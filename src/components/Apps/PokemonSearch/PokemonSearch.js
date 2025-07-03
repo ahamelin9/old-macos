@@ -119,7 +119,7 @@ const PokemonSearch = () => {
             return '';
         try {
             return showShiny
-                ? pokemonData.sprites.other['official-artwork'].front_default
+                ? pokemonData.sprites.front_shiny
                 : pokemonData.sprites.front_default;
         }
         catch (_a) {

@@ -6,11 +6,7 @@ interface PokemonData {
   name: string;
   sprites: {
     front_default: string;
-    other: {
-      'official-artwork': {
-        front_default: string;
-      };
-    };
+    front_shiny: string;
   };
   types: {
     slot: number;
@@ -163,7 +159,7 @@ const PokemonSearch: React.FC = () => {
     if (!pokemonData) return '';
     try {
       return showShiny 
-        ? pokemonData.sprites.other['official-artwork'].front_default 
+        ? pokemonData.sprites.front_shiny 
         : pokemonData.sprites.front_default;
     } catch {
       return 'https://via.placeholder.com/150?text=Image+Not+Found';
