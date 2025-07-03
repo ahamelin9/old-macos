@@ -26,7 +26,7 @@ const PokemonSearch = () => {
             setError(null);
             try {
                 // Fetch basic Pokémon data
-                const pokemonResponse = yield fetch(`https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`);
+                const pokemonResponse = yield fetch(`${import.meta.env.VITE_POKEAPI_BASE_URL}/pokemon/${searchTerm.toLowerCase()}`);
                 if (!pokemonResponse.ok) {
                     throw new Error(`Pokémon not found!`);
                 }

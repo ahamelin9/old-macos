@@ -62,9 +62,7 @@ const PokemonSearch: React.FC = () => {
       
       try {
         // Fetch basic Pokémon data
-        const pokemonResponse = await fetch(
-          `https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`
-        );
+        const pokemonResponse = await fetch(`${import.meta.env.VITE_POKEAPI_BASE_URL}/pokemon/${searchTerm.toLowerCase()}`);
         
         if (!pokemonResponse.ok) {
           throw new Error(`Pokémon not found!`);
