@@ -53,58 +53,71 @@ const PokemonSearch: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('pikachu');
   const [showShiny, setShowShiny] = useState<boolean>(false);
 
-  const fetchPokemonData = async () => {
+  const mobileSafeFetch = async (url: string) => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const proxyUrl = 'https://corsproxy.io/?';
+    const targetUrl = isMobile ? `${proxyUrl}${encodeURIComponent(url)}` : url;
+
     try {
-      const apiUrl = `${import.meta.env.VITE_POKEAPI_BASE_URL}/pokemon/${encodeURIComponent(searchTerm.toLowerCase())}`;
-      const response = await fetch(apiUrl);
-      
-      if (!response.ok) throw new Error(`Pokémon not found (HTTP ${response.status})`);
-      
-      const data = await response.json();
-      return data;
+      const response = await fetch(targetUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error('Fetch error:', error);
       throw error;
     }
   };
 
-  const fetchSpeciesData = async (url: string) => {
-    const response = await fetch(url);
-    return await response.json();
+  const fetchPokemonData = async (nameOrId: string) => {
+    const searchTerm = encodeURIComponent(nameOrId.toString().toLowerCase().trim());
+    const apiUrl = `${import.meta.env.VITE_POKEAPI_BASE_URL || 'https://pokeapi.co/api/v2'}/pokemon/${searchTerm}`;
+    return await mobileSafeFetch(apiUrl);
   };
 
-  const fetchTypeData = async (url: string) => {
-    const response = await fetch(url);
-    return await response.json();
+  const fetchAdditionalData = async (pokemon: PokemonData) => {
+    const [species, types] = await Promise.all([
+      mobileSafeFetch(pokemon.species.url),
+      Promise.all(pokemon.types.map(t => mobileSafeFetch(t.type.url)))
+    ]);
+    return { species, types };
   };
 
   useEffect(() => {
-    if (!searchTerm.trim()) return;
-
+    const controller = new AbortController();
+    
     const loadData = async () => {
+      if (!searchTerm.trim()) return;
+      
       setLoading(true);
       setError(null);
       
       try {
-        const pokemon = await fetchPokemonData();
-        setPokemonData(pokemon);
-
-        const species = await fetchSpeciesData(pokemon.species.url);
-        setSpeciesData(species);
-
-        const types = await Promise.all(
-          pokemon.types.map((type: { type: { url: string; }; }) => fetchTypeData(type.type.url))
-        );
-        setTypeData(types);
+        const pokemon = await fetchPokemonData(searchTerm);
+        const { species, types } = await fetchAdditionalData(pokemon);
+        
+        if (!controller.signal.aborted) {
+          setPokemonData(pokemon);
+          setSpeciesData(species);
+          setTypeData(types);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setPokemonData(null);
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err.message : 'Failed to load Pokémon');
+        }
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+    return () => controller.abort();
   }, [searchTerm]);
 
   const getEnglishDescription = () => {
@@ -117,14 +130,12 @@ const PokemonSearch: React.FC = () => {
 
   const getWeaknesses = () => {
     if (typeData.length === 0) return [];
-    
     const weaknesses = new Set<string>();
     typeData.forEach(type => {
       type.damage_relations.double_damage_from.forEach(weakness => {
         weaknesses.add(weakness.name);
       });
     });
-    
     return Array.from(weaknesses);
   };
 
@@ -146,7 +157,15 @@ const PokemonSearch: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="pokemon-container loading">Loading Pokémon data...</div>;
+    return (
+      <div className="pokemon-container loading">
+        <div className="skeleton-loading">
+          <div className="skeleton-image"></div>
+          <div className="skeleton-text"></div>
+          <div className="skeleton-text"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -160,12 +179,24 @@ const PokemonSearch: React.FC = () => {
           placeholder="Enter Pokémon name or ID"
           defaultValue={searchTerm}
           className="search-input"
+          aria-label="Pokémon search"
         />
         <button type="submit" className="search-button">Search</button>
       </form>
 
       {error && (
-        <div className="pokemon-error">Error: {error}</div>
+        <div className="pokemon-error">
+          <p>{error}</p>
+          <button 
+            onClick={() => setSearchTerm(searchTerm)} 
+            className="retry-button"
+          >
+            Retry
+          </button>
+          <p className="network-tip">
+            Mobile tip: Try switching networks if this persists
+          </p>
+        </div>
       )}
 
       {pokemonData && (
@@ -182,6 +213,7 @@ const PokemonSearch: React.FC = () => {
                 src={getImageUrl()}
                 alt={pokemonData.name}
                 className="pokemon-image"
+                loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/150?text=Pokemon+Not+Found';
@@ -191,6 +223,7 @@ const PokemonSearch: React.FC = () => {
             <button 
               className="shiny-toggle" 
               onClick={() => setShowShiny(!showShiny)}
+              aria-label="Toggle shiny version"
             >
               {showShiny ? 'Show Normal' : 'Show Shiny'}
             </button>

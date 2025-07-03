@@ -18,51 +18,67 @@ const PokemonSearch = () => {
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('pikachu');
     const [showShiny, setShowShiny] = useState(false);
-    const fetchPokemonData = () => __awaiter(void 0, void 0, void 0, function* () {
+    const mobileSafeFetch = (url) => __awaiter(void 0, void 0, void 0, function* () {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const proxyUrl = 'https://corsproxy.io/?';
+        const targetUrl = isMobile ? `${proxyUrl}${encodeURIComponent(url)}` : url;
         try {
-            const apiUrl = `${import.meta.env.VITE_POKEAPI_BASE_URL}/pokemon/${encodeURIComponent(searchTerm.toLowerCase())}`;
-            const response = yield fetch(apiUrl);
+            const response = yield fetch(targetUrl, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
             if (!response.ok)
-                throw new Error(`Pokémon not found (HTTP ${response.status})`);
-            const data = yield response.json();
-            return data;
+                throw new Error(`HTTP ${response.status}`);
+            return yield response.json();
         }
         catch (error) {
-            console.error("Fetch error:", error);
+            console.error('Fetch error:', error);
             throw error;
         }
     });
-    const fetchSpeciesData = (url) => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield fetch(url);
-        return yield response.json();
+    const fetchPokemonData = (nameOrId) => __awaiter(void 0, void 0, void 0, function* () {
+        const searchTerm = encodeURIComponent(nameOrId.toString().toLowerCase().trim());
+        const apiUrl = `${import.meta.env.VITE_POKEAPI_BASE_URL || 'https://pokeapi.co/api/v2'}/pokemon/${searchTerm}`;
+        return yield mobileSafeFetch(apiUrl);
     });
-    const fetchTypeData = (url) => __awaiter(void 0, void 0, void 0, function* () {
-        const response = yield fetch(url);
-        return yield response.json();
+    const fetchAdditionalData = (pokemon) => __awaiter(void 0, void 0, void 0, function* () {
+        const [species, types] = yield Promise.all([
+            mobileSafeFetch(pokemon.species.url),
+            Promise.all(pokemon.types.map(t => mobileSafeFetch(t.type.url)))
+        ]);
+        return { species, types };
     });
     useEffect(() => {
-        if (!searchTerm.trim())
-            return;
+        const controller = new AbortController();
         const loadData = () => __awaiter(void 0, void 0, void 0, function* () {
+            if (!searchTerm.trim())
+                return;
             setLoading(true);
             setError(null);
             try {
-                const pokemon = yield fetchPokemonData();
-                setPokemonData(pokemon);
-                const species = yield fetchSpeciesData(pokemon.species.url);
-                setSpeciesData(species);
-                const types = yield Promise.all(pokemon.types.map((type) => fetchTypeData(type.type.url)));
-                setTypeData(types);
+                const pokemon = yield fetchPokemonData(searchTerm);
+                const { species, types } = yield fetchAdditionalData(pokemon);
+                if (!controller.signal.aborted) {
+                    setPokemonData(pokemon);
+                    setSpeciesData(species);
+                    setTypeData(types);
+                }
             }
             catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred');
-                setPokemonData(null);
+                if (!controller.signal.aborted) {
+                    setError(err instanceof Error ? err.message : 'Failed to load Pokémon');
+                }
             }
             finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         });
         loadData();
+        return () => controller.abort();
     }, [searchTerm]);
     const getEnglishDescription = () => {
         if (!speciesData)
@@ -99,11 +115,11 @@ const PokemonSearch = () => {
         }
     };
     if (loading) {
-        return _jsx("div", { className: "pokemon-container loading", children: "Loading Pok\u00E9mon data..." });
+        return (_jsx("div", { className: "pokemon-container loading", children: _jsxs("div", { className: "skeleton-loading", children: [_jsx("div", { className: "skeleton-image" }), _jsx("div", { className: "skeleton-text" }), _jsx("div", { className: "skeleton-text" })] }) }));
     }
-    return (_jsxs("div", { className: "pokemon-container", children: [_jsx("h2", { className: "pokemon-title", children: "Pok\u00E9mon Search" }), _jsxs("form", { onSubmit: handleSearch, className: "search-form", children: [_jsx("input", { type: "text", name: "pokemonSearch", placeholder: "Enter Pok\u00E9mon name or ID", defaultValue: searchTerm, className: "search-input" }), _jsx("button", { type: "submit", className: "search-button", children: "Search" })] }), error && (_jsxs("div", { className: "pokemon-error", children: ["Error: ", error] })), pokemonData && (_jsxs("div", { className: "pokemon-details", children: [_jsx("div", { className: "pokemon-header", children: _jsxs("h3", { className: "pokemon-name", children: ["#", pokemonData.id, " - ", pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)] }) }), _jsxs("div", { className: "pokemon-image-container", children: [_jsx("div", { className: "pokemon-image-wrapper", children: _jsx("img", { src: getImageUrl(), alt: pokemonData.name, className: "pokemon-image", onError: (e) => {
+    return (_jsxs("div", { className: "pokemon-container", children: [_jsx("h2", { className: "pokemon-title", children: "Pok\u00E9mon Search" }), _jsxs("form", { onSubmit: handleSearch, className: "search-form", children: [_jsx("input", { type: "text", name: "pokemonSearch", placeholder: "Enter Pok\u00E9mon name or ID", defaultValue: searchTerm, className: "search-input", "aria-label": "Pok\u00E9mon search" }), _jsx("button", { type: "submit", className: "search-button", children: "Search" })] }), error && (_jsxs("div", { className: "pokemon-error", children: [_jsx("p", { children: error }), _jsx("button", { onClick: () => setSearchTerm(searchTerm), className: "retry-button", children: "Retry" }), _jsx("p", { className: "network-tip", children: "Mobile tip: Try switching networks if this persists" })] })), pokemonData && (_jsxs("div", { className: "pokemon-details", children: [_jsx("div", { className: "pokemon-header", children: _jsxs("h3", { className: "pokemon-name", children: ["#", pokemonData.id, " - ", pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)] }) }), _jsxs("div", { className: "pokemon-image-container", children: [_jsx("div", { className: "pokemon-image-wrapper", children: _jsx("img", { src: getImageUrl(), alt: pokemonData.name, className: "pokemon-image", loading: "lazy", onError: (e) => {
                                         const target = e.target;
                                         target.src = 'https://via.placeholder.com/150?text=Pokemon+Not+Found';
-                                    } }) }), _jsx("button", { className: "shiny-toggle", onClick: () => setShowShiny(!showShiny), children: showShiny ? 'Show Normal' : 'Show Shiny' })] }), _jsxs("div", { className: "pokemon-info", children: [_jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Types" }), _jsx("div", { className: "types-container", children: pokemonData.types.map(type => (_jsx("span", { className: `type-badge type-${type.type.name}`, children: type.type.name }, type.slot))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Weaknesses" }), _jsx("div", { className: "weaknesses-container", children: getWeaknesses().length > 0 ? (getWeaknesses().map(weakness => (_jsx("span", { className: `type-badge type-${weakness}`, children: weakness }, weakness)))) : (_jsx("span", { children: "No weaknesses" })) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Physical Attributes" }), _jsxs("p", { children: ["Height: ", (pokemonData.height / 10).toFixed(1), " m"] }), _jsxs("p", { children: ["Weight: ", (pokemonData.weight / 10).toFixed(1), " kg"] })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Pok\u00E9dex Description" }), _jsx("p", { className: "pokedex-description", children: getEnglishDescription() })] })] })] }))] }));
+                                    } }) }), _jsx("button", { className: "shiny-toggle", onClick: () => setShowShiny(!showShiny), "aria-label": "Toggle shiny version", children: showShiny ? 'Show Normal' : 'Show Shiny' })] }), _jsxs("div", { className: "pokemon-info", children: [_jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Types" }), _jsx("div", { className: "types-container", children: pokemonData.types.map(type => (_jsx("span", { className: `type-badge type-${type.type.name}`, children: type.type.name }, type.slot))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Weaknesses" }), _jsx("div", { className: "weaknesses-container", children: getWeaknesses().length > 0 ? (getWeaknesses().map(weakness => (_jsx("span", { className: `type-badge type-${weakness}`, children: weakness }, weakness)))) : (_jsx("span", { children: "No weaknesses" })) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Physical Attributes" }), _jsxs("p", { children: ["Height: ", (pokemonData.height / 10).toFixed(1), " m"] }), _jsxs("p", { children: ["Weight: ", (pokemonData.weight / 10).toFixed(1), " kg"] })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Pok\u00E9dex Description" }), _jsx("p", { className: "pokedex-description", children: getEnglishDescription() })] })] })] }))] }));
 };
 export default PokemonSearch;
