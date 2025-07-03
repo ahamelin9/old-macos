@@ -50,6 +50,12 @@
   border-radius: 3px;
 }
 
+@media (max-width: 600px) {
+  .menu-item {
+    display: none !important;
+  }
+}
+
 .menu-item:hover {
   background: rgba(255, 255, 255, 0.15);
 }
