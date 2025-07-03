@@ -1,0 +1,165 @@
+.finder-window {
+  border-radius: 8px;
+  background: linear-gradient(to bottom, #e4e4e4, #d0d0d0);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Lucida Grande', Arial, sans-serif;
+  overflow: hidden;
+}
+
+.finder-titlebar {
+  height: 22px;
+  background: linear-gradient(to bottom, #a0a0a0, #707070);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.finder-toolbar {
+  height: 44px;
+  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+  border-bottom: 1px solid #b0b0b0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+}
+
+.toolbar-button {
+  padding: 4px 12px;
+  background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
+  border: 1px solid #a0a0a0;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #333;
+  cursor: default;
+}
+
+.toolbar-button:hover {
+  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 20px;
+  background: #c0c0c0;
+  margin: 0 5px;
+}
+
+.finder-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.finder-sidebar {
+  width: 180px;
+  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+  border-right: 1px solid #b0b0b0;
+  padding: 10px 0;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  margin-bottom: 20px;
+}
+
+.sidebar-header {
+  padding: 4px 15px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.sidebar-item {
+  padding: 6px 15px;
+  font-size: 13px;
+  color: #333;
+  cursor: default;
+}
+
+.sidebar-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-item.selected {
+  background: #3b6dbb;
+  color: white;
+}
+
+.finder-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: white;
+}
+
+.content-section {
+  margin-bottom: 30px;
+}
+
+.section-title {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: normal;
+}
+
+.section-content {
+  padding-left: 10px;
+}
+
+.info-row {
+  margin-bottom: 10px;
+  display: flex;
+}
+
+.info-label {
+  width: 80px;
+  font-weight: bold;
+  color: #555;
+}
+
+.info-value {
+  flex: 1;
+  margin-inline-start: 4px;
+  color: #333;
+}
+
+.leopard-link {
+  color: #3b6dbb;
+  margin-inline-start: 4px;
+  text-decoration: none;
+}
+
+.leopard-link:hover {
+  text-decoration: underline;
+}
+
+.finder-statusbar {
+  height: 22px;
+  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
+  border-top: 1px solid #b0b0b0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  color: #555;
+}
+
+.statusbar-item {
+  padding: 0 5px;
+}
+
+.statusbar-separator {
+  width: 1px;
+  height: 14px;
+  background: #b0b0b0;
+  margin: 0 5px;
+}

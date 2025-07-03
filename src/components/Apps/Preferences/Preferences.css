@@ -1,0 +1,12 @@
+.preferences-window {
+  padding: 15px;
+}
+
+.preferences-category {
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  cursor: pointer;
+  color: black;
+}

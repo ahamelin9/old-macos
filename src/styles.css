@@ -1,0 +1,39 @@
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Chicago', 'Lucida Grande', sans-serif;
+  background-color: #6D8CBE;
+  color: #333;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+/* Classic Mac OS platinum appearance */
+button {
+  font-family: inherit;
+  background: linear-gradient(to bottom, #F7F7F7, #E5E5E5);
+  border: 1px solid #999;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: linear-gradient(to bottom, #E5E5E5, #D5D5D5);
+}
+
+button:active {
+  background: linear-gradient(to bottom, #D5D5D5, #C5C5C5);
+}

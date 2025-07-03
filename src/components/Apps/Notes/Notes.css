@@ -1,0 +1,13 @@
+.notes-window {
+  height: 100%;
+}
+
+.notes-textarea {
+  width: 95%;
+  height: 85%;
+  border: none;
+  resize: none;
+  padding: 10px;
+  font-family: 'Geneva', sans-serif;
+  font-size: 13px;
+}
