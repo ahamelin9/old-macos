@@ -7,19 +7,20 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  touch-action: none; /* Prevent pinch zoom, scroll during drag/resize */
 }
 
 .window-header {
   background: linear-gradient(to bottom, #6D8CBE, #4769A5);
   color: white;
-  padding: 6px 10px;
+  padding: 6px 40px; /* Leave space for controls */
   display: flex;
   align-items: center;
-  cursor: grab; /* Updated from move to grab for better UX */
+  justify-content: center; /* Center children horizontally */
+  cursor: grab;
   user-select: none;
   height: 24px;
-  position: relative;
+  position: relative; /* For absolute centering of title */
+  touch-action: none; /* for pointer events */
 }
 
 .window.dragging .window-header {
@@ -32,6 +33,7 @@
   position: absolute;
   left: 7px;
   top: 5px;
+  /* You can add right side controls here if needed */
 }
 
 .window-close,
@@ -44,7 +46,6 @@
   cursor: pointer;
   position: relative;
   padding: 0;
-  touch-action: none; /* Prevent accidental double-tap zoom */
 }
 
 .window-close {
@@ -63,9 +64,8 @@
 }
 
 /* Control symbols */
-.window-close::before,
-.window-minimize::before,
-.window-maximize::before {
+.window-close::before {
+  content: "×";
   position: absolute;
   font-size: 10px;
   color: rgba(0, 0, 0, 0.5);
@@ -74,36 +74,51 @@
   transform: translate(-50%, -50%);
 }
 
-.window-close::before {
-  content: "×";
-}
-
 .window-minimize::before {
   content: "−";
+  position: absolute;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.5);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .window-maximize::before {
   content: "+";
+  position: absolute;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.5);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
+/* The window title - desktop absolute center */
 .window-title {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  pointer-events: none;
+  pointer-events: none; /* Let clicks go through */
+  text-align: center;
   font-family: 'Chicago', 'Lucida Grande', sans-serif;
   font-size: 13px;
   text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  margin: 0;
+  padding: 0;
 }
 
+/* Content inside the window */
 .window-content {
   flex: 1;
   padding: 5px;
   overflow: auto;
   background: white;
-  touch-action: auto; /* Allow inner content to scroll normally */
+  touch-action: auto;
 }
 
+/* Resize handle */
 .window-resize-handle {
   position: absolute;
   right: 0;
@@ -112,7 +127,7 @@
   height: 16px;
   background: linear-gradient(135deg, #999 50%, transparent 50%);
   cursor: se-resize;
-  touch-action: none; /* Block gestures during resize */
+  touch-action: none;
 }
 
 .window.active {
@@ -129,6 +144,7 @@
   content: "↔";
 }
 
+/* Hover states for controls */
 .window-close:hover {
   background: #E0463F !important;
 }
@@ -139,4 +155,30 @@
 
 .window-maximize:hover {
   background: #1BAC2B !important;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  .window-header {
+    padding: 6px 16px;
+    justify-content: flex-start; /* or center, if you prefer */
+    position: static; /* Remove absolute positioning context */
+  }
+
+  .window-title {
+    position: static;
+    transform: none;
+    pointer-events: auto;
+    flex-grow: 1;
+    text-align: center;
+    margin: 0 auto;
+    white-space: normal;
+  }
+
+  .window-controls {
+    position: static;
+    left: auto;
+    top: auto;
+    gap: 8px;
+  }
 }
