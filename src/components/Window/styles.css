@@ -7,37 +7,45 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 200px; /* Added minimum reasonable width */
 }
 
 .window-header {
   background: linear-gradient(to bottom, #6D8CBE, #4769A5);
   color: white;
-  padding: 6px 40px; /* Leave space for controls */
-  display: flex;
+  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: min-content 1fr;
   align-items: center;
-  justify-content: center; /* Center children horizontally */
-  cursor: grab;
+  gap: 10px;
+  cursor: move;
   user-select: none;
   height: 24px;
-  position: relative; /* For absolute centering of title */
-  touch-action: none; /* for pointer events */
-}
-
-.window.dragging .window-header {
-  cursor: grabbing;
 }
 
 .window-controls {
   display: flex;
   gap: 6px;
-  position: absolute;
-  left: 7px;
-  top: 5px;
-  /* You can add right side controls here if needed */
+  /* Let this column shrink to content width */
+  width: min-content;
 }
 
-.window-close,
-.window-minimize,
+.window-title {
+  text-align: center;
+  font-family: 'Chicago', 'Lucida Grande', sans-serif;
+  font-size: 13px;
+  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+/* Window control buttons */
+.window-close, 
+.window-minimize, 
 .window-maximize {
   width: 12px;
   height: 12px;
@@ -46,6 +54,7 @@
   cursor: pointer;
   position: relative;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .window-close {
@@ -63,7 +72,7 @@
   border-color: #1BAC2B;
 }
 
-/* Control symbols */
+/* Control button icons */
 .window-close::before {
   content: "×";
   position: absolute;
@@ -94,28 +103,12 @@
   transform: translate(-50%, -50%);
 }
 
-/* The window title - desktop absolute center */
-.window-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none; /* Let clicks go through */
-  text-align: center;
-  font-family: 'Chicago', 'Lucida Grande', sans-serif;
-  font-size: 13px;
-  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3);
-  white-space: nowrap;
-  margin: 0;
-  padding: 0;
-}
-
-/* Content inside the window */
+/* Window content area */
 .window-content {
   flex: 1;
-  padding: 5px;
+  padding: 8px;
   overflow: auto;
   background: white;
-  touch-action: auto;
 }
 
 /* Resize handle */
@@ -126,10 +119,10 @@
   width: 16px;
   height: 16px;
   background: linear-gradient(135deg, #999 50%, transparent 50%);
-  cursor: se-resize;
-  touch-action: none;
+  cursor: nwse-resize;
 }
 
+/* Window states */
 .window.active {
   z-index: 100;
   box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.4);
@@ -144,41 +137,23 @@
   content: "↔";
 }
 
-/* Hover states for controls */
-.window-close:hover {
-  background: #E0463F !important;
-}
+/* Hover states */
+.window-close:hover { background: #E0463F !important; }
+.window-minimize:hover { background: #DF9E23 !important; }
+.window-maximize:hover { background: #1BAC2B !important; }
 
-.window-minimize:hover {
-  background: #DF9E23 !important;
-}
-
-.window-maximize:hover {
-  background: #1BAC2B !important;
-}
-
-/* Mobile styles */
-@media (max-width: 768px) {
+/* Mobile responsive styles */
+@media (max-width: 600px) {
   .window-header {
-    padding: 6px 16px;
-    justify-content: flex-start; /* or center, if you prefer */
-    position: static; /* Remove absolute positioning context */
-  }
-
-  .window-title {
-    position: static;
-    transform: none;
-    pointer-events: auto;
-    flex-grow: 1;
-    text-align: center;
-    margin: 0 auto;
-    white-space: normal;
-  }
-
-  .window-controls {
-    position: static;
-    left: auto;
-    top: auto;
+    padding: 6px 12px;
     gap: 8px;
+  }
+  
+  .window-title {
+    font-size: 12px;
+  }
+  
+  .window-content {
+    padding: 6px;
   }
 }
