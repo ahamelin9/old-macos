@@ -54,55 +54,44 @@ const PokemonSearch: React.FC = () => {
   const [showShiny, setShowShiny] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
 
-  const fetchWithRetry = async (url: string, options = {}, retries = 3): Promise<any> => {
-    const proxies = [
-      '', // Direct connection first
-      'https://corsproxy.io/?',
-      'https://api.allorigins.win/raw?url=',
-      'https://thingproxy.freeboard.io/fetch/',
-      'https://cors-anywhere.herokuapp.com/'
+  const createTimeoutSignal = (ms: number) => {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), ms);
+    return controller.signal;
+  };
+
+  const fetchPokemon = async (pokemonName: string) => {
+    const endpoints = [
+      `https://pokeapi.co/api/v2/pokemon/${pokemonName}`,
+      `https://pokedex-api.vercel.app/api/v2/pokemon/${pokemonName}`,
+      `https://pokeapi.fly.dev/pokeapi/v2/pokemon/${pokemonName}`
     ];
 
-    for (let attempt = 0; attempt < proxies.length; attempt++) {
+    for (const endpoint of endpoints) {
       try {
-        const proxyUrl = proxies[attempt];
-        const fullUrl = proxyUrl + encodeURIComponent(url);
-
-        const createTimeoutSignal = (ms: number) => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), ms);
-          return controller.signal;
-        };
-        
-        const response = await fetch(fullUrl, {
-          ...options,
+        const response = await fetch(endpoint, {
+          signal: createTimeoutSignal(8000),
           headers: {
             'Content-Type': 'application/json',
-            ...(proxyUrl.includes('cors-anywhere') && { 'X-Requested-With': 'XMLHttpRequest' })
-          },
-          signal: createTimeoutSignal(2000) // 8 second timeout
-        });
-
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
-      } catch (error) {
-        console.warn(`Attempt ${attempt + 1} failed with proxy ${proxies[attempt] || 'none'}`, error);
-        if (attempt === proxies.length - 1) {
-          if (retries > 0) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * (4 - retries)));
-            return fetchWithRetry(url, options, retries - 1);
+            'Accept': 'application/json'
           }
-          throw error;
+        });
+        
+        if (response.ok) {
+          return await response.json();
         }
+      } catch (error) {
+        console.warn(`Failed with endpoint ${endpoint}:`, error);
+        continue;
       }
     }
-    throw new Error('All proxy attempts failed');
+    throw new Error('All API endpoints failed');
   };
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const loadPokemonData = async () => {
+    const loadData = async () => {
       if (!searchTerm.trim()) return;
 
       setLoading(true);
@@ -112,16 +101,12 @@ const PokemonSearch: React.FC = () => {
       setTypeData([]);
 
       try {
-        // First try our primary API endpoint
-        const pokemon = await fetchWithRetry(
-          `https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`
-        );
+        const pokemon = await fetchPokemon(searchTerm.toLowerCase());
         if (controller.signal.aborted) return;
 
-        // Then fetch additional data
         const [species, types] = await Promise.all([
-          fetchWithRetry(pokemon.species.url),
-          Promise.all(pokemon.types.map((t: any) => fetchWithRetry(t.type.url)))
+          fetch(pokemon.species.url).then(res => res.json()),
+          Promise.all(pokemon.types.map((t: any) => fetch(t.type.url).then(res => res.json())))
         ]);
 
         if (!controller.signal.aborted) {
@@ -131,9 +116,8 @@ const PokemonSearch: React.FC = () => {
         }
       } catch (err) {
         if (!controller.signal.aborted) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to load Pokémon';
-          setError(errorMessage);
-          console.error('Final fetch error:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load Pokémon');
+          console.error('API Error:', err);
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -142,7 +126,7 @@ const PokemonSearch: React.FC = () => {
       }
     };
 
-    loadPokemonData();
+    loadData();
     return () => controller.abort();
   }, [searchTerm, retryCount]);
 
@@ -175,36 +159,29 @@ const PokemonSearch: React.FC = () => {
     setRetryCount(prev => prev + 1);
   };
 
-  const handleLoadExample = () => {
-    setSearchTerm('pikachu');
-  };
-
   const getImageUrl = () => {
     if (!pokemonData) return '';
     try {
-      const url = showShiny 
+      return showShiny 
         ? pokemonData.sprites.other['official-artwork'].front_default 
         : pokemonData.sprites.front_default;
-      return url || 'https://via.placeholder.com/150?text=Image+Missing';
     } catch {
-      return 'https://via.placeholder.com/150?text=Image+Error';
+      return 'https://via.placeholder.com/150?text=Image+Not+Found';
     }
   };
 
   if (loading) {
     return (
-      <div className="pokemon-container">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>Loading Pokémon data...</p>
-        </div>
+      <div className="pokemon-container loading">
+        <div className="loading-spinner"></div>
+        <p>Loading Pokémon data...</p>
       </div>
     );
   }
 
   return (
     <div className="pokemon-container">
-      <h1 className="pokemon-title">Pokémon Search</h1>
+      <h2 className="pokemon-title">Pokémon Search</h2>
       
       <form onSubmit={handleSearch} className="search-form">
         <input
@@ -214,46 +191,28 @@ const PokemonSearch: React.FC = () => {
           defaultValue={searchTerm}
           className="search-input"
           aria-label="Search for Pokémon"
-          required
-          minLength={2}
         />
-        <button type="submit" className="search-button">
-          Search
-        </button>
+        <button type="submit" className="search-button">Search</button>
       </form>
 
       {error && (
         <div className="error-state">
-          <div className="error-icon">⚠️</div>
-          <h3>Oops! Something went wrong</h3>
-          <p className="error-message">{error}</p>
-          
-          <div className="error-actions">
-            <button onClick={handleRetry} className="retry-button">
-              Try Again
-            </button>
-            <button onClick={handleLoadExample} className="example-button">
-              Load Example
-            </button>
-          </div>
-          
-          <div className="error-tips">
-            <p>If this keeps happening:</p>
-            <ul>
-              <li>Check your internet connection</li>
-              <li>Try a different Pokémon name</li>
-              <li>Wait a few minutes and try again</li>
-            </ul>
-          </div>
+          <p>Error: {error}</p>
+          <button onClick={handleRetry} className="retry-button">
+            Retry
+          </button>
+          <p className="error-tip">
+            If this persists, try a different Pokémon or check your connection
+          </p>
         </div>
       )}
 
       {pokemonData && (
         <div className="pokemon-details">
           <div className="pokemon-header">
-            <h2 className="pokemon-name">
-              #{pokemonData.id.toString().padStart(3, '0')} - {pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)}
-            </h2>
+            <h3 className="pokemon-name">
+              #{pokemonData.id} - {pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)}
+            </h3>
           </div>
 
           <div className="pokemon-image-container">
@@ -266,26 +225,24 @@ const PokemonSearch: React.FC = () => {
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://via.placeholder.com/150?text=Image+Failed';
-                  target.className = 'pokemon-image-error';
                 }}
               />
             </div>
             <button
               className={`shiny-toggle ${showShiny ? 'active' : ''}`}
               onClick={() => setShowShiny(!showShiny)}
-              aria-label={`Show ${showShiny ? 'normal' : 'shiny'} version`}
             >
               {showShiny ? '★ Shiny' : '☆ Shiny'}
             </button>
           </div>
 
-          <div className="pokemon-info-grid">
-            <div className="pokemon-info-section types-section">
-              <h3>Types</h3>
+          <div className="pokemon-info">
+            <div className="info-section">
+              <h4>Types</h4>
               <div className="types-container">
-                {pokemonData.types.map((type, index) => (
+                {pokemonData.types.map(type => (
                   <span
-                    key={`${type.slot}-${index}`}
+                    key={type.slot}
                     className={`type-badge type-${type.type.name}`}
                   >
                     {type.type.name}
@@ -294,40 +251,32 @@ const PokemonSearch: React.FC = () => {
               </div>
             </div>
 
-            <div className="pokemon-info-section weaknesses-section">
-              <h3>Weaknesses</h3>
+            <div className="info-section">
+              <h4>Weaknesses</h4>
               <div className="weaknesses-container">
                 {getWeaknesses().length > 0 ? (
-                  getWeaknesses().map((weakness, index) => (
+                  getWeaknesses().map(weakness => (
                     <span
-                      key={`${weakness}-${index}`}
+                      key={weakness}
                       className={`type-badge type-${weakness}`}
                     >
                       {weakness}
                     </span>
                   ))
                 ) : (
-                  <span className="no-weaknesses">None</span>
+                  <span>No weaknesses</span>
                 )}
               </div>
             </div>
 
-            <div className="pokemon-info-section stats-section">
-              <h3>Stats</h3>
-              <div className="stats-grid">
-                <div className="stat-item">
-                  <span className="stat-label">Height:</span>
-                  <span className="stat-value">{(pokemonData.height / 10).toFixed(1)} m</span>
-                </div>
-                <div className="stat-item">
-                  <span className="stat-label">Weight:</span>
-                  <span className="stat-value">{(pokemonData.weight / 10).toFixed(1)} kg</span>
-                </div>
-              </div>
+            <div className="info-section">
+              <h4>Stats</h4>
+              <p>Height: {(pokemonData.height / 10).toFixed(1)} m</p>
+              <p>Weight: {(pokemonData.weight / 10).toFixed(1)} kg</p>
             </div>
 
-            <div className="pokemon-info-section description-section">
-              <h3>Pokédex Entry</h3>
+            <div className="info-section">
+              <h4>Pokédex Entry</h4>
               <p className="pokedex-description">{getEnglishDescription()}</p>
             </div>
           </div>
