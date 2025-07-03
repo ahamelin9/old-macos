@@ -1,0 +1,3 @@
+name = "old-macos"
+main = "src/main.tsx"
+compatibility_date = "2025-07-03"
