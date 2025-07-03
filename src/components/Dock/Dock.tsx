@@ -10,6 +10,7 @@ import Calculator from '../Apps/Calculator/Calculator';
 import Trash from '../Apps/Trash/Trash';
 import Music from '../Apps/Music/Music';
 import Camera from '../Apps/Camera/Camera';
+import PokemonSearch from '../Apps/PokemonSearch/PokemonSearch';
 // Styling
 import './styles.css';
 import { useEffect, useState } from 'react';
@@ -38,6 +39,12 @@ const Dock = () => {
       icon: '/nasa-icon.png',
       action: () => openWindow('Nasa News', <NasaNews />)
     },
+    { 
+      name: 'Pokemon', 
+      icon: '/nasa-icon.png',
+      action: () => openWindow('Pokemon Search', <PokemonSearch />)
+    },
+
     { 
       name: 'Music', 
       icon: '/music-icon.png',
@@ -78,7 +85,7 @@ const Dock = () => {
   // Choose which apps to show on mobile
   const visibleApps = isMobile
     ? apps.filter(app => 
-        ['Finder', 'Nasa News', 'Music', 'Terminal'].includes(app.name)
+        ['Finder', 'Nasa News', 'Music', 'Pokemon'].includes(app.name)
       )
     : apps;
 

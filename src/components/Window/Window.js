@@ -1,83 +1,59 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-// React
-import { useState, useRef, useEffect } from 'react';
-// Context
+import { useState, useRef } from 'react';
 import { useWindows } from '../../contexts/WindowContext';
-// Sub Components
 import WindowHeader from './WindowHeader';
-// Styling
 import './styles.css';
 const Window = ({ id, title, children, onClose, initialPosition, initialSize, zIndex, minimized, maximized }) => {
     const [position, setPosition] = useState(initialPosition);
     const [size, setSize] = useState(initialSize);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isResizing, setIsResizing] = useState(false);
-    const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+    const [dragStartOffset, setDragStartOffset] = useState(null);
+    const [resizeStartPos, setResizeStartPos] = useState(null);
     const windowRef = useRef(null);
     const { focusWindow, minimizeWindow, maximizeWindow, restoreWindow } = useWindows();
-    const handleInteraction = () => {
-        focusWindow(id);
-    };
-    const handleMouseDown = (e) => {
-        handleInteraction();
-        if (e.target.closest('.window-header') && !maximized) {
-            setIsDragging(true);
-            setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
-            e.stopPropagation();
-        }
-    };
-    const handleMouseMove = (e) => {
-        if (isDragging && !maximized) {
-            setPosition({
-                x: e.clientX - startPos.x,
-                y: e.clientY - startPos.y
-            });
-        }
-        else if (isResizing && !maximized) {
-            const newWidth = Math.max(300, e.clientX - position.x);
-            const newHeight = Math.max(200, e.clientY - position.y);
-            setSize({ width: newWidth, height: newHeight });
-        }
-    };
-    const handleMouseUp = () => {
-        setIsDragging(false);
-        setIsResizing(false);
-    };
-    const handleResizeMouseDown = (e) => {
+    const onPointerDownDrag = (e) => {
+        var _a;
         if (maximized)
             return;
-        handleInteraction();
-        e.stopPropagation();
-        setIsResizing(true);
-        setStartPos({ x: e.clientX, y: e.clientY });
+        focusWindow(id);
+        setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
+        (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.setPointerCapture(e.pointerId);
     };
-    const handleMinimize = () => {
-        minimizeWindow(id);
+    const onPointerDownResize = (e) => {
+        var _a;
+        if (maximized)
+            return;
+        focusWindow(id);
+        setResizeStartPos({ x: e.clientX, y: e.clientY });
+        (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.setPointerCapture(e.pointerId);
     };
-    const handleMaximize = () => {
-        if (maximized) {
-            restoreWindow(id);
+    const onPointerMove = (e) => {
+        if (dragStartOffset) {
+            setPosition({
+                x: e.clientX - dragStartOffset.x,
+                y: e.clientY - dragStartOffset.y,
+            });
         }
-        else {
-            maximizeWindow(id);
+        else if (resizeStartPos) {
+            setSize({
+                width: Math.max(300, e.clientX - position.x),
+                height: Math.max(200, e.clientY - position.y),
+            });
         }
     };
-    useEffect(() => {
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, isResizing, startPos, maximized]);
+    const onPointerUp = (e) => {
+        var _a;
+        setDragStartOffset(null);
+        setResizeStartPos(null);
+        (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.releasePointerCapture(e.pointerId);
+    };
     if (minimized)
         return null;
-    return (_jsxs("div", { ref: windowRef, className: `window ${isDragging ? 'dragging' : ''} ${maximized ? 'maximized' : ''}`, style: {
+    return (_jsxs("div", { ref: windowRef, className: `window ${maximized ? 'maximized' : ''}`, style: {
             left: `${position.x}px`,
             top: `${position.y}px`,
             width: `${size.width}px`,
             height: `${size.height}px`,
             zIndex: zIndex
-        }, onMouseDown: handleMouseDown, onClick: handleInteraction, children: [_jsx(WindowHeader, { title: title, onClose: onClose, onMinimize: handleMinimize, onMaximize: handleMaximize, maximized: maximized }), _jsx("div", { className: "window-content", children: children }), !maximized && (_jsx("div", { className: "window-resize-handle", onMouseDown: handleResizeMouseDown }))] }));
+        }, onPointerMove: onPointerMove, onPointerUp: onPointerUp, onPointerCancel: onPointerUp, children: [_jsx("div", { className: "window-header", onPointerDown: onPointerDownDrag, children: _jsx(WindowHeader, { title: title, onClose: onClose, onMinimize: () => minimizeWindow(id), onMaximize: () => maximized ? restoreWindow(id) : maximizeWindow(id), maximized: maximized }) }), _jsx("div", { className: "window-content", children: children }), !maximized && (_jsx("div", { className: "window-resize-handle", onPointerDown: onPointerDownResize }))] }));
 };
 export default Window;
