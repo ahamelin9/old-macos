@@ -9,7 +9,7 @@ import Terminal from '../Apps/Terminal/Terminal';
 import Calculator from '../Apps/Calculator/Calculator';
 import Trash from '../Apps/Trash/Trash';
 import Music from '../Apps/Music/Music';
-import Camera from 'components/Apps/Camera/Camera';
+import Camera from '../Apps/Camera/Camera';
 // Styling
 import './styles.css';
 import { useEffect, useState } from 'react';
