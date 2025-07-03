@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useWindows } from '../../contexts/WindowContext';
-import WindowHeader from './WindowHeader';
 import './styles.css';
 
 interface WindowProps {
@@ -35,10 +34,17 @@ const Window: React.FC<WindowProps> = ({
 
   const onPointerDownDrag = (e: React.PointerEvent) => {
     if (maximized) return;
+  
+    // Prevent drag if clicking on button
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+  
     focusWindow(id);
     setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
     windowRef.current?.setPointerCapture(e.pointerId);
   };
+  
 
   const onPointerDownResize = (e: React.PointerEvent) => {
     if (maximized) return;
@@ -84,21 +90,37 @@ const Window: React.FC<WindowProps> = ({
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      <div
-        className="window-header"
-        onPointerDown={onPointerDownDrag}
-      >
-        <WindowHeader
-          title={title}
-          onClose={onClose}
-          onMinimize={() => minimizeWindow(id)}
-          onMaximize={() => maximized ? restoreWindow(id) : maximizeWindow(id)}
-          maximized={maximized}
-        />
+      <div className="window-header" onPointerDown={onPointerDownDrag}>
+        <div className="window-controls">
+          <button
+            className="window-close"
+            onClick={onClose}
+            aria-label="Close window"
+          >
+            ×
+          </button>
+          <button
+            className="window-minimize"
+            onClick={() => minimizeWindow(id)}
+            aria-label="Minimize window"
+          >
+            −
+          </button>
+          <button
+            className="window-maximize"
+            onClick={() => maximized ? restoreWindow(id) : maximizeWindow(id)}
+            aria-label={maximized ? "Restore window" : "Maximize window"}
+          >
+            {maximized ? "↔" : "+"}
+          </button>
+        </div>
+        <div className="window-title">{title}</div>
       </div>
+
       <div className="window-content">
         {children}
       </div>
+
       {!maximized && (
         <div
           className="window-resize-handle"

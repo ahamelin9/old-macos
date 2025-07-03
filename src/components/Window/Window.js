@@ -1,7 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useRef } from 'react';
 import { useWindows } from '../../contexts/WindowContext';
-import WindowHeader from './WindowHeader';
 import './styles.css';
 const Window = ({ id, title, children, onClose, initialPosition, initialSize, zIndex, minimized, maximized }) => {
     const [position, setPosition] = useState(initialPosition);
@@ -14,6 +13,10 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
         var _a;
         if (maximized)
             return;
+        // Prevent drag if clicking on button
+        if (e.target.closest('button')) {
+            return;
+        }
         focusWindow(id);
         setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
         (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.setPointerCapture(e.pointerId);
@@ -54,6 +57,6 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
             width: `${size.width}px`,
             height: `${size.height}px`,
             zIndex: zIndex
-        }, onPointerMove: onPointerMove, onPointerUp: onPointerUp, onPointerCancel: onPointerUp, children: [_jsx("div", { className: "window-header", onPointerDown: onPointerDownDrag, children: _jsx(WindowHeader, { title: title, onClose: onClose, onMinimize: () => minimizeWindow(id), onMaximize: () => maximized ? restoreWindow(id) : maximizeWindow(id), maximized: maximized }) }), _jsx("div", { className: "window-content", children: children }), !maximized && (_jsx("div", { className: "window-resize-handle", onPointerDown: onPointerDownResize }))] }));
+        }, onPointerMove: onPointerMove, onPointerUp: onPointerUp, onPointerCancel: onPointerUp, children: [_jsxs("div", { className: "window-header", onPointerDown: onPointerDownDrag, children: [_jsxs("div", { className: "window-controls", children: [_jsx("button", { className: "window-close", onClick: onClose, "aria-label": "Close window", children: "\u00D7" }), _jsx("button", { className: "window-minimize", onClick: () => minimizeWindow(id), "aria-label": "Minimize window", children: "\u2212" }), _jsx("button", { className: "window-maximize", onClick: () => maximized ? restoreWindow(id) : maximizeWindow(id), "aria-label": maximized ? "Restore window" : "Maximize window", children: maximized ? "↔" : "+" })] }), _jsx("div", { className: "window-title", children: title })] }), _jsx("div", { className: "window-content", children: children }), !maximized && (_jsx("div", { className: "window-resize-handle", onPointerDown: onPointerDownResize }))] }));
 };
 export default Window;
