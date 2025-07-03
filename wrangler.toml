@@ -1,3 +1,3 @@
 name = "old-macos"
-main = "src/main.tsx"
+pages_build_output_dir = "./dist"
 compatibility_date = "2025-07-03"
