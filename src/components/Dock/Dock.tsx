@@ -9,11 +9,23 @@ import Terminal from '../Apps/Terminal/Terminal';
 import Calculator from '../Apps/Calculator/Calculator';
 import Trash from '../Apps/Trash/Trash';
 import Music from '../Apps/Music/Music';
+import Camera from 'components/Apps/Camera/Camera';
 // Styling
 import './styles.css';
+import { useEffect, useState } from 'react';
 
 const Dock = () => {
   const { windows, openWindow, restoreWindow } = useWindows();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 600);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const apps = [
     { 
@@ -35,6 +47,11 @@ const Dock = () => {
       name: 'Notes', 
       icon: '/notes-icon.png',
       action: () => openWindow('Notes', <Notes />)
+    },
+    {
+      name: 'Camera',
+      icon: '/camera-icon.png',
+      action: () => openWindow('Camera', <Camera />)
     },
     { 
       name: 'Calculator', 
@@ -58,11 +75,18 @@ const Dock = () => {
     }
   ];
 
+  // Choose which apps to show on mobile
+  const visibleApps = isMobile
+    ? apps.filter(app => 
+        ['Finder', 'Nasa News', 'Music', 'Terminal'].includes(app.name)
+      )
+    : apps;
+
   const minimizedWindows = windows.filter(w => w.minimized);
 
   return (
     <div className="dock">
-      {apps.map((app, index) => (
+      {visibleApps.map((app, index) => (
         <div 
           key={`app-${index}`}
           className="dock-item"
