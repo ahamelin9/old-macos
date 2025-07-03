@@ -53,47 +53,58 @@ const PokemonSearch: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('pikachu');
   const [showShiny, setShowShiny] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (searchTerm.trim() === '') return;
+  const fetchPokemonData = async () => {
+    try {
+      const apiUrl = `${import.meta.env.VITE_POKEAPI_BASE_URL}/pokemon/${encodeURIComponent(searchTerm.toLowerCase())}`;
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) throw new Error(`Pokémon not found (HTTP ${response.status})`);
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Fetch error:", error);
+      throw error;
+    }
+  };
 
-    const fetchPokemonData = async () => {
+  const fetchSpeciesData = async (url: string) => {
+    const response = await fetch(url);
+    return await response.json();
+  };
+
+  const fetchTypeData = async (url: string) => {
+    const response = await fetch(url);
+    return await response.json();
+  };
+
+  useEffect(() => {
+    if (!searchTerm.trim()) return;
+
+    const loadData = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        // Fetch basic Pokémon data
-        const pokemonResponse = await fetch(`${import.meta.env.VITE_POKEAPI_BASE_URL}/pokemon/${searchTerm.toLowerCase()}`);
-        
-        if (!pokemonResponse.ok) {
-          throw new Error(`Pokémon not found!`);
-        }
-        
-        const pokemon: PokemonData = await pokemonResponse.json();
+        const pokemon = await fetchPokemonData();
         setPokemonData(pokemon);
 
-        // Fetch species data for description
-        const speciesResponse = await fetch(pokemon.species.url);
-        const species: PokemonSpecies = await speciesResponse.json();
+        const species = await fetchSpeciesData(pokemon.species.url);
         setSpeciesData(species);
 
-        // Fetch type data for weaknesses
-        const typeRequests = pokemon.types.map(type => 
-          fetch(type.type.url).then(res => res.json())
+        const types = await Promise.all(
+          pokemon.types.map((type: { type: { url: string; }; }) => fetchTypeData(type.type.url))
         );
-        const typeResults = await Promise.all(typeRequests);
-        setTypeData(typeResults);
-
+        setTypeData(types);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setPokemonData(null);
-        setSpeciesData(null);
-        setTypeData([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPokemonData();
+    loadData();
   }, [searchTerm]);
 
   const getEnglishDescription = () => {
@@ -121,6 +132,17 @@ const PokemonSearch: React.FC = () => {
     e.preventDefault();
     const input = (e.currentTarget as HTMLFormElement).elements.namedItem('pokemonSearch') as HTMLInputElement;
     setSearchTerm(input.value);
+  };
+
+  const getImageUrl = () => {
+    if (!pokemonData) return '';
+    try {
+      return showShiny 
+        ? pokemonData.sprites.other['official-artwork'].front_default 
+        : pokemonData.sprites.front_default;
+    } catch {
+      return 'https://via.placeholder.com/150?text=Pokemon+Not+Found';
+    }
   };
 
   if (loading) {
@@ -157,9 +179,7 @@ const PokemonSearch: React.FC = () => {
           <div className="pokemon-image-container">
             <div className="pokemon-image-wrapper">
               <img 
-                src={showShiny 
-                  ? pokemonData.sprites.other['official-artwork'].front_default 
-                  : pokemonData.sprites.front_default}
+                src={getImageUrl()}
                 alt={pokemonData.name}
                 className="pokemon-image"
                 onError={(e) => {
@@ -222,15 +242,6 @@ const PokemonSearch: React.FC = () => {
           </div>
         </div>
       )}
-
-      <div className="pokemon-links">
-        <h4>More Pokémon Resources:</h4>
-        <ul>
-          <li><a href="https://www.pokemon.com" target="_blank" rel="noopener noreferrer">Official Pokémon Website</a></li>
-          <li><a href="https://www.serebii.net/" target="_blank" rel="noopener noreferrer">Serebii</a></li>
-          <li><a href="https://pokeapi.co" target="_blank" rel="noopener noreferrer">PokéAPI Documentation</a></li>
-        </ul>
-      </div>
     </div>
   );
 };
