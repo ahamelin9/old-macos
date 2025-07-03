@@ -38,7 +38,7 @@ const Dock = () => {
         },
         {
             name: 'Pokemon',
-            icon: '/nasa-icon.png',
+            icon: '/pokemon-icon.png',
             action: () => openWindow('Pokemon Search', _jsx(PokemonSearch, {}))
         },
         {

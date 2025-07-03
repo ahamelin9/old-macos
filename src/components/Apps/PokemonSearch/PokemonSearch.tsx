@@ -52,54 +52,78 @@ const PokemonSearch: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('pikachu');
   const [showShiny, setShowShiny] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
-  const mobileSafeFetch = async (url: string) => {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const proxyUrl = 'https://corsproxy.io/?';
-    const targetUrl = isMobile ? `${proxyUrl}${encodeURIComponent(url)}` : url;
+  const fetchWithRetry = async (url: string, options = {}, retries = 3): Promise<any> => {
+    const proxies = [
+      '', // Direct connection first
+      'https://corsproxy.io/?',
+      'https://api.allorigins.win/raw?url=',
+      'https://thingproxy.freeboard.io/fetch/',
+      'https://cors-anywhere.herokuapp.com/'
+    ];
 
-    try {
-      const response = await fetch(targetUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+    for (let attempt = 0; attempt < proxies.length; attempt++) {
+      try {
+        const proxyUrl = proxies[attempt];
+        const fullUrl = proxyUrl + encodeURIComponent(url);
+
+        const createTimeoutSignal = (ms: number) => {
+          const controller = new AbortController();
+          setTimeout(() => controller.abort(), ms);
+          return controller.signal;
+        };
+        
+        const response = await fetch(fullUrl, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(proxyUrl.includes('cors-anywhere') && { 'X-Requested-With': 'XMLHttpRequest' })
+          },
+          signal: createTimeoutSignal(2000) // 8 second timeout
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (error) {
+        console.warn(`Attempt ${attempt + 1} failed with proxy ${proxies[attempt] || 'none'}`, error);
+        if (attempt === proxies.length - 1) {
+          if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * (4 - retries)));
+            return fetchWithRetry(url, options, retries - 1);
+          }
+          throw error;
         }
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      console.error('Fetch error:', error);
-      throw error;
+      }
     }
-  };
-
-  const fetchPokemonData = async (nameOrId: string) => {
-    const searchTerm = encodeURIComponent(nameOrId.toString().toLowerCase().trim());
-    const apiUrl = `${import.meta.env.VITE_POKEAPI_BASE_URL || 'https://pokeapi.co/api/v2'}/pokemon/${searchTerm}`;
-    return await mobileSafeFetch(apiUrl);
-  };
-
-  const fetchAdditionalData = async (pokemon: PokemonData) => {
-    const [species, types] = await Promise.all([
-      mobileSafeFetch(pokemon.species.url),
-      Promise.all(pokemon.types.map(t => mobileSafeFetch(t.type.url)))
-    ]);
-    return { species, types };
+    throw new Error('All proxy attempts failed');
   };
 
   useEffect(() => {
     const controller = new AbortController();
-    
-    const loadData = async () => {
+
+    const loadPokemonData = async () => {
       if (!searchTerm.trim()) return;
-      
+
       setLoading(true);
       setError(null);
-      
+      setPokemonData(null);
+      setSpeciesData(null);
+      setTypeData([]);
+
       try {
-        const pokemon = await fetchPokemonData(searchTerm);
-        const { species, types } = await fetchAdditionalData(pokemon);
-        
+        // First try our primary API endpoint
+        const pokemon = await fetchWithRetry(
+          `https://pokeapi.co/api/v2/pokemon/${searchTerm.toLowerCase()}`
+        );
+        if (controller.signal.aborted) return;
+
+        // Then fetch additional data
+        const [species, types] = await Promise.all([
+          fetchWithRetry(pokemon.species.url),
+          Promise.all(pokemon.types.map((t: any) => fetchWithRetry(t.type.url)))
+        ]);
+
         if (!controller.signal.aborted) {
           setPokemonData(pokemon);
           setSpeciesData(species);
@@ -107,7 +131,9 @@ const PokemonSearch: React.FC = () => {
         }
       } catch (err) {
         if (!controller.signal.aborted) {
-          setError(err instanceof Error ? err.message : 'Failed to load Pokémon');
+          const errorMessage = err instanceof Error ? err.message : 'Failed to load Pokémon';
+          setError(errorMessage);
+          console.error('Final fetch error:', err);
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -116,9 +142,9 @@ const PokemonSearch: React.FC = () => {
       }
     };
 
-    loadData();
+    loadPokemonData();
     return () => controller.abort();
-  }, [searchTerm]);
+  }, [searchTerm, retryCount]);
 
   const getEnglishDescription = () => {
     if (!speciesData) return 'No description available';
@@ -145,24 +171,32 @@ const PokemonSearch: React.FC = () => {
     setSearchTerm(input.value);
   };
 
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
+
+  const handleLoadExample = () => {
+    setSearchTerm('pikachu');
+  };
+
   const getImageUrl = () => {
     if (!pokemonData) return '';
     try {
-      return showShiny 
+      const url = showShiny 
         ? pokemonData.sprites.other['official-artwork'].front_default 
         : pokemonData.sprites.front_default;
+      return url || 'https://via.placeholder.com/150?text=Image+Missing';
     } catch {
-      return 'https://via.placeholder.com/150?text=Pokemon+Not+Found';
+      return 'https://via.placeholder.com/150?text=Image+Error';
     }
   };
 
   if (loading) {
     return (
-      <div className="pokemon-container loading">
-        <div className="skeleton-loading">
-          <div className="skeleton-image"></div>
-          <div className="skeleton-text"></div>
-          <div className="skeleton-text"></div>
+      <div className="pokemon-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          <p>Loading Pokémon data...</p>
         </div>
       </div>
     );
@@ -170,7 +204,7 @@ const PokemonSearch: React.FC = () => {
 
   return (
     <div className="pokemon-container">
-      <h2 className="pokemon-title">Pokémon Search</h2>
+      <h1 className="pokemon-title">Pokémon Search</h1>
       
       <form onSubmit={handleSearch} className="search-form">
         <input
@@ -179,63 +213,79 @@ const PokemonSearch: React.FC = () => {
           placeholder="Enter Pokémon name or ID"
           defaultValue={searchTerm}
           className="search-input"
-          aria-label="Pokémon search"
+          aria-label="Search for Pokémon"
+          required
+          minLength={2}
         />
-        <button type="submit" className="search-button">Search</button>
+        <button type="submit" className="search-button">
+          Search
+        </button>
       </form>
 
       {error && (
-        <div className="pokemon-error">
-          <p>{error}</p>
-          <button 
-            onClick={() => setSearchTerm(searchTerm)} 
-            className="retry-button"
-          >
-            Retry
-          </button>
-          <p className="network-tip">
-            Mobile tip: Try switching networks if this persists
-          </p>
+        <div className="error-state">
+          <div className="error-icon">⚠️</div>
+          <h3>Oops! Something went wrong</h3>
+          <p className="error-message">{error}</p>
+          
+          <div className="error-actions">
+            <button onClick={handleRetry} className="retry-button">
+              Try Again
+            </button>
+            <button onClick={handleLoadExample} className="example-button">
+              Load Example
+            </button>
+          </div>
+          
+          <div className="error-tips">
+            <p>If this keeps happening:</p>
+            <ul>
+              <li>Check your internet connection</li>
+              <li>Try a different Pokémon name</li>
+              <li>Wait a few minutes and try again</li>
+            </ul>
+          </div>
         </div>
       )}
 
       {pokemonData && (
         <div className="pokemon-details">
           <div className="pokemon-header">
-            <h3 className="pokemon-name">
-              #{pokemonData.id} - {pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)}
-            </h3>
+            <h2 className="pokemon-name">
+              #{pokemonData.id.toString().padStart(3, '0')} - {pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)}
+            </h2>
           </div>
 
           <div className="pokemon-image-container">
             <div className="pokemon-image-wrapper">
-              <img 
+              <img
                 src={getImageUrl()}
                 alt={pokemonData.name}
                 className="pokemon-image"
                 loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = 'https://via.placeholder.com/150?text=Pokemon+Not+Found';
+                  target.src = 'https://via.placeholder.com/150?text=Image+Failed';
+                  target.className = 'pokemon-image-error';
                 }}
               />
             </div>
-            <button 
-              className="shiny-toggle" 
+            <button
+              className={`shiny-toggle ${showShiny ? 'active' : ''}`}
               onClick={() => setShowShiny(!showShiny)}
-              aria-label="Toggle shiny version"
+              aria-label={`Show ${showShiny ? 'normal' : 'shiny'} version`}
             >
-              {showShiny ? 'Show Normal' : 'Show Shiny'}
+              {showShiny ? '★ Shiny' : '☆ Shiny'}
             </button>
           </div>
 
-          <div className="pokemon-info">
-            <div className="info-section">
-              <h4>Types</h4>
+          <div className="pokemon-info-grid">
+            <div className="pokemon-info-section types-section">
+              <h3>Types</h3>
               <div className="types-container">
-                {pokemonData.types.map(type => (
-                  <span 
-                    key={type.slot} 
+                {pokemonData.types.map((type, index) => (
+                  <span
+                    key={`${type.slot}-${index}`}
                     className={`type-badge type-${type.type.name}`}
                   >
                     {type.type.name}
@@ -244,32 +294,40 @@ const PokemonSearch: React.FC = () => {
               </div>
             </div>
 
-            <div className="info-section">
-              <h4>Weaknesses</h4>
+            <div className="pokemon-info-section weaknesses-section">
+              <h3>Weaknesses</h3>
               <div className="weaknesses-container">
                 {getWeaknesses().length > 0 ? (
-                  getWeaknesses().map(weakness => (
-                    <span 
-                      key={weakness} 
+                  getWeaknesses().map((weakness, index) => (
+                    <span
+                      key={`${weakness}-${index}`}
                       className={`type-badge type-${weakness}`}
                     >
                       {weakness}
                     </span>
                   ))
                 ) : (
-                  <span>No weaknesses</span>
+                  <span className="no-weaknesses">None</span>
                 )}
               </div>
             </div>
 
-            <div className="info-section">
-              <h4>Physical Attributes</h4>
-              <p>Height: {(pokemonData.height / 10).toFixed(1)} m</p>
-              <p>Weight: {(pokemonData.weight / 10).toFixed(1)} kg</p>
+            <div className="pokemon-info-section stats-section">
+              <h3>Stats</h3>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-label">Height:</span>
+                  <span className="stat-value">{(pokemonData.height / 10).toFixed(1)} m</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Weight:</span>
+                  <span className="stat-value">{(pokemonData.weight / 10).toFixed(1)} kg</span>
+                </div>
+              </div>
             </div>
 
-            <div className="info-section">
-              <h4>Pokédex Description</h4>
+            <div className="pokemon-info-section description-section">
+              <h3>Pokédex Entry</h3>
               <p className="pokedex-description">{getEnglishDescription()}</p>
             </div>
           </div>
