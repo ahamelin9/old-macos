@@ -1,97 +1,83 @@
-// React
-import React from 'react';
-// Styling
+import React, { useState } from 'react';
 import './Finder.css';
 
 const Finder: React.FC = () => {
+  const [activeSection, setActiveSection] = useState('About Me');
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'About Me':
+        return (
+          <div className="content-section">
+            <h2>About Me</h2>
+            <p>Hello! I'm <strong>Alex Hamelin</strong></p>
+          </div>
+        );
+      case 'Projects':
+        return (
+          <div className="content-section">
+            <h2>Projects</h2>
+            <ul>
+              <li><strong>Desktop OS UI</strong> – A React app mimicking Mac OS windows with drag/resize functionality. I wanted this to have multiple apps within the application itself so I can keep scaling it and add more projects later.</li>
+            </ul>
+          </div>
+        );
+      case 'Skills':
+        return (
+          <div className="content-section">
+            <h2>Skills</h2>
+            <ul>
+              <li>React / TypeScript</li>
+              <li>JavaScript</li>
+              <li>CSS</li>
+              <li>Node.js</li>
+              <li>REST API Integration</li>
+            </ul>
+          </div>
+        );
+      case 'Interests':
+        return (
+          <div className="content-section">
+            <h2>Interests</h2>
+            <p>Coding, gaming, art, pickleball, golf, etc.</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="finder-window">
-      <div className="finder-titlebar">
-        <div className="titlebar-title">Find Me!</div>
-      </div>
-      
+    <div className="finder-inner">
       <div className="finder-toolbar">
-        <div className="toolbar-button">Back</div>
-        <div className="toolbar-button">Forward</div>
-        <div className="toolbar-separator"></div>
-        <div className="toolbar-button">View</div>
-        <div className="toolbar-button">Action</div>
+        <div className="toolbar-buttons">
+          <button>Back</button>
+          <button>Forward</button>
+          <button>View</button>
+          <button>Action</button>
+        </div>
       </div>
-      
-      <div className="finder-container">
+
+      <div className="finder-body">
         <div className="finder-sidebar">
-          <div className="sidebar-section">
-            <div className="sidebar-header">Places</div>
-            <div className="sidebar-item selected">About Me</div>
-            <div className="sidebar-item">Interests</div>
-            <div className="sidebar-item">Projects</div>
-            <div className="sidebar-item">Skills</div>
-          </div>
-          <div className="sidebar-section">
-            <div className="sidebar-header">Devices</div>
-            <div className="sidebar-item">My Computer</div>
-            <div className="sidebar-item">Network</div>
+          {['About Me', 'Interests', 'Projects', 'Skills'].map(item => (
+            <div
+              key={item}
+              className={`sidebar-item ${activeSection === item ? 'selected' : ''}`}
+              onClick={() => setActiveSection(item)}
+            >
+              {item}
+            </div>
+          ))}
+          <div className="sidebar-links">
+            <a href="https://www.linkedin.com/in/alejandro-hamelin/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://github.com/ahamelin9" target="_blank" rel="noopener noreferrer">GitHub</a>
           </div>
         </div>
-        
+
         <div className="finder-content">
-          <div className="content-section">
-            <h2 className="section-title">About Me</h2>
-            <div className="section-content">
-              <div className="info-row">
-                <span className="info-label">Name:</span>
-                <span className="info-value">Alex Hamelin</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Email:</span>
-                <span className="info-value">ahamelin9@gmail.com</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">LinkedIn:</span>
-                <span className="info-value">
-                  <a href="https://www.linkedin.com/in/alejandro-hamelin/" target="_blank" rel="noopener noreferrer" className="leopard-link">
-                    linkedin.com/in/alejandro-hamelin
-                  </a>
-                </span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">GitHub:</span>
-                <span className="info-value">
-                  <a href="https://github.com/ahamelin9" target="_blank" rel="noopener noreferrer" className="leopard-link">
-                    github.com/ahamelin9
-                  </a>
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="content-section">
-            <h2 className="section-title">Interests</h2>
-            <div className="section-content">
-              <p>Type your interests here...</p>
-            </div>
-          </div>
-          
-          <div className="content-section">
-            <h2 className="section-title">Projects</h2>
-            <div className="section-content">
-              <p>Describe your projects here...</p>
-            </div>
-          </div>
-          
-          <div className="content-section">
-            <h2 className="section-title">Skills</h2>
-            <div className="section-content">
-              <p>List your skills here...</p>
-            </div>
-          </div>
+          {renderContent()}
         </div>
-      </div>
-      
-      <div className="finder-statusbar">
-        <div className="statusbar-item">5 items</div>
-        <div className="statusbar-separator"></div>
-        <div className="statusbar-item">Mac OS X (10.5.8)</div>
       </div>
     </div>
   );

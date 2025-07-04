@@ -65,7 +65,7 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
             // Maximize
             setPosition({ x: 0, y: 26 });
             setSize({ width: window.innerWidth, height: window.innerHeight });
-            maximizeWindow(id); // keep your context state in sync
+            maximizeWindow(id);
         }
         else {
             // Restore previous size/position
@@ -73,13 +73,13 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
                 setPosition(prevPosition);
                 setSize(prevSize);
             }
-            restoreWindow(id); // keep your context state in sync
+            restoreWindow(id);
         }
     };
     useEffect(() => {
         const handleResize = () => {
             if (maximized) {
-                setSize({ width: window.innerWidth, height: window.innerHeight - 500 });
+                setSize({ width: window.innerWidth, height: window.innerHeight });
             }
         };
         window.addEventListener('resize', handleResize);

@@ -1,165 +1,88 @@
-.finder-window {
-  border-radius: 8px;
-  background: linear-gradient(to bottom, #e4e4e4, #d0d0d0);
+.finder-inner {
   display: flex;
   flex-direction: column;
-  font-family: 'Lucida Grande', Arial, sans-serif;
-  overflow: hidden;
-}
-
-.finder-titlebar {
-  height: 22px;
-  background: linear-gradient(to bottom, #a0a0a0, #707070);
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  color: white;
-  font-size: 13px;
-  font-weight: bold;
+  height: 100%;
 }
 
 .finder-toolbar {
-  height: 44px;
-  background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
-  border-bottom: 1px solid #b0b0b0;
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  gap: 8px;
+  padding: 4px;
+  background: #ececec;
+  border-bottom: 1px solid #ccc;
 }
 
-.toolbar-button {
-  padding: 4px 12px;
-  background: linear-gradient(to bottom, #f8f8f8, #e0e0e0);
-  border: 1px solid #a0a0a0;
+.toolbar-buttons button {
+  margin-right: 4px;
+  padding: 2px 6px;
+  border: 1px solid #ccc;
   border-radius: 4px;
+  background: #f9f9f9;
+  cursor: pointer;
   font-size: 12px;
-  color: #333;
-  cursor: default;
 }
 
-.toolbar-button:hover {
-  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
+.toolbar-buttons button:hover {
+  background: #e0e0e0;
 }
 
-.toolbar-separator {
-  width: 1px;
-  height: 20px;
-  background: #c0c0c0;
-  margin: 0 5px;
-}
-
-.finder-container {
+.finder-body {
   display: flex;
   flex: 1;
-  overflow: hidden;
 }
 
 .finder-sidebar {
-  width: 180px;
-  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
-  border-right: 1px solid #b0b0b0;
-  padding: 10px 0;
-  overflow-y: auto;
-}
-
-.sidebar-section {
-  margin-bottom: 20px;
-}
-
-.sidebar-header {
-  padding: 4px 15px;
-  font-size: 11px;
-  font-weight: bold;
-  color: #666;
-  text-transform: uppercase;
+  width: 150px;
+  background: #f0f0f0;
+  padding: 4px;
+  border-right: 1px solid #ccc;
 }
 
 .sidebar-item {
-  padding: 6px 15px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 13px;
-  color: #333;
-  cursor: default;
 }
 
+.sidebar-item.selected,
 .sidebar-item:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: #cce0ff;
 }
 
-.sidebar-item.selected {
-  background: #3b6dbb;
-  color: white;
+.sidebar-links {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-links a {
+  font-size: 12px;
+  color: #0645AD;
+  text-decoration: none;
+  margin-bottom: 2px;
+}
+
+.sidebar-links a:hover {
+  text-decoration: underline;
 }
 
 .finder-content {
   flex: 1;
-  padding: 20px;
+  padding: 8px;
   overflow-y: auto;
-  background: white;
 }
 
-.content-section {
-  margin-bottom: 30px;
+.content-section h2 {
+  margin-top: 0;
+  font-size: 16px;
 }
 
-.section-title {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 15px;
-  font-weight: normal;
+.content-section p,
+.content-section ul {
+  font-size: 14px;
 }
 
-.section-content {
-  padding-left: 10px;
-}
-
-.info-row {
-  margin-bottom: 10px;
-  display: flex;
-}
-
-.info-label {
-  width: 80px;
-  font-weight: bold;
-  color: #555;
-}
-
-.info-value {
-  flex: 1;
-  margin-inline-start: 4px;
-  color: #333;
-}
-
-.leopard-link {
-  color: #3b6dbb;
-  margin-inline-start: 4px;
-  text-decoration: none;
-}
-
-.leopard-link:hover {
-  text-decoration: underline;
-}
-
-.finder-statusbar {
-  height: 22px;
-  background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
-  border-top: 1px solid #b0b0b0;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  font-size: 11px;
-  color: #555;
-}
-
-.statusbar-item {
-  padding: 0 5px;
-}
-
-.statusbar-separator {
-  width: 1px;
-  height: 14px;
-  background: #b0b0b0;
-  margin: 0 5px;
+.content-section ul {
+  list-style: disc inside;
 }
