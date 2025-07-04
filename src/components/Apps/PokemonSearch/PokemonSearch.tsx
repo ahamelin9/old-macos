@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import fuzzysort from 'fuzzysort';
 import './PokemonSearch.css';
 
 interface PokemonData {
@@ -46,15 +47,31 @@ const PokemonSearch: React.FC = () => {
   const [typeData, setTypeData] = useState<TypeData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [inputTerm, setInputTerm] = useState<string>('pikachu');
   const [searchTerm, setSearchTerm] = useState<string>('pikachu');
-  const [showShiny, setShowShiny] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
+  const [allPokemonNames, setAllPokemonNames] = useState<string[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const [showShiny, setShowShiny] = useState<boolean>(false);
 
   const createTimeoutSignal = (ms: number) => {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), ms);
     return controller.signal;
   };
+
+  useEffect(() => {
+    const loadAllPokemon = async () => {
+      try {
+        const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
+        const data = await res.json();
+        setAllPokemonNames(data.results.map((p: any) => p.name));
+      } catch (err) {
+        console.error('Failed to load Pokémon names', err);
+      }
+    };
+    loadAllPokemon();
+  }, []);
 
   const fetchPokemon = async (pokemonName: string) => {
     const endpoints = [
@@ -85,11 +102,10 @@ const PokemonSearch: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!searchTerm.trim()) return;
     const controller = new AbortController();
 
     const loadData = async () => {
-      if (!searchTerm.trim()) return;
-
       setLoading(true);
       setError(null);
       setPokemonData(null);
@@ -145,10 +161,31 @@ const PokemonSearch: React.FC = () => {
     return Array.from(weaknesses);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    setInputTerm(input);
+
+    if (input.trim() === '') {
+      setFilteredSuggestions([]);
+      return;
+    }
+
+    const results = fuzzysort.go(input, allPokemonNames, { limit: 5, threshold: -1000 });
+    setFilteredSuggestions(results.map(r => r.target));
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const input = (e.currentTarget as HTMLFormElement).elements.namedItem('pokemonSearch') as HTMLInputElement;
-    setSearchTerm(input.value);
+    if (inputTerm.trim() !== '') {
+      setSearchTerm(inputTerm.trim());
+      setFilteredSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (name: string) => {
+    setInputTerm(name);
+    setSearchTerm(name);
+    setFilteredSuggestions([]);
   };
 
   const handleRetry = () => {
@@ -178,18 +215,36 @@ const PokemonSearch: React.FC = () => {
   return (
     <div className="pokemon-container">
       <h2 className="pokemon-title">Pokémon Search</h2>
-      
-      <form onSubmit={handleSearch} className="search-form">
-        <input
-          type="text"
-          name="pokemonSearch"
-          placeholder="Enter Pokémon name or ID"
-          defaultValue={searchTerm}
-          className="search-input"
-          aria-label="Search for Pokémon"
-        />
-        <button type="submit" className="search-button">Search</button>
-      </form>
+
+      <div className="search-wrapper" style={{ position: 'relative' }}>
+        <form onSubmit={handleSearch} className="search-form">
+          <input
+            type="text"
+            name="pokemonSearch"
+            placeholder="Enter Pokémon name or ID"
+            value={inputTerm}
+            onChange={handleInputChange}
+            className="search-input"
+            aria-label="Search for Pokémon"
+            autoComplete="off"
+          />
+          <button type="submit" className="search-button">Search</button>
+        </form>
+
+        {filteredSuggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {filteredSuggestions.map(name => (
+              <li
+                key={name}
+                className="suggestion-item"
+                onClick={() => handleSuggestionClick(name)}
+              >
+                {name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {error && (
         <div className="error-state">

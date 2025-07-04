@@ -14,10 +14,15 @@
   margin-bottom: 1.5rem;
 }
 
+.search-wrapper {
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto 1.5rem auto;
+}
+
 .search-form {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
   justify-content: center;
 }
 
@@ -26,8 +31,9 @@
   border: 2px solid #ffcb05;
   border-radius: 8px;
   flex-grow: 1;
-  max-width: 400px;
   font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-button {
@@ -39,6 +45,32 @@
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
+}
+
+.suggestions-list {
+  list-style: none;
+  margin-top: 4px;
+  padding: 0;
+  border: 1px solid #ccc;
+  background: white;
+  max-height: 150px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+.suggestion-item {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background: #f0f0f0;
 }
 
 /* Loading State */
@@ -143,7 +175,8 @@
   border-radius: 8px;
 }
 
-.types-container, .weaknesses-container {
+.types-container,
+.weaknesses-container {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -194,8 +227,12 @@
   .search-form {
     flex-direction: column;
   }
-  
+
   .search-input {
     max-width: none;
+  }
+
+  .search-button {
+    width: 100%;
   }
 }
