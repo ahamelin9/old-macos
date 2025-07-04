@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useWindows } from '../../contexts/WindowContext';
 import './styles.css';
 
@@ -31,6 +31,9 @@ const Window: React.FC<WindowProps> = ({
   const [resizeStartPos, setResizeStartPos] = useState<{ x: number; y: number } | null>(null);
   const windowRef = useRef<HTMLDivElement>(null);
   const { focusWindow, minimizeWindow, maximizeWindow, restoreWindow } = useWindows();
+  const [prevSize, setPrevSize] = useState<{ width: number; height: number } | null>(null);
+  const [prevPosition, setPrevPosition] = useState<{ x: number; y: number } | null>(null);
+
 
   const onPointerDownDrag = (e: React.PointerEvent) => {
     if (maximized) return;
@@ -39,7 +42,7 @@ const Window: React.FC<WindowProps> = ({
       return;
     }
   
-    e.preventDefault(); // 👈 prevent default scroll behavior
+    e.preventDefault();
     focusWindow(id);
     setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
     windowRef.current?.setPointerCapture(e.pointerId);
@@ -71,7 +74,6 @@ const Window: React.FC<WindowProps> = ({
       });
     }
   };
-  
 
   const onPointerUp = (e: React.PointerEvent) => {
     setDragStartOffset(null);
@@ -81,6 +83,37 @@ const Window: React.FC<WindowProps> = ({
 
   if (minimized) return null;
 
+  const handleToggleMaximize = () => {
+    if (!maximized) {
+      // Save current size/position
+      setPrevSize(size);
+      setPrevPosition(position);
+  
+      // Maximize
+      setPosition({ x: 0, y: 26 });
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+      maximizeWindow(id);
+    } else {
+      // Restore previous size/position
+      if (prevSize && prevPosition) {
+        setPosition(prevPosition);
+        setSize(prevSize);
+      }
+      restoreWindow(id);
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (maximized) {
+        setSize({ width: window.innerWidth, height: window.innerHeight });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [maximized]);
+  
+  
   return (
     <div
       ref={windowRef}
@@ -114,7 +147,7 @@ const Window: React.FC<WindowProps> = ({
           </button>
           <button
             className="window-maximize"
-            onClick={() => maximized ? restoreWindow(id) : maximizeWindow(id)}
+            onClick={handleToggleMaximize}
             aria-label={maximized ? "Restore window" : "Maximize window"}
           >
             {maximized ? "↔" : "+"}

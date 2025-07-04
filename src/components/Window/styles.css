@@ -116,9 +116,9 @@
   border: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .window, .window-header {
-    touch-action: none; /* disables browser gesture handling for touch */
+    touch-action: none;
   }
   
   .window-header {

@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useWindows } from '../../contexts/WindowContext';
 import './styles.css';
 const Window = ({ id, title, children, onClose, initialPosition, initialSize, zIndex, minimized, maximized }) => {
@@ -9,6 +9,8 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
     const [resizeStartPos, setResizeStartPos] = useState(null);
     const windowRef = useRef(null);
     const { focusWindow, minimizeWindow, maximizeWindow, restoreWindow } = useWindows();
+    const [prevSize, setPrevSize] = useState(null);
+    const [prevPosition, setPrevPosition] = useState(null);
     const onPointerDownDrag = (e) => {
         var _a;
         if (maximized)
@@ -16,7 +18,7 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
         if (e.target.closest('button')) {
             return;
         }
-        e.preventDefault(); // 👈 prevent default scroll behavior
+        e.preventDefault();
         focusWindow(id);
         setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
         (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.setPointerCapture(e.pointerId);
@@ -55,12 +57,40 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
     };
     if (minimized)
         return null;
+    const handleToggleMaximize = () => {
+        if (!maximized) {
+            // Save current size/position
+            setPrevSize(size);
+            setPrevPosition(position);
+            // Maximize
+            setPosition({ x: 0, y: 26 });
+            setSize({ width: window.innerWidth, height: window.innerHeight });
+            maximizeWindow(id); // keep your context state in sync
+        }
+        else {
+            // Restore previous size/position
+            if (prevSize && prevPosition) {
+                setPosition(prevPosition);
+                setSize(prevSize);
+            }
+            restoreWindow(id); // keep your context state in sync
+        }
+    };
+    useEffect(() => {
+        const handleResize = () => {
+            if (maximized) {
+                setSize({ width: window.innerWidth, height: window.innerHeight - 500 });
+            }
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [maximized]);
     return (_jsxs("div", { ref: windowRef, className: `window ${maximized ? 'maximized' : ''}`, style: {
             left: `${position.x}px`,
             top: `${position.y}px`,
             width: `${size.width}px`,
             height: `${size.height}px`,
             zIndex: zIndex
-        }, onPointerMove: onPointerMove, onPointerUp: onPointerUp, onPointerCancel: onPointerUp, children: [_jsxs("div", { className: "window-header", onPointerDown: onPointerDownDrag, children: [_jsxs("div", { className: "window-controls", children: [_jsx("button", { className: "window-close", onClick: onClose, "aria-label": "Close window", children: "\u00D7" }), _jsx("button", { className: "window-minimize", onClick: () => minimizeWindow(id), "aria-label": "Minimize window", children: "\u2212" }), _jsx("button", { className: "window-maximize", onClick: () => maximized ? restoreWindow(id) : maximizeWindow(id), "aria-label": maximized ? "Restore window" : "Maximize window", children: maximized ? "↔" : "+" })] }), _jsx("div", { className: "window-title", children: title })] }), _jsx("div", { className: "window-content", children: children }), !maximized && (_jsx("div", { className: "window-resize-handle", onPointerDown: onPointerDownResize }))] }));
+        }, onPointerMove: onPointerMove, onPointerUp: onPointerUp, onPointerCancel: onPointerUp, children: [_jsxs("div", { className: "window-header", onPointerDown: onPointerDownDrag, children: [_jsxs("div", { className: "window-controls", children: [_jsx("button", { className: "window-close", onClick: onClose, "aria-label": "Close window", children: "\u00D7" }), _jsx("button", { className: "window-minimize", onClick: () => minimizeWindow(id), "aria-label": "Minimize window", children: "\u2212" }), _jsx("button", { className: "window-maximize", onClick: handleToggleMaximize, "aria-label": maximized ? "Restore window" : "Maximize window", children: maximized ? "↔" : "+" })] }), _jsx("div", { className: "window-title", children: title })] }), _jsx("div", { className: "window-content", children: children }), !maximized && (_jsx("div", { className: "window-resize-handle", onPointerDown: onPointerDownResize }))] }));
 };
 export default Window;
