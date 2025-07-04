@@ -117,6 +117,10 @@
 }
 
 @media (max-width: 768px) {
+  .window, .window-header {
+    touch-action: none; /* disables browser gesture handling for touch */
+  }
+  
   .window-header {
     padding: 4px 6px;
   }
