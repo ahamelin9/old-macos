@@ -35,25 +35,30 @@ const Window: React.FC<WindowProps> = ({
   const onPointerDownDrag = (e: React.PointerEvent) => {
     if (maximized) return;
   
-    // Prevent drag if clicking on button
     if ((e.target as HTMLElement).closest('button')) {
       return;
     }
   
+    e.preventDefault(); // 👈 prevent default scroll behavior
     focusWindow(id);
     setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
     windowRef.current?.setPointerCapture(e.pointerId);
   };
   
-
   const onPointerDownResize = (e: React.PointerEvent) => {
     if (maximized) return;
+  
+    e.preventDefault();
     focusWindow(id);
     setResizeStartPos({ x: e.clientX, y: e.clientY });
     windowRef.current?.setPointerCapture(e.pointerId);
-  };
+  };  
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (dragStartOffset || resizeStartPos) {
+      e.preventDefault(); 
+    }
+  
     if (dragStartOffset) {
       setPosition({
         x: e.clientX - dragStartOffset.x,
@@ -66,6 +71,7 @@ const Window: React.FC<WindowProps> = ({
       });
     }
   };
+  
 
   const onPointerUp = (e: React.PointerEvent) => {
     setDragStartOffset(null);

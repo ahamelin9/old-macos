@@ -13,10 +13,10 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
         var _a;
         if (maximized)
             return;
-        // Prevent drag if clicking on button
         if (e.target.closest('button')) {
             return;
         }
+        e.preventDefault(); // 👈 prevent default scroll behavior
         focusWindow(id);
         setDragStartOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
         (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.setPointerCapture(e.pointerId);
@@ -25,11 +25,15 @@ const Window = ({ id, title, children, onClose, initialPosition, initialSize, zI
         var _a;
         if (maximized)
             return;
+        e.preventDefault();
         focusWindow(id);
         setResizeStartPos({ x: e.clientX, y: e.clientY });
         (_a = windowRef.current) === null || _a === void 0 ? void 0 : _a.setPointerCapture(e.pointerId);
     };
     const onPointerMove = (e) => {
+        if (dragStartOffset || resizeStartPos) {
+            e.preventDefault();
+        }
         if (dragStartOffset) {
             setPosition({
                 x: e.clientX - dragStartOffset.x,
