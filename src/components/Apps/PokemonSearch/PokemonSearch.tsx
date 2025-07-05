@@ -126,7 +126,7 @@ const PokemonSearch: React.FC = () => {
           setPokemonData(pokemon);
           setSpeciesData(species);
           setTypeData(types);
-          setShowShiny(false); // reset shiny toggle on new Pokémon
+          setShowShiny(false);
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -221,7 +221,6 @@ const PokemonSearch: React.FC = () => {
 
   const handlePrevious = () => {
     if (pokemonData && pokemonData.id > 1) {
-      // Find the Pokémon name with id - 1
       fetchPokemonNameById(pokemonData.id - 1).then(name => {
         if (name) {
           setSearchTerm(name);
@@ -233,7 +232,6 @@ const PokemonSearch: React.FC = () => {
   
   const handleNext = () => {
     if (pokemonData) {
-      // Find the Pokémon name with id + 1
       fetchPokemonNameById(pokemonData.id + 1).then(name => {
         if (name) {
           setSearchTerm(name);
