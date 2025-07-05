@@ -33,7 +33,8 @@ const PokemonSearch = () => {
             try {
                 const res = yield fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
                 const data = yield res.json();
-                setAllPokemonNames(data.results.map((p) => p.name));
+                const names = data.results.map((p) => p.name);
+                setAllPokemonNames(names);
             }
             catch (err) {
                 console.error('Failed to load Pokémon names', err);
@@ -89,6 +90,7 @@ const PokemonSearch = () => {
                     setPokemonData(pokemon);
                     setSpeciesData(species);
                     setTypeData(types);
+                    setShowShiny(false); // reset shiny toggle on new Pokémon
                 }
             }
             catch (err) {
@@ -160,12 +162,48 @@ const PokemonSearch = () => {
             return 'https://via.placeholder.com/150?text=Image+Not+Found';
         }
     };
+    const fetchPokemonNameById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const existingPokemon = allPokemonNames.find((_, index) => index + 1 === id);
+            if (existingPokemon)
+                return existingPokemon;
+            const response = yield fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+            const data = yield response.json();
+            return data.name;
+        }
+        catch (error) {
+            console.error(`Failed to fetch Pokémon name for ID ${id}:`, error);
+            return null;
+        }
+    });
+    const handlePrevious = () => {
+        if (pokemonData && pokemonData.id > 1) {
+            // Find the Pokémon name with id - 1
+            fetchPokemonNameById(pokemonData.id - 1).then(name => {
+                if (name) {
+                    setSearchTerm(name);
+                    setInputTerm(name);
+                }
+            });
+        }
+    };
+    const handleNext = () => {
+        if (pokemonData) {
+            // Find the Pokémon name with id + 1
+            fetchPokemonNameById(pokemonData.id + 1).then(name => {
+                if (name) {
+                    setSearchTerm(name);
+                    setInputTerm(name);
+                }
+            });
+        }
+    };
     if (loading) {
         return (_jsxs("div", { className: "pokemon-container loading", children: [_jsx("div", { className: "loading-spinner" }), _jsx("p", { children: "Loading Pok\u00E9mon data..." })] }));
     }
-    return (_jsxs("div", { className: "pokemon-container", children: [_jsx("h2", { className: "pokemon-title", children: "Pok\u00E9mon Search" }), _jsxs("div", { className: "search-wrapper", style: { position: 'relative' }, children: [_jsxs("form", { onSubmit: handleSearch, className: "search-form", children: [_jsx("input", { type: "text", name: "pokemonSearch", placeholder: "Enter Pok\u00E9mon name or ID", value: inputTerm, onChange: handleInputChange, className: "search-input", "aria-label": "Search for Pok\u00E9mon", autoComplete: "off" }), _jsx("button", { type: "submit", className: "search-button", children: "Search" })] }), filteredSuggestions.length > 0 && (_jsx("ul", { className: "suggestions-list", children: filteredSuggestions.map(name => (_jsx("li", { className: "suggestion-item", onClick: () => handleSuggestionClick(name), children: name }, name))) }))] }), error && (_jsxs("div", { className: "error-state", children: [_jsxs("p", { children: ["Error: ", error] }), _jsx("button", { onClick: handleRetry, className: "retry-button", children: "Retry" }), _jsx("p", { className: "error-tip", children: "If this persists, try a different Pok\u00E9mon or check your connection" })] })), pokemonData && (_jsxs("div", { className: "pokemon-details", children: [_jsx("div", { className: "pokemon-header", children: _jsxs("h3", { className: "pokemon-name", children: ["#", pokemonData.id, " - ", pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)] }) }), _jsxs("div", { className: "pokemon-image-container", children: [_jsx("div", { className: "pokemon-image-wrapper", children: _jsx("img", { src: getImageUrl(), alt: pokemonData.name, className: "pokemon-image", loading: "lazy", onError: (e) => {
+    return (_jsxs("div", { className: "pokemon-container", children: [_jsx("h2", { className: "pokemon-title", children: "Pok\u00E9mon Search" }), _jsxs("div", { className: "search-wrapper", children: [_jsxs("form", { onSubmit: handleSearch, className: "search-form", children: [_jsx("input", { type: "text", name: "pokemonSearch", placeholder: "Enter Pok\u00E9mon name or ID", value: inputTerm, onChange: handleInputChange, className: "search-input", "aria-label": "Search for Pok\u00E9mon", autoComplete: "off" }), _jsx("button", { type: "submit", className: "search-button", children: "Search" })] }), filteredSuggestions.length > 0 && (_jsx("ul", { className: "suggestions-list", children: filteredSuggestions.map(name => (_jsx("li", { className: "suggestion-item", onClick: () => handleSuggestionClick(name), children: name }, name))) }))] }), error && (_jsxs("div", { className: "error-state", children: [_jsxs("p", { children: ["Error: ", error] }), _jsx("button", { onClick: handleRetry, className: "retry-button", children: "Retry" }), _jsx("p", { className: "error-tip", children: "If this persists, try a different Pok\u00E9mon or check your connection" })] })), pokemonData && (_jsxs("div", { className: "pokemon-details", children: [_jsx("div", { className: "pokemon-header", children: _jsxs("h3", { className: "pokemon-name", children: ["#", pokemonData.id, " - ", pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)] }) }), _jsxs("div", { className: "pokemon-image-container", children: [_jsx("button", { className: "nav-button", onClick: handlePrevious, disabled: pokemonData.id === 1, "aria-label": "Previous Pok\u00E9mon", title: "Previous Pok\u00E9mon", children: "\u25C0 Prev" }), _jsx("div", { className: "pokemon-image-wrapper", children: _jsx("img", { src: getImageUrl(), alt: pokemonData.name, className: "pokemon-image", loading: "lazy", onError: (e) => {
                                         const target = e.target;
                                         target.src = 'https://via.placeholder.com/150?text=Image+Failed';
-                                    } }) }), _jsx("button", { className: `shiny-toggle ${showShiny ? 'active' : ''}`, onClick: () => setShowShiny(!showShiny), children: showShiny ? '★ Shiny' : '☆ Shiny' })] }), _jsxs("div", { className: "pokemon-info", children: [_jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Types" }), _jsx("div", { className: "types-container", children: pokemonData.types.map(type => (_jsx("span", { className: `type-badge type-${type.type.name}`, children: type.type.name }, type.slot))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Weaknesses" }), _jsx("div", { className: "weaknesses-container", children: getWeaknesses().length > 0 ? (getWeaknesses().map(weakness => (_jsx("span", { className: `type-badge type-${weakness}`, children: weakness }, weakness)))) : (_jsx("span", { children: "No weaknesses" })) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Stats" }), _jsxs("p", { children: ["Height: ", (pokemonData.height / 10).toFixed(1), " m"] }), _jsxs("p", { children: ["Weight: ", (pokemonData.weight / 10).toFixed(1), " kg"] })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Pok\u00E9dex Entry" }), _jsx("p", { className: "pokedex-description", children: getEnglishDescription() })] })] })] }))] }));
+                                    } }) }), _jsx("button", { className: "nav-button", onClick: handleNext, "aria-label": "Next Pok\u00E9mon", title: "Next Pok\u00E9mon", children: "Next \u25B6" })] }), _jsx("div", { className: "shiny-toggle-wrapper", children: _jsx("button", { className: `shiny-toggle ${showShiny ? 'active' : ''}`, onClick: () => setShowShiny(!showShiny), children: showShiny ? '★ Shiny' : '☆ Shiny' }) }), _jsxs("div", { className: "pokemon-info", children: [_jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Types" }), _jsx("div", { className: "types-container", children: pokemonData.types.map(type => (_jsx("span", { className: `type-badge type-${type.type.name}`, children: type.type.name }, type.slot))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Weaknesses" }), _jsx("div", { className: "weaknesses-container", children: getWeaknesses().length > 0 ? (getWeaknesses().map(weakness => (_jsx("span", { className: `type-badge type-${weakness}`, children: weakness }, weakness)))) : (_jsx("span", { children: "No weaknesses" })) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Stats" }), _jsxs("p", { children: ["Height: ", (pokemonData.height / 10).toFixed(1), " m"] }), _jsxs("p", { children: ["Weight: ", (pokemonData.weight / 10).toFixed(1), " kg"] })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Pok\u00E9dex Entry" }), _jsx("p", { className: "pokedex-description", children: getEnglishDescription() })] })] })] }))] }));
 };
 export default PokemonSearch;

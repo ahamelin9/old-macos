@@ -65,7 +65,8 @@ const PokemonSearch: React.FC = () => {
       try {
         const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
         const data = await res.json();
-        setAllPokemonNames(data.results.map((p: any) => p.name));
+        const names = data.results.map((p: any) => p.name);
+        setAllPokemonNames(names);
       } catch (err) {
         console.error('Failed to load Pokémon names', err);
       }
@@ -125,6 +126,7 @@ const PokemonSearch: React.FC = () => {
           setPokemonData(pokemon);
           setSpeciesData(species);
           setTypeData(types);
+          setShowShiny(false); // reset shiny toggle on new Pokémon
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -203,6 +205,44 @@ const PokemonSearch: React.FC = () => {
     }
   };
 
+  const fetchPokemonNameById = async (id: number): Promise<string | null> => {
+    try {
+      const existingPokemon = allPokemonNames.find((_, index) => index + 1 === id);
+      if (existingPokemon) return existingPokemon;
+  
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+      const data = await response.json();
+      return data.name;
+    } catch (error) {
+      console.error(`Failed to fetch Pokémon name for ID ${id}:`, error);
+      return null;
+    }
+  };
+
+  const handlePrevious = () => {
+    if (pokemonData && pokemonData.id > 1) {
+      // Find the Pokémon name with id - 1
+      fetchPokemonNameById(pokemonData.id - 1).then(name => {
+        if (name) {
+          setSearchTerm(name);
+          setInputTerm(name);
+        }
+      });
+    }
+  };
+  
+  const handleNext = () => {
+    if (pokemonData) {
+      // Find the Pokémon name with id + 1
+      fetchPokemonNameById(pokemonData.id + 1).then(name => {
+        if (name) {
+          setSearchTerm(name);
+          setInputTerm(name);
+        }
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="pokemon-container loading">
@@ -216,7 +256,7 @@ const PokemonSearch: React.FC = () => {
     <div className="pokemon-container">
       <h2 className="pokemon-title">Pokémon Search</h2>
 
-      <div className="search-wrapper" style={{ position: 'relative' }}>
+      <div className="search-wrapper">
         <form onSubmit={handleSearch} className="search-form">
           <input
             type="text"
@@ -267,6 +307,16 @@ const PokemonSearch: React.FC = () => {
           </div>
 
           <div className="pokemon-image-container">
+            <button
+              className="nav-button"
+              onClick={handlePrevious}
+              disabled={pokemonData.id === 1}
+              aria-label="Previous Pokémon"
+              title="Previous Pokémon"
+            >
+              ◀ Prev
+            </button>
+
             <div className="pokemon-image-wrapper">
               <img
                 src={getImageUrl()}
@@ -279,6 +329,18 @@ const PokemonSearch: React.FC = () => {
                 }}
               />
             </div>
+
+            <button
+              className="nav-button"
+              onClick={handleNext}
+              aria-label="Next Pokémon"
+              title="Next Pokémon"
+            >
+              Next ▶
+            </button>
+          </div>
+          
+          <div className="shiny-toggle-wrapper">
             <button
               className={`shiny-toggle ${showShiny ? 'active' : ''}`}
               onClick={() => setShowShiny(!showShiny)}
