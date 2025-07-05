@@ -312,7 +312,7 @@ const PokemonSearch: React.FC = () => {
               aria-label="Previous Pokémon"
               title="Previous Pokémon"
             >
-              ◀ Prev
+              ←
             </button>
 
             <div className="pokemon-image-wrapper">
@@ -334,7 +334,7 @@ const PokemonSearch: React.FC = () => {
               aria-label="Next Pokémon"
               title="Next Pokémon"
             >
-              Next ▶
+              →
             </button>
           </div>
           
