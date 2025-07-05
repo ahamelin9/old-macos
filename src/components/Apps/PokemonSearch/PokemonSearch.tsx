@@ -47,8 +47,8 @@ const PokemonSearch: React.FC = () => {
   const [typeData, setTypeData] = useState<TypeData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [inputTerm, setInputTerm] = useState<string>('pikachu');
-  const [searchTerm, setSearchTerm] = useState<string>('pikachu');
+  const [inputTerm, setInputTerm] = useState<string>('dragonite');
+  const [searchTerm, setSearchTerm] = useState<string>('dragonite');
   const [retryCount, setRetryCount] = useState<number>(0);
   const [allPokemonNames, setAllPokemonNames] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
