@@ -106,8 +106,8 @@ const PokemonSearch: React.FC = () => {
     const res = await fetch(url);
     const data = await res.json();
     const stages: EvolutionStage[] = [];
-    let node = data.chain;
-    while (node) {
+  
+    const processNode = async (node: any) => {
       const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
       const pokeData = await pokeRes.json();
       stages.push({
@@ -115,10 +115,16 @@ const PokemonSearch: React.FC = () => {
         name: pokeData.name,
         sprite: pokeData.sprites.front_default,
       });
-      node = node.evolves_to[0];
-    }
+  
+      for (const evo of node.evolves_to) {
+        await processNode(evo);
+      }
+    };
+  
+    await processNode(data.chain);
     setEvolutionChain(stages);
   };
+  
 
   useEffect(() => {
     if (!searchTerm) return;

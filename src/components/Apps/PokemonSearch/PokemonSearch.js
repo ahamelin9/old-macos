@@ -62,8 +62,7 @@ const PokemonSearch = () => {
         const res = yield fetch(url);
         const data = yield res.json();
         const stages = [];
-        let node = data.chain;
-        while (node) {
+        const processNode = (node) => __awaiter(void 0, void 0, void 0, function* () {
             const pokeRes = yield fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
             const pokeData = yield pokeRes.json();
             stages.push({
@@ -71,8 +70,11 @@ const PokemonSearch = () => {
                 name: pokeData.name,
                 sprite: pokeData.sprites.front_default,
             });
-            node = node.evolves_to[0];
-        }
+            for (const evo of node.evolves_to) {
+                yield processNode(evo);
+            }
+        });
+        yield processNode(data.chain);
         setEvolutionChain(stages);
     });
     useEffect(() => {
