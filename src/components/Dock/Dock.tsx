@@ -17,11 +17,11 @@ import { useEffect, useState } from 'react';
 
 const Dock = () => {
   const { windows, openWindow, restoreWindow } = useWindows();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 800);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 600);
+      setIsMobile(window.innerWidth < 800);
     };
 
     window.addEventListener('resize', handleResize);
