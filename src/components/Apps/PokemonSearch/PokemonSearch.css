@@ -30,6 +30,8 @@
 .search-input {
   padding: 0.8rem;
   border: 2px solid #ffcb05;
+  background-color: #ffffff;
+  color: #333;
   border-radius: 8px;
   flex-grow: 1;
   font-size: 1rem;
