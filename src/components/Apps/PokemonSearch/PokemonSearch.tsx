@@ -241,6 +241,21 @@ const PokemonSearch: React.FC = () => {
     }
   };
 
+  const convertToFeetInches = (heightInDecimeters: number): string => {
+    const heightInMeters = heightInDecimeters / 10;
+    const heightInInches = heightInMeters * 39.37;
+    const feet = Math.floor(heightInInches / 12);
+    const inches = Math.round(heightInInches % 12);
+    
+    return `${feet} ft ${inches} in`;
+  };
+
+  const convertToPounds = (weightInHectograms: number): string => {
+    const weightInKg = weightInHectograms / 10;
+    const weightInLbs = (weightInKg * 2.20462).toFixed(1); // 1 decimal place
+    return weightInLbs;
+  };
+
   if (loading) {
     return (
       <div className="pokemon-container loading">
@@ -382,8 +397,8 @@ const PokemonSearch: React.FC = () => {
 
             <div className="info-section">
               <h4>Stats</h4>
-              <p>Height: {(pokemonData.height / 10).toFixed(1)} m</p>
-              <p>Weight: {(pokemonData.weight / 10).toFixed(1)} kg</p>
+              <p>Height: {convertToFeetInches(pokemonData.height)}</p>
+              <p>Weight: {convertToPounds(pokemonData.weight)} lbs</p>
             </div>
 
             <div className="info-section">
