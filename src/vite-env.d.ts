@@ -3,8 +3,8 @@
 /// <reference types="react-dom" />
 
 interface ImportMetaEnv {
-  readonly VITE_POKEAPI_BASE_URL: string;
   readonly VITE_ENABLE_CORS_PROXY: string;
+  readonly VITE_NASA_API_KEY: string;
 }
 
 interface ImportMeta {

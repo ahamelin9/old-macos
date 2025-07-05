@@ -20,9 +20,10 @@ const NasaNews: React.FC = () => {
 
   useEffect(() => {
     const fetchApodData = async () => {
+      const nasaApiKey = import.meta.env.VITE_NASA_API_KEY;
       try {
         const response = await fetch(
-          `https://api.nasa.gov/planetary/apod?api_key=vo1VH05rOqSiG5CSuxAJghu9Q6J3FLywblYVjNLu&thumbs=true`
+          `https://api.nasa.gov/planetary/apod?api_key=${nasaApiKey}=true`
         );
         
         if (!response.ok) {
