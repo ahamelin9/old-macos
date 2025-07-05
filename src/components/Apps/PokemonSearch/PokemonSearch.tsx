@@ -31,6 +31,12 @@ interface PokemonSpecies {
       name: string;
     };
   }[];
+  evolution_chain: {
+    url: string;
+  };
+  generation: {
+    name: string;
+  };
 }
 
 interface TypeData {
@@ -41,10 +47,17 @@ interface TypeData {
   };
 }
 
+interface EvolutionStage {
+  id: number;
+  name: string;
+  sprite: string;
+}
+
 const PokemonSearch: React.FC = () => {
   const [pokemonData, setPokemonData] = useState<PokemonData | null>(null);
   const [speciesData, setSpeciesData] = useState<PokemonSpecies | null>(null);
   const [typeData, setTypeData] = useState<TypeData[]>([]);
+  const [evolutionChain, setEvolutionChain] = useState<EvolutionStage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [inputTerm, setInputTerm] = useState<string>('dragonite');
@@ -53,20 +66,15 @@ const PokemonSearch: React.FC = () => {
   const [allPokemonNames, setAllPokemonNames] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showShiny, setShowShiny] = useState<boolean>(false);
+  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
-  const createTimeoutSignal = (ms: number) => {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), ms);
-    return controller.signal;
-  };
 
   useEffect(() => {
     const loadAllPokemon = async () => {
       try {
         const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
         const data = await res.json();
-        const names = data.results.map((p: any) => p.name);
-        setAllPokemonNames(names);
+        setAllPokemonNames(data.results.map((p: any) => p.name));
       } catch (err) {
         console.error('Failed to load Pokémon names', err);
       }
@@ -83,28 +91,37 @@ const PokemonSearch: React.FC = () => {
 
     for (const endpoint of endpoints) {
       try {
-        const response = await fetch(endpoint, {
-          signal: createTimeoutSignal(8000),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        
+        const response = await fetch(endpoint);
         if (response.ok) {
           return await response.json();
         }
-      } catch (error) {
-        console.warn(`Failed with endpoint ${endpoint}:`, error);
+      } catch {
         continue;
       }
     }
-    throw new Error('All API endpoints failed');
+    throw new Error('If on mobile try turning off wifi or the PokeAPI might be down.');
+  };
+
+  const fetchEvolutionChain = async (url: string) => {
+    const res = await fetch(url);
+    const data = await res.json();
+    const stages: EvolutionStage[] = [];
+    let node = data.chain;
+    while (node) {
+      const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
+      const pokeData = await pokeRes.json();
+      stages.push({
+        id: pokeData.id,
+        name: pokeData.name,
+        sprite: pokeData.sprites.front_default,
+      });
+      node = node.evolves_to[0];
+    }
+    setEvolutionChain(stages);
   };
 
   useEffect(() => {
-    if (!searchTerm.trim()) return;
-    const controller = new AbortController();
+    if (!searchTerm) return;
 
     const loadData = async () => {
       setLoading(true);
@@ -112,66 +129,49 @@ const PokemonSearch: React.FC = () => {
       setPokemonData(null);
       setSpeciesData(null);
       setTypeData([]);
-
+      setEvolutionChain([]);
       try {
         const pokemon = await fetchPokemon(searchTerm.toLowerCase());
-        if (controller.signal.aborted) return;
+        setPokemonData(pokemon);
 
-        const [species, types] = await Promise.all([
-          fetch(pokemon.species.url).then(res => res.json()),
-          Promise.all(pokemon.types.map((t: any) => fetch(t.type.url).then(res => res.json())))
-        ]);
+        const speciesRes = await fetch(pokemon.species.url);
+        const species = await speciesRes.json();
+        setSpeciesData(species);
 
-        if (!controller.signal.aborted) {
-          setPokemonData(pokemon);
-          setSpeciesData(species);
-          setTypeData(types);
-          setShowShiny(false);
+        const types = await Promise.all(
+          pokemon.types.map((t: any) =>
+            fetch(t.type.url).then(res => res.json())
+          )
+        );
+        setTypeData(types);
+
+        if (species.evolution_chain?.url) {
+          fetchEvolutionChain(species.evolution_chain.url);
         }
-      } catch (err) {
-        if (!controller.signal.aborted) {
-          setError(err instanceof Error ? err.message : 'Failed to load Pokémon');
-          console.error('API Error:', err);
-        }
+
+        setShowShiny(false);
+      } catch (err: any) {
+        setError(err.message);
       } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
     loadData();
-    return () => controller.abort();
   }, [searchTerm, retryCount]);
 
-  const getEnglishDescription = () => {
-    if (!speciesData) return 'No description available';
-    const entry = speciesData.flavor_text_entries.find(
-      entry => entry.language.name === 'en'
-    );
-    return entry?.flavor_text.replace(/\f/g, ' ') || 'No description available';
-  };
-
-  const getWeaknesses = () => {
-    if (typeData.length === 0) return [];
-    const weaknesses = new Set<string>();
-    typeData.forEach(type => {
-      type.damage_relations.double_damage_from.forEach(weakness => {
-        weaknesses.add(weakness.name);
-      });
-    });
-    return Array.from(weaknesses);
+  const getImageUrl = () => {
+    if (!pokemonData) return '';
+    return showShiny ? pokemonData.sprites.front_shiny : pokemonData.sprites.front_default;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     setInputTerm(input);
-
     if (input.trim() === '') {
       setFilteredSuggestions([]);
       return;
     }
-
     const results = fuzzysort.go(input, allPokemonNames, { limit: 5, threshold: -1000 });
     setFilteredSuggestions(results.map(r => r.target));
   };
@@ -184,25 +184,12 @@ const PokemonSearch: React.FC = () => {
     }
   };
 
-  const handleSuggestionClick = (name: string) => {
-    setInputTerm(name);
-    setSearchTerm(name);
-    setFilteredSuggestions([]);
-  };
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-  };
-
-  const getImageUrl = () => {
-    if (!pokemonData) return '';
-    try {
-      return showShiny 
-        ? pokemonData.sprites.front_shiny 
-        : pokemonData.sprites.front_default;
-    } catch {
-      return 'https://via.placeholder.com/150?text=Image+Not+Found';
-    }
+  const getWeaknesses = () => {
+    const weaknesses = new Set<string>();
+    typeData.forEach(type =>
+      type.damage_relations.double_damage_from.forEach(w => weaknesses.add(w.name))
+    );
+    return Array.from(weaknesses);
   };
 
   const fetchPokemonNameById = async (id: number): Promise<string | null> => {
@@ -214,7 +201,7 @@ const PokemonSearch: React.FC = () => {
       const data = await response.json();
       return data.name;
     } catch (error) {
-      console.error(`Failed to fetch Pokémon name for ID ${id}:`, error);
+      console.error(`Failed to fetch Pokémon name for ID ${id}:, error`);
       return null;
     }
   };
@@ -229,7 +216,7 @@ const PokemonSearch: React.FC = () => {
       });
     }
   };
-  
+
   const handleNext = () => {
     if (pokemonData) {
       fetchPokemonNameById(pokemonData.id + 1).then(name => {
@@ -241,84 +228,49 @@ const PokemonSearch: React.FC = () => {
     }
   };
 
-  const convertToFeetInches = (heightInDecimeters: number): string => {
-    const heightInMeters = heightInDecimeters / 10;
-    const heightInInches = heightInMeters * 39.37;
-    const feet = Math.floor(heightInInches / 12);
-    const inches = Math.round(heightInInches % 12);
-    
-    return `${feet} ft ${inches} in`;
+  const convertToFeetInches = (heightInDecimeters: number) => {
+    const inches = (heightInDecimeters / 10) * 39.37;
+    const feet = Math.floor(inches / 12);
+    const remInches = Math.round(inches % 12);
+    return `${feet} ft ${remInches} in`;
   };
 
-  const convertToPounds = (weightInHectograms: number): string => {
-    const weightInKg = weightInHectograms / 10;
-    const weightInLbs = (weightInKg * 2.20462).toFixed(1); // 1 decimal place
-    return weightInLbs;
+  const convertToPounds = (weightInHectograms: number) => {
+    const lbs = (weightInHectograms / 10) * 2.20462;
+    return lbs.toFixed(1);
   };
-
-  if (loading) {
-    return (
-      <div className="pokemon-container loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Pokémon data...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="pokemon-container">
       <h2 className="pokemon-title">Pokémon Search</h2>
-
       <div className="search-wrapper">
         <form onSubmit={handleSearch} className="search-form">
           <input
             type="text"
-            name="pokemonSearch"
-            placeholder="Enter Pokémon name or ID"
             value={inputTerm}
             onChange={handleInputChange}
+            placeholder="Enter Pokémon name or ID"
             className="search-input"
-            aria-label="Search for Pokémon"
-            autoComplete="off"
           />
           <button type="submit" className="search-button">Search</button>
         </form>
-
         {filteredSuggestions.length > 0 && (
           <ul className="suggestions-list">
             {filteredSuggestions.map(name => (
-              <li
-                key={name}
-                className="suggestion-item"
-                onClick={() => handleSuggestionClick(name)}
-              >
-                {name}
-              </li>
+              <li key={name} onClick={() => {
+                setInputTerm(name);
+                setSearchTerm(name);
+                setFilteredSuggestions([]);
+              }} className="suggestion-item">{name}</li>
             ))}
           </ul>
         )}
       </div>
-
-      {error && (
-        <div className="error-state">
-          <p>Error: {error}</p>
-          <button onClick={handleRetry} className="retry-button">
-            Retry
-          </button>
-          <p className="error-tip">
-            If this persists, try a different Pokémon or check your connection
-          </p>
-        </div>
-      )}
-
+      {loading && <div className="loading">Loading...</div>}
+      {error && <div className="error-state">{error}</div>}
       {pokemonData && (
         <div className="pokemon-details">
-          <div className="pokemon-header">
-            <h3 className="pokemon-name">
-              #{pokemonData.id} - {pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)}
-            </h3>
-          </div>
-
+          <h3 className='pokemon-name'>#{pokemonData.id} - {capitalize(pokemonData.name)}</h3>
           <div className="pokemon-image-container">
             <button
               className="nav-button"
@@ -329,20 +281,9 @@ const PokemonSearch: React.FC = () => {
             >
               ←
             </button>
-
             <div className="pokemon-image-wrapper">
-              <img
-                src={getImageUrl()}
-                alt={pokemonData.name}
-                className="pokemon-image"
-                loading="lazy"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'https://via.placeholder.com/150?text=Image+Failed';
-                }}
-              />
+              <img src={getImageUrl()} alt={pokemonData.name} className="pokemon-image" />
             </div>
-
             <button
               className="nav-button"
               onClick={handleNext}
@@ -352,58 +293,51 @@ const PokemonSearch: React.FC = () => {
               →
             </button>
           </div>
-          
           <div className="shiny-toggle-wrapper">
-            <button
-              className={`shiny-toggle ${showShiny ? 'active' : ''}`}
-              onClick={() => setShowShiny(!showShiny)}
-            >
+            <button onClick={() => setShowShiny(!showShiny)} className={`shiny-toggle ${showShiny ? 'active' : ''}`}>
               {showShiny ? '★ Shiny' : '☆ Shiny'}
             </button>
           </div>
-
+          {evolutionChain.length > 0 && (
+            <div className="evolution-chain">
+              <h4>Evolution Chain</h4>
+              <div className="evolution-stages">
+                {evolutionChain.map(stage => (
+                  <div key={stage.id} className="evolution-stage">
+                    <img src={stage.sprite} alt={stage.name} />
+                    <span>{capitalize(stage.name)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="pokemon-info">
             <div className="info-section">
               <h4>Types</h4>
               <div className="types-container">
-                {pokemonData.types.map(type => (
-                  <span
-                    key={type.slot}
-                    className={`type-badge type-${type.type.name}`}
-                  >
-                    {type.type.name}
-                  </span>
+                {pokemonData.types.map(t => (
+                  <span key={t.type.name} className={`type-badge type-${t.type.name}`}>{t.type.name}</span>
                 ))}
               </div>
             </div>
-
             <div className="info-section">
               <h4>Weaknesses</h4>
               <div className="weaknesses-container">
-                {getWeaknesses().length > 0 ? (
-                  getWeaknesses().map(weakness => (
-                    <span
-                      key={weakness}
-                      className={`type-badge type-${weakness}`}
-                    >
-                      {weakness}
-                    </span>
-                  ))
-                ) : (
-                  <span>No weaknesses</span>
-                )}
+                {getWeaknesses().map(w => (
+                  <span key={w} className={`type-badge type-${w}`}>{w}</span>
+                ))}
               </div>
             </div>
-
             <div className="info-section">
               <h4>Stats</h4>
               <p>Height: {convertToFeetInches(pokemonData.height)}</p>
               <p>Weight: {convertToPounds(pokemonData.weight)} lbs</p>
             </div>
-
             <div className="info-section">
               <h4>Pokédex Entry</h4>
-              <p className="pokedex-description">{getEnglishDescription()}</p>
+              <p className="pokedex-description">
+                {speciesData?.flavor_text_entries.find(e => e.language.name === 'en')?.flavor_text.replace(/\f/g, ' ') || 'No description available'}
+              </p>
             </div>
           </div>
         </div>

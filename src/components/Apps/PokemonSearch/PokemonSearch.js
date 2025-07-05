@@ -12,29 +12,26 @@ import { useState, useEffect } from 'react';
 import fuzzysort from 'fuzzysort';
 import './PokemonSearch.css';
 const PokemonSearch = () => {
+    var _a;
     const [pokemonData, setPokemonData] = useState(null);
     const [speciesData, setSpeciesData] = useState(null);
     const [typeData, setTypeData] = useState([]);
+    const [evolutionChain, setEvolutionChain] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [inputTerm, setInputTerm] = useState('pikachu');
-    const [searchTerm, setSearchTerm] = useState('pikachu');
+    const [inputTerm, setInputTerm] = useState('dragonite');
+    const [searchTerm, setSearchTerm] = useState('dragonite');
     const [retryCount, setRetryCount] = useState(0);
     const [allPokemonNames, setAllPokemonNames] = useState([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState([]);
     const [showShiny, setShowShiny] = useState(false);
-    const createTimeoutSignal = (ms) => {
-        const controller = new AbortController();
-        setTimeout(() => controller.abort(), ms);
-        return controller.signal;
-    };
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
     useEffect(() => {
         const loadAllPokemon = () => __awaiter(void 0, void 0, void 0, function* () {
             try {
                 const res = yield fetch('https://pokeapi.co/api/v2/pokemon?limit=10000');
                 const data = yield res.json();
-                const names = data.results.map((p) => p.name);
-                setAllPokemonNames(names);
+                setAllPokemonNames(data.results.map((p) => p.name));
             }
             catch (err) {
                 console.error('Failed to load Pokémon names', err);
@@ -50,80 +47,71 @@ const PokemonSearch = () => {
         ];
         for (const endpoint of endpoints) {
             try {
-                const response = yield fetch(endpoint, {
-                    signal: createTimeoutSignal(8000),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
+                const response = yield fetch(endpoint);
                 if (response.ok) {
                     return yield response.json();
                 }
             }
-            catch (error) {
-                console.warn(`Failed with endpoint ${endpoint}:`, error);
+            catch (_a) {
                 continue;
             }
         }
-        throw new Error('All API endpoints failed');
+        throw new Error('If on mobile try turning off wifi or the PokeAPI might be down.');
+    });
+    const fetchEvolutionChain = (url) => __awaiter(void 0, void 0, void 0, function* () {
+        const res = yield fetch(url);
+        const data = yield res.json();
+        const stages = [];
+        let node = data.chain;
+        while (node) {
+            const pokeRes = yield fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
+            const pokeData = yield pokeRes.json();
+            stages.push({
+                id: pokeData.id,
+                name: pokeData.name,
+                sprite: pokeData.sprites.front_default,
+            });
+            node = node.evolves_to[0];
+        }
+        setEvolutionChain(stages);
     });
     useEffect(() => {
-        if (!searchTerm.trim())
+        if (!searchTerm)
             return;
-        const controller = new AbortController();
         const loadData = () => __awaiter(void 0, void 0, void 0, function* () {
+            var _a;
             setLoading(true);
             setError(null);
             setPokemonData(null);
             setSpeciesData(null);
             setTypeData([]);
+            setEvolutionChain([]);
             try {
                 const pokemon = yield fetchPokemon(searchTerm.toLowerCase());
-                if (controller.signal.aborted)
-                    return;
-                const [species, types] = yield Promise.all([
-                    fetch(pokemon.species.url).then(res => res.json()),
-                    Promise.all(pokemon.types.map((t) => fetch(t.type.url).then(res => res.json())))
-                ]);
-                if (!controller.signal.aborted) {
-                    setPokemonData(pokemon);
-                    setSpeciesData(species);
-                    setTypeData(types);
-                    setShowShiny(false);
+                setPokemonData(pokemon);
+                const speciesRes = yield fetch(pokemon.species.url);
+                const species = yield speciesRes.json();
+                setSpeciesData(species);
+                const types = yield Promise.all(pokemon.types.map((t) => fetch(t.type.url).then(res => res.json())));
+                setTypeData(types);
+                if ((_a = species.evolution_chain) === null || _a === void 0 ? void 0 : _a.url) {
+                    fetchEvolutionChain(species.evolution_chain.url);
                 }
+                setShowShiny(false);
             }
             catch (err) {
-                if (!controller.signal.aborted) {
-                    setError(err instanceof Error ? err.message : 'Failed to load Pokémon');
-                    console.error('API Error:', err);
-                }
+                setError(err.message);
             }
             finally {
-                if (!controller.signal.aborted) {
-                    setLoading(false);
-                }
+                setLoading(false);
             }
         });
         loadData();
-        return () => controller.abort();
     }, [searchTerm, retryCount]);
-    const getEnglishDescription = () => {
-        if (!speciesData)
-            return 'No description available';
-        const entry = speciesData.flavor_text_entries.find(entry => entry.language.name === 'en');
-        return (entry === null || entry === void 0 ? void 0 : entry.flavor_text.replace(/\f/g, ' ')) || 'No description available';
-    };
-    const getWeaknesses = () => {
-        if (typeData.length === 0)
-            return [];
-        const weaknesses = new Set();
-        typeData.forEach(type => {
-            type.damage_relations.double_damage_from.forEach(weakness => {
-                weaknesses.add(weakness.name);
-            });
-        });
-        return Array.from(weaknesses);
+    const getImageUrl = () => {
+        if (!pokemonData)
+            return '';
+        return showShiny ? pokemonData.sprites.front_shiny : pokemonData.sprites.front_default;
     };
     const handleInputChange = (e) => {
         const input = e.target.value;
@@ -142,25 +130,10 @@ const PokemonSearch = () => {
             setFilteredSuggestions([]);
         }
     };
-    const handleSuggestionClick = (name) => {
-        setInputTerm(name);
-        setSearchTerm(name);
-        setFilteredSuggestions([]);
-    };
-    const handleRetry = () => {
-        setRetryCount(prev => prev + 1);
-    };
-    const getImageUrl = () => {
-        if (!pokemonData)
-            return '';
-        try {
-            return showShiny
-                ? pokemonData.sprites.front_shiny
-                : pokemonData.sprites.front_default;
-        }
-        catch (_a) {
-            return 'https://via.placeholder.com/150?text=Image+Not+Found';
-        }
+    const getWeaknesses = () => {
+        const weaknesses = new Set();
+        typeData.forEach(type => type.damage_relations.double_damage_from.forEach(w => weaknesses.add(w.name)));
+        return Array.from(weaknesses);
     };
     const fetchPokemonNameById = (id) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -172,7 +145,7 @@ const PokemonSearch = () => {
             return data.name;
         }
         catch (error) {
-            console.error(`Failed to fetch Pokémon name for ID ${id}:`, error);
+            console.error(`Failed to fetch Pokémon name for ID ${id}:, error`);
             return null;
         }
     });
@@ -197,23 +170,19 @@ const PokemonSearch = () => {
         }
     };
     const convertToFeetInches = (heightInDecimeters) => {
-        const heightInMeters = heightInDecimeters / 10;
-        const heightInInches = heightInMeters * 39.37;
-        const feet = Math.floor(heightInInches / 12);
-        const inches = Math.round(heightInInches % 12);
-        return `${feet} ft ${inches} in`;
+        const inches = (heightInDecimeters / 10) * 39.37;
+        const feet = Math.floor(inches / 12);
+        const remInches = Math.round(inches % 12);
+        return `${feet} ft ${remInches} in`;
     };
     const convertToPounds = (weightInHectograms) => {
-        const weightInKg = weightInHectograms / 10;
-        const weightInLbs = (weightInKg * 2.20462).toFixed(1); // 1 decimal place
-        return weightInLbs;
+        const lbs = (weightInHectograms / 10) * 2.20462;
+        return lbs.toFixed(1);
     };
-    if (loading) {
-        return (_jsxs("div", { className: "pokemon-container loading", children: [_jsx("div", { className: "loading-spinner" }), _jsx("p", { children: "Loading Pok\u00E9mon data..." })] }));
-    }
-    return (_jsxs("div", { className: "pokemon-container", children: [_jsx("h2", { className: "pokemon-title", children: "Pok\u00E9mon Search" }), _jsxs("div", { className: "search-wrapper", children: [_jsxs("form", { onSubmit: handleSearch, className: "search-form", children: [_jsx("input", { type: "text", name: "pokemonSearch", placeholder: "Enter Pok\u00E9mon name or ID", value: inputTerm, onChange: handleInputChange, className: "search-input", "aria-label": "Search for Pok\u00E9mon", autoComplete: "off" }), _jsx("button", { type: "submit", className: "search-button", children: "Search" })] }), filteredSuggestions.length > 0 && (_jsx("ul", { className: "suggestions-list", children: filteredSuggestions.map(name => (_jsx("li", { className: "suggestion-item", onClick: () => handleSuggestionClick(name), children: name }, name))) }))] }), error && (_jsxs("div", { className: "error-state", children: [_jsxs("p", { children: ["Error: ", error] }), _jsx("button", { onClick: handleRetry, className: "retry-button", children: "Retry" }), _jsx("p", { className: "error-tip", children: "If this persists, try a different Pok\u00E9mon or check your connection" })] })), pokemonData && (_jsxs("div", { className: "pokemon-details", children: [_jsx("div", { className: "pokemon-header", children: _jsxs("h3", { className: "pokemon-name", children: ["#", pokemonData.id, " - ", pokemonData.name.charAt(0).toUpperCase() + pokemonData.name.slice(1)] }) }), _jsxs("div", { className: "pokemon-image-container", children: [_jsx("button", { className: "nav-button", onClick: handlePrevious, disabled: pokemonData.id === 1, "aria-label": "Previous Pok\u00E9mon", title: "Previous Pok\u00E9mon", children: "\u2190" }), _jsx("div", { className: "pokemon-image-wrapper", children: _jsx("img", { src: getImageUrl(), alt: pokemonData.name, className: "pokemon-image", loading: "lazy", onError: (e) => {
-                                        const target = e.target;
-                                        target.src = 'https://via.placeholder.com/150?text=Image+Failed';
-                                    } }) }), _jsx("button", { className: "nav-button", onClick: handleNext, "aria-label": "Next Pok\u00E9mon", title: "Next Pok\u00E9mon", children: "\u2192" })] }), _jsx("div", { className: "shiny-toggle-wrapper", children: _jsx("button", { className: `shiny-toggle ${showShiny ? 'active' : ''}`, onClick: () => setShowShiny(!showShiny), children: showShiny ? '★ Shiny' : '☆ Shiny' }) }), _jsxs("div", { className: "pokemon-info", children: [_jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Types" }), _jsx("div", { className: "types-container", children: pokemonData.types.map(type => (_jsx("span", { className: `type-badge type-${type.type.name}`, children: type.type.name }, type.slot))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Weaknesses" }), _jsx("div", { className: "weaknesses-container", children: getWeaknesses().length > 0 ? (getWeaknesses().map(weakness => (_jsx("span", { className: `type-badge type-${weakness}`, children: weakness }, weakness)))) : (_jsx("span", { children: "No weaknesses" })) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Stats" }), _jsxs("p", { children: ["Height: ", convertToFeetInches(pokemonData.height)] }), _jsxs("p", { children: ["Weight: ", convertToPounds(pokemonData.weight), " lbs"] })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Pok\u00E9dex Entry" }), _jsx("p", { className: "pokedex-description", children: getEnglishDescription() })] })] })] }))] }));
+    return (_jsxs("div", { className: "pokemon-container", children: [_jsx("h2", { className: "pokemon-title", children: "Pok\u00E9mon Search" }), _jsxs("div", { className: "search-wrapper", children: [_jsxs("form", { onSubmit: handleSearch, className: "search-form", children: [_jsx("input", { type: "text", value: inputTerm, onChange: handleInputChange, placeholder: "Enter Pok\u00E9mon name or ID", className: "search-input" }), _jsx("button", { type: "submit", className: "search-button", children: "Search" })] }), filteredSuggestions.length > 0 && (_jsx("ul", { className: "suggestions-list", children: filteredSuggestions.map(name => (_jsx("li", { onClick: () => {
+                                setInputTerm(name);
+                                setSearchTerm(name);
+                                setFilteredSuggestions([]);
+                            }, className: "suggestion-item", children: name }, name))) }))] }), loading && _jsx("div", { className: "loading", children: "Loading..." }), error && _jsx("div", { className: "error-state", children: error }), pokemonData && (_jsxs("div", { className: "pokemon-details", children: [_jsxs("h3", { className: 'pokemon-name', children: ["#", pokemonData.id, " - ", capitalize(pokemonData.name)] }), _jsxs("div", { className: "pokemon-image-container", children: [_jsx("button", { className: "nav-button", onClick: handlePrevious, disabled: pokemonData.id === 1, "aria-label": "Previous Pok\u00E9mon", title: "Previous Pok\u00E9mon", children: "\u2190" }), _jsx("div", { className: "pokemon-image-wrapper", children: _jsx("img", { src: getImageUrl(), alt: pokemonData.name, className: "pokemon-image" }) }), _jsx("button", { className: "nav-button", onClick: handleNext, "aria-label": "Next Pok\u00E9mon", title: "Next Pok\u00E9mon", children: "\u2192" })] }), _jsx("div", { className: "shiny-toggle-wrapper", children: _jsx("button", { onClick: () => setShowShiny(!showShiny), className: `shiny-toggle ${showShiny ? 'active' : ''}`, children: showShiny ? '★ Shiny' : '☆ Shiny' }) }), evolutionChain.length > 0 && (_jsxs("div", { className: "evolution-chain", children: [_jsx("h4", { children: "Evolution Chain" }), _jsx("div", { className: "evolution-stages", children: evolutionChain.map(stage => (_jsxs("div", { className: "evolution-stage", children: [_jsx("img", { src: stage.sprite, alt: stage.name }), _jsx("span", { children: capitalize(stage.name) })] }, stage.id))) })] })), _jsxs("div", { className: "pokemon-info", children: [_jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Types" }), _jsx("div", { className: "types-container", children: pokemonData.types.map(t => (_jsx("span", { className: `type-badge type-${t.type.name}`, children: t.type.name }, t.type.name))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Weaknesses" }), _jsx("div", { className: "weaknesses-container", children: getWeaknesses().map(w => (_jsx("span", { className: `type-badge type-${w}`, children: w }, w))) })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Stats" }), _jsxs("p", { children: ["Height: ", convertToFeetInches(pokemonData.height)] }), _jsxs("p", { children: ["Weight: ", convertToPounds(pokemonData.weight), " lbs"] })] }), _jsxs("div", { className: "info-section", children: [_jsx("h4", { children: "Pok\u00E9dex Entry" }), _jsx("p", { className: "pokedex-description", children: ((_a = speciesData === null || speciesData === void 0 ? void 0 : speciesData.flavor_text_entries.find(e => e.language.name === 'en')) === null || _a === void 0 ? void 0 : _a.flavor_text.replace(/\f/g, ' ')) || 'No description available' })] })] })] }))] }));
 };
 export default PokemonSearch;
