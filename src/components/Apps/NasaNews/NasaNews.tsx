@@ -23,7 +23,7 @@ const NasaNews: React.FC = () => {
       const nasaApiKey = import.meta.env.VITE_NASA_API_KEY;
       try {
         const response = await fetch(
-          `https://api.nasa.gov/planetary/apod?api_key=${nasaApiKey}=true`
+          `https://api.nasa.gov/planetary/apod?api_key=${nasaApiKey}`
         );
         
         if (!response.ok) {

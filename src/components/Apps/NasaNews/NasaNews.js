@@ -19,7 +19,7 @@ const NasaNews = () => {
         const fetchApodData = () => __awaiter(void 0, void 0, void 0, function* () {
             const nasaApiKey = import.meta.env.VITE_NASA_API_KEY;
             try {
-                const response = yield fetch(`https://api.nasa.gov/planetary/apod?api_key=${nasaApiKey}=true`);
+                const response = yield fetch(`https://api.nasa.gov/planetary/apod?api_key=${nasaApiKey}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
