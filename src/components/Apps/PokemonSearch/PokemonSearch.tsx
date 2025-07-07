@@ -308,12 +308,20 @@ const PokemonSearch: React.FC = () => {
             <div className="evolution-chain">
               <h4>Evolution Chain</h4>
               <div className="evolution-stages">
-                {evolutionChain.map(stage => (
-                  <div key={stage.id} className="evolution-stage">
-                    <img src={stage.sprite} alt={stage.name} />
-                    <span>{capitalize(stage.name)}</span>
-                  </div>
-                ))}
+              {evolutionChain.map(stage => (
+                <button
+                  key={stage.id}
+                  className="evolution-stage"
+                  onClick={() => {
+                    setSearchTerm(stage.name);
+                    setInputTerm(stage.name);
+                  }}
+                  title={`Go to ${capitalize(stage.name)}`}
+                >
+                  <img src={stage.sprite} alt={stage.name} />
+                  <span>{capitalize(stage.name)}</span>
+                </button>
+              ))}
               </div>
             </div>
           )}
