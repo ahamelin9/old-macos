@@ -1,0 +1,84 @@
+.safari-container {
+  max-width: 800px;
+  margin: 4rem auto;
+  padding: 0 1rem;
+  font-family: Arial, sans-serif;
+  color: #222;
+  background-color: #fff;
+}
+
+.safari-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.safari-logo {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #4285f4;
+}
+
+.safari-search-box {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.safari-input {
+  width: 100%;
+  max-width: 500px;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  background-color: #fff;
+  color:#222;
+}
+
+.safari-button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.safari-button:hover {
+  background-color: #f1f1f1;
+}
+
+.safari-error {
+  color: red;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.safari-results {
+  margin-top: 2rem;
+}
+
+.safari-result {
+  margin-bottom: 1.5rem;
+}
+
+.safari-result-title {
+  font-size: 1.1rem;
+  color: #1a0dab;
+  text-decoration: none;
+}
+
+.safari-result-title:hover {
+  text-decoration: underline;
+}
+
+.safari-result-url {
+  color: #006621;
+  font-size: 0.9rem;
+}
+
+.safari-result-snippet {
+  font-size: 0.95rem;
+  margin-top: 0.1rem;
+}

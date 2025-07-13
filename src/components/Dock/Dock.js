@@ -12,7 +12,7 @@ import Trash from '../Apps/Trash/Trash';
 import Music from '../Apps/Music/Music';
 import Camera from '../Apps/Camera/Camera';
 import PokemonSearch from '../Apps/PokemonSearch/PokemonSearch';
-import RetroSearch from '../Apps/RetroSearch/RetroSearch';
+import Safari from '../Apps/Safari/Safari';
 // Styling
 import './styles.css';
 import { useEffect, useState } from 'react';
@@ -35,7 +35,7 @@ const Dock = () => {
         {
             name: 'Safari',
             icon: '/safari-icon.png',
-            action: () => openWindow('Retro Search', _jsx(RetroSearch, {}))
+            action: () => openWindow('Safari', _jsx(Safari, {}))
         },
         {
             name: 'Nasa News',
