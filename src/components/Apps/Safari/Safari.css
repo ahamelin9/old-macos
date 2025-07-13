@@ -76,7 +76,11 @@
 .safari-result-url {
   color: #006621;
   font-size: 0.9rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
+
 
 .safari-result-snippet {
   font-size: 0.95rem;
