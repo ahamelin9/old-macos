@@ -91,7 +91,7 @@ const Dock = () => {
   // Choose which apps to show on mobile
   const visibleApps = isMobile
     ? apps.filter(app => 
-        ['Finder', 'Nasa News', 'Music', 'Pokemon'].includes(app.name)
+        ['Finder', 'Safari', 'Nasa News', 'Music', 'Pokemon'].includes(app.name)
       )
     : apps;
 

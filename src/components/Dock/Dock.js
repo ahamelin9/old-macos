@@ -85,7 +85,7 @@ const Dock = () => {
     ];
     // Choose which apps to show on mobile
     const visibleApps = isMobile
-        ? apps.filter(app => ['Finder', 'Nasa News', 'Music', 'Pokemon'].includes(app.name))
+        ? apps.filter(app => ['Finder', 'Safari', 'Nasa News', 'Music', 'Pokemon'].includes(app.name))
         : apps;
     const minimizedWindows = windows.filter(w => w.minimized);
     return (_jsxs("div", { className: "dock", children: [visibleApps.map((app, index) => (_jsxs("div", { className: "dock-item", onClick: app.action, children: [_jsx("img", { src: app.icon, alt: app.name, className: "dock-icon" }), _jsx("span", { className: "dock-label", children: app.name })] }, `app-${index}`))), minimizedWindows.map(window => (_jsxs("div", { className: "dock-item minimized-window", onClick: () => restoreWindow(window.id), children: [_jsx("div", { className: "dock-icon", children: "\uD83D\uDCC4" }), _jsx("span", { className: "dock-label", children: window.title })] }, `min-${window.id}`)))] }));
