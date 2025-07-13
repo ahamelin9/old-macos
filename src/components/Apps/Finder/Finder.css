@@ -10,6 +10,7 @@
   padding: 4px;
   background: #ececec;
   border-bottom: 1px solid #ccc;
+  color: #222;
 }
 
 .toolbar-buttons button {
@@ -18,12 +19,14 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   background: #f9f9f9;
+  color: #222;
   cursor: pointer;
   font-size: 12px;
 }
 
 .toolbar-buttons button:hover {
   background: #e0e0e0;
+  color: #222;
 }
 
 .finder-body {
@@ -34,6 +37,7 @@
 .finder-sidebar {
   width: 150px;
   background: #f0f0f0;
+  color: #222;
   padding: 4px;
   border-right: 1px solid #ccc;
 }
@@ -48,6 +52,7 @@
 .sidebar-item.selected,
 .sidebar-item:hover {
   background: #cce0ff;
+  color: #222;
 }
 
 .sidebar-links {
@@ -71,6 +76,7 @@
   flex: 1;
   padding: 8px;
   overflow-y: auto;
+  color: #222;
 }
 
 .content-section h2 {
