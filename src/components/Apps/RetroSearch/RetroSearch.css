@@ -1,0 +1,102 @@
+/* RetroSearch.css */
+
+.retro-search-container {
+  max-width: 720px;
+  margin: 3rem auto;
+  font-family: "Arial", sans-serif;
+  color: #000;
+  padding: 0 1rem;
+}
+
+.retro-logo {
+  font-size: 3rem;
+  text-align: center;
+  font-weight: bold;
+  color: #3366cc;
+  margin-bottom: 1.5rem;
+}
+
+.retro-search-form {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.retro-search-input {
+  width: 60%;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 24px 0 0 24px;
+  outline: none;
+}
+
+.retro-search-button {
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  border-left: none;
+  border-radius: 0 24px 24px 0;
+  cursor: pointer;
+}
+
+.retro-search-button:hover {
+  background-color: #e8e8e8;
+}
+
+.did-you-mean {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #555;
+  font-style: italic;
+}
+
+.correction-link {
+  background: none;
+  border: none;
+  color: #3366cc;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 1rem;
+}
+
+.retro-loading,
+.retro-error {
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
+  margin-top: 1rem;
+}
+
+.retro-results-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.5rem;
+}
+
+.retro-result {
+  margin-bottom: 1rem;
+}
+
+.retro-result-title {
+  font-size: 1.2rem;
+  color: #1a0dab;
+  text-decoration: none;
+}
+
+.retro-result-title:hover {
+  text-decoration: underline;
+}
+
+.retro-result-url {
+  font-size: 0.9rem;
+  margin-block: 0rem;
+  color: #006621;
+}
+
+.retro-result-snippet {
+  font-size: 0.95rem;
+  color: #545454;
+  margin-top: 0.15rem;
+}

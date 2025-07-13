@@ -11,6 +11,7 @@ import Trash from '../Apps/Trash/Trash';
 import Music from '../Apps/Music/Music';
 import Camera from '../Apps/Camera/Camera';
 import PokemonSearch from '../Apps/PokemonSearch/PokemonSearch';
+import RetroSearch from '../Apps/RetroSearch/RetroSearch';
 // Styling
 import './styles.css';
 import { useEffect, useState } from 'react';
@@ -33,6 +34,11 @@ const Dock = () => {
       name: 'Finder', 
       icon: '/finder-icon.webp',
       action: () => openWindow('Finder', <Finder />)
+    },
+    { 
+      name: 'Safari', 
+      icon: '/safari-icon.png',
+      action: () => openWindow('Retro Search', <RetroSearch />)
     },
     { 
       name: 'Nasa News', 
