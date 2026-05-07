@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 // Components
 import { useWindows } from '../../contexts/WindowContext';
+import { useSpotify } from '../../contexts/SpotifyContext';
 import Window from '../Window/Window';
 import Dock from '../Dock/Dock';
 // Styling
@@ -11,6 +12,7 @@ import './styles.css';
 
 const Desktop = () => {
   const { windows, closeWindow } = useWindows();
+  const { accessToken, logout } = useSpotify();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update time every second
@@ -37,6 +39,11 @@ const Desktop = () => {
           <span className="menu-item">Go</span>
           <span className="menu-item">Window</span>
           <span className="menu-item">Help</span>
+          {accessToken && (
+            <span className="menu-item" onClick={logout} style={{ color: '#1DB954', fontWeight: 'bold' }}>
+              Disconnect Spotify
+            </span>
+          )}
         </div>
         <div className="menu-status">
           <span className="status-item">{format(currentTime, 'EEE')}</span>

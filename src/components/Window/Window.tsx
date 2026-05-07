@@ -83,15 +83,36 @@ const Window: React.FC<WindowProps> = ({
 
   if (minimized) return null;
 
+  // Helper function to calculate safe desktop bounds dynamically
+  const getAvailableDesktopSize = () => {
+    const topMenuBarHeight = 26; // The y-offset for your top menu
+    const dockElement = document.querySelector('.dock');
+    
+    // Get the true rendered height of the dock, default to 0 if not found
+    const dockHeight = dockElement ? dockElement.getBoundingClientRect().height : 0;
+    
+    // Without this, the window calculates the height of the dock itself, but 
+    // forgets the dock is hovering above the bottom of the screen.
+    const dockHoverOffset = 12; 
+    
+    // The buffer keeps the window from physically touching the dock boundary
+    const buffer = 10; 
+
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight - topMenuBarHeight - dockHeight - dockHoverOffset - buffer
+    };
+  };
+
   const handleToggleMaximize = () => {
     if (!maximized) {
       // Save current size/position
       setPrevSize(size);
       setPrevPosition(position);
   
-      // Maximize
+      // Maximize using the dynamic calculation instead of window.innerHeight
       setPosition({ x: 0, y: 26 });
-      setSize({ width: window.innerWidth, height: window.innerHeight });
+      setSize(getAvailableDesktopSize());
       maximizeWindow(id);
     } else {
       // Restore previous size/position
@@ -106,7 +127,8 @@ const Window: React.FC<WindowProps> = ({
   useEffect(() => {
     const handleResize = () => {
       if (maximized) {
-        setSize({ width: window.innerWidth, height: window.innerHeight });
+        // Recalculate if the user rotates their phone or resizes the browser
+        setSize(getAvailableDesktopSize());
       }
     };
     window.addEventListener('resize', handleResize);

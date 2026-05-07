@@ -89,12 +89,21 @@
   cursor: grabbing;
 }
 
+/* 1. The Default Window Content (Restored for normal apps) */
 .window-content {
   flex: 1;
   padding: 5px;
   overflow: auto;
   background: white;
-  padding-bottom: 145px;
+  /* Notice we permanently removed the padding-bottom: 145px! */
+}
+
+/* 2. The Override specifically for the iTunes app */
+.window-content:has(.retro-itunes) {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .window-resize-handle {
