@@ -10,7 +10,7 @@ const ensureCleanId = (id: string) => id.split('?')[0].split('/').pop() || id;
 const PLAYLISTS = [
   { name: "Jackie & Alex <3", id: "6UjgBHoOhSatQxMRDg30HI" },
   { name: "Tism", id: "0IVqQXdYjCuSIcRvBTdgjt" }, 
-  { name: "Indy Eras 24' Tour", id: "2zZaspkKHdD8GVPuigHJPw" },
+  { name: "Zach Bryan 24' Tour", id: "34LNnZ8iIV884x9xZZxDt6" },
   { name: "Indy Eras 24' Tour", id: "2zZaspkKHdD8GVPuigHJPw" },
   { name: "Morgan Wallen 25' Tour", id: "46UZ7PIUiNkzqEjIdia9rv" }
 ];
@@ -26,7 +26,7 @@ interface Track {
   image: string;
 }
 
-// Define Spotify SDK Types with specific types instead of 'any'
+// Define Spotify SDK Types with specific types
 interface SpotifyPlayer {
   addListener: (event: string, callback: (data: { 
     message?: string; 
@@ -135,6 +135,7 @@ const Music = () => {
     if (newIndex < 0) newIndex = tracks.length - 1;
     if (newIndex >= tracks.length) newIndex = 0;
     playTrack(tracks[newIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tracks, currentTrack, activePlaylistId, accessToken, deviceId, isPremium]);
 
   // Fetch tracks
@@ -146,8 +147,8 @@ const Music = () => {
       if (!token) {
         try {
           const response = await fetch('/api/client_credentials');
-          const data = await response.json();
-          token = (data as { access_token: string }).access_token;
+          const data = (await response.json()) as { access_token: string };
+          token = data.access_token;
         } catch (error: unknown) {
           console.error('Guest fetch error:', error);
           setLoadError('Failed to connect to backend.');
@@ -187,7 +188,7 @@ const Music = () => {
       }
     };
 
-    fetchTracks();
+    void fetchTracks();
   }, [accessToken, activePlaylistId]);
 
   // SDK Setup
@@ -207,11 +208,11 @@ const Music = () => {
         name: 'Classic Mac OS Player',
         getOAuthToken: (cb: (token: string) => void) => { cb(accessToken); },
         volume: volume
-      }) as SpotifyPlayer;
+      }) as unknown as SpotifyPlayer;
 
       setPlayer(newPlayer);
 
-      newPlayer.addListener('initialization_error', ({ message }) => setSdkError(`Init Error: ${message}`));
+      newPlayer.addListener('initialization_error', ({ message }) => setSdkError(`Init Error: ${message || 'Unknown'}`));
       newPlayer.addListener('authentication_error', () => setSdkError('Auth Error. Try re-logging.'));
       newPlayer.addListener('account_error', () => setSdkError('Premium required.'));
       newPlayer.addListener('playback_error', ({ message }) => console.warn('Playback Warning:', message));
@@ -230,7 +231,7 @@ const Music = () => {
       });
 
       newPlayer.addListener('player_state_changed', (state) => {
-        const playerState = state as SpotifyPlayerState | null;
+        const playerState = state as unknown as SpotifyPlayerState | null;
         if (!playerState) return;
         
         setIsPlaying(!playerState.paused);
@@ -253,7 +254,7 @@ const Music = () => {
         setCurrentTime(formatTime(pos / 1000));
       });
 
-      newPlayer.connect();
+      void newPlayer.connect();
     };
 
     return () => { if (player) player.disconnect(); };
@@ -279,11 +280,13 @@ const Music = () => {
 
   const togglePlay = async () => {
     if (isPremium && player) {
-      player.togglePlay();
+      void player.togglePlay();
     } else if (audioRef.current) {
       if (!currentTrack?.preview_url) return;
       if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
+      else {
+        void audioRef.current.play();
+      }
       setIsPlaying(!isPlaying);
     }
   };
@@ -372,7 +375,7 @@ const Music = () => {
                 <div
                   key={track.id}
                   className={`track-row ${currentTrack?.id === track.id ? 'active' : ''}`}
-                  onClick={() => playTrack(track)}
+                  onClick={() => { void playTrack(track); }}
                 >
                   <div>
                     {track.image && <img src={track.image} alt="album" className="track-thumb" />}
@@ -398,7 +401,7 @@ const Music = () => {
 
           <div className="transport-controls">
             <button onClick={() => skipTrack('prev')} className="control-button">⏮</button>
-            <button onClick={togglePlay} className="control-button play-pause">
+            <button onClick={() => { void togglePlay(); }} className="control-button play-pause">
               {isPlaying ? '⏸' : '▶'}
             </button>
             <button onClick={() => skipTrack('next')} className="control-button">⏭</button>

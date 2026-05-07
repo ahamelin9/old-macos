@@ -20,11 +20,20 @@ const NasaNews: React.FC = () => {
 
   useEffect(() => {
     const fetchApodData = async () => {
-      const nasaApiKey = import.meta.env.VITE_NASA_API_KEY;
+      // Use DEMO_KEY as a fallback if the environment variable is missing
+      const rawKey = import.meta.env.VITE_NASA_API_KEY || 'DEMO_KEY';
       try {
-        const response = await fetch(
-          `https://api.nasa.gov/planetary/apod?api_key=${nasaApiKey}&thumbs=true`
-        );
+        // Build URL carefully, ensuring api_key is handled correctly
+        const baseUrl = 'https://api.nasa.gov/planetary/apod';
+        
+        // Aggressively clean the key - remove anything after and including '&' or '='
+        const nasaApiKey = rawKey.split('&')[0].split('=')[0].trim();
+        
+        const queryParams = new URLSearchParams();
+        queryParams.append('api_key', nasaApiKey);
+        queryParams.append('thumbs', 'true');
+
+        const response = await fetch(`${baseUrl}?${queryParams.toString()}`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -64,25 +73,37 @@ const NasaNews: React.FC = () => {
         
         {apodData.media_type === 'image' ? (
           <div className="apod-image-container">
+            <div className="quality-indicator">
+              Currently Viewing: <strong>{showHD ? 'HD Quality' : 'Standard Quality'}</strong>
+            </div>
             <img 
               src={showHD && apodData.hdurl ? apodData.hdurl : apodData.url} 
               alt={apodData.title} 
-              className="apod-image"
+              className={`apod-image ${showHD ? 'hd-active' : ''}`}
+              onLoad={() => console.log(`Loaded ${showHD ? 'HD' : 'Standard'} image`)}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = apodData.url || '';
               }}
             />
-            {apodData.hdurl && (
-              <button 
-                className="hd-toggle" 
-                onClick={() => setShowHD(!showHD)}
-              >
-                {showHD ? 'Show Standard Quality' : 'Show HD Quality'}
-              </button>
-            )}
+            <div className="button-row">
+              {apodData.hdurl && (
+                <button 
+                  className="hd-toggle" 
+                  onClick={() => setShowHD(!showHD)}
+                >
+                  {showHD ? '◀ Switch to Standard' : '▶ Switch to HD Quality'}
+                </button>
+              )}
+              {showHD && apodData.hdurl && (
+                <a href={apodData.hdurl} target="_blank" rel="noopener noreferrer" className="download-link">
+                  Open Original HD File
+                </a>
+              )}
+            </div>
           </div>
-        ) : apodData.media_type === 'video' ? (
+        ) : 
+ apodData.media_type === 'video' ? (
           <div className="apod-video-container">
             <iframe
               src={apodData.url}
