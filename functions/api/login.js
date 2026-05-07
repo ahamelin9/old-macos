@@ -1,9 +1,21 @@
 // functions/api/login.js
 export async function onRequest(context) {
   const { env } = context;
-  const client_id = env.SPOTIFY_CLIENT_ID;
-  const redirect_uri = `${new URL(context.request.url).origin}/api/callback`;
   
+  // Try both names in case of prefixing
+  const client_id = env.SPOTIFY_CLIENT_ID || env.VITE_SPOTIFY_CLIENT_ID;
+  
+  if (!client_id) {
+    return new Response(
+      JSON.stringify({ 
+        error: "Missing SPOTIFY_CLIENT_ID in Cloudflare Environment Variables.",
+        available_keys: Object.keys(env) 
+      }), 
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const redirect_uri = `${new URL(context.request.url).origin}/api/callback`;
   const scope = "user-read-private user-read-email user-modify-playback-state user-read-playback-state streaming";
   
   const spotifyUrl = new URL("https://accounts.spotify.com/authorize");

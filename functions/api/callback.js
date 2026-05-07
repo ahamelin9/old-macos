@@ -5,8 +5,8 @@ export async function onRequest(context) {
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
 
-  const client_id = env.SPOTIFY_CLIENT_ID;
-  const client_secret = env.SPOTIFY_CLIENT_SECRET;
+  const client_id = env.SPOTIFY_CLIENT_ID || env.VITE_SPOTIFY_CLIENT_ID;
+  const client_secret = env.SPOTIFY_CLIENT_SECRET || env.VITE_SPOTIFY_CLIENT_SECRET;
   const redirect_uri = `${url.origin}/api/callback`;
 
   if (error) {
@@ -15,6 +15,10 @@ export async function onRequest(context) {
 
   if (!code) {
     return Response.redirect(url.origin, 307);
+  }
+
+  if (!client_id || !client_secret) {
+    return new Response("Missing Spotify credentials in Cloudflare environment", { status: 500 });
   }
 
   const authHeader = btoa(`${client_id}:${client_secret}`);
@@ -33,7 +37,8 @@ export async function onRequest(context) {
   });
 
   if (!response.ok) {
-    return new Response("Failed to exchange token", { status: 500 });
+    const errText = await response.text();
+    return new Response(`Spotify Token Exchange Failed: ${errText}`, { status: 500 });
   }
 
   const tokens = await response.json();

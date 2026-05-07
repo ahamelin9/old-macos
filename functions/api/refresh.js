@@ -8,8 +8,13 @@ export async function onRequest(context) {
     return new Response("Missing refresh token", { status: 400 });
   }
 
-  const client_id = env.SPOTIFY_CLIENT_ID;
-  const client_secret = env.SPOTIFY_CLIENT_SECRET;
+  const client_id = env.SPOTIFY_CLIENT_ID || env.VITE_SPOTIFY_CLIENT_ID;
+  const client_secret = env.SPOTIFY_CLIENT_SECRET || env.VITE_SPOTIFY_CLIENT_SECRET;
+
+  if (!client_id || !client_secret) {
+    return new Response("Missing credentials", { status: 500 });
+  }
+
   const authHeader = btoa(`${client_id}:${client_secret}`);
 
   const response = await fetch("https://accounts.spotify.com/api/token", {
