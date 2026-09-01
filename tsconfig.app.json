@@ -8,6 +8,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "noEmit": true,
     
     // Type inclusion
     "types": ["vite/client", "react", "react-dom"],

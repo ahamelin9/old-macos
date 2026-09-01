@@ -9,6 +9,7 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
     "types": ["vite/client"],
     "baseUrl": "./src",
     "typeRoots": [

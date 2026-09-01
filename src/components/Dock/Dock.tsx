@@ -12,6 +12,7 @@ import Music from '../Apps/Music/Music';
 import Camera from '../Apps/Camera/Camera';
 import PokemonSearch from '../Apps/PokemonSearch/PokemonSearch';
 import Safari from '../Apps/Safari/Safari';
+import FieldGuide from '../Apps/FieldGuide/FieldGuide';
 // Styling
 import './styles.css';
 import { useEffect, useState } from 'react';
@@ -50,7 +51,11 @@ const Dock = () => {
       icon: '/pokemon-icon.png',
       action: () => openWindow('Pokemon Search', <PokemonSearch />)
     },
-
+    { 
+      name: 'Field Guide', 
+      icon: '/fieldguide-icon.png',
+      action: () => openWindow('Field Guide (Flora & Fauna)', <FieldGuide />)
+    },
     { 
       name: 'Music', 
       icon: '/music-icon.png',
@@ -91,7 +96,7 @@ const Dock = () => {
   // Choose which apps to show on mobile
   const visibleApps = isMobile
     ? apps.filter(app => 
-        ['Finder', 'Safari', 'Nasa News', 'Music', 'Pokemon'].includes(app.name)
+        ['Finder', 'Safari', 'Field Guide', 'Nasa News', 'Pokemon'].includes(app.name)
       )
     : apps;
 
