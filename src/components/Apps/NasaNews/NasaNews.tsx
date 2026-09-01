@@ -16,7 +16,6 @@ const NasaNews: React.FC = () => {
   const [apodData, setApodData] = useState<ApodData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [showHD, setShowHD] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchApodData = async () => {
@@ -63,6 +62,19 @@ const NasaNews: React.FC = () => {
     return <div className="nasa-container">No data available</div>;
   }
 
+  const imageUrl = apodData.hdurl || apodData.url;
+  const isDirectVideo = Boolean(
+    apodData.url &&
+    (
+      apodData.url.endsWith('.mp4') ||
+      apodData.url.endsWith('.webm') ||
+      apodData.url.endsWith('.ogg') ||
+      apodData.url.endsWith('.mov') ||
+      apodData.url.endsWith('.m4v') ||
+      apodData.url.includes('.mp4?')
+    )
+  );
+
   return (
     <div className="nasa-container">
       <h2 className="nasa-title">NASA Astronomy Picture of the Day</h2>
@@ -73,44 +85,45 @@ const NasaNews: React.FC = () => {
         
         {apodData.media_type === 'image' ? (
           <div className="apod-image-container">
-            <div className="quality-indicator">
-              Currently Viewing: <strong>{showHD ? 'HD Quality' : 'Standard Quality'}</strong>
-            </div>
             <img 
-              src={showHD && apodData.hdurl ? apodData.hdurl : apodData.url} 
+              src={imageUrl} 
               alt={apodData.title} 
-              className={`apod-image ${showHD ? 'hd-active' : ''}`}
-              onLoad={() => console.log(`Loaded ${showHD ? 'HD' : 'Standard'} image`)}
+              className="apod-image"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = apodData.url || '';
+                if (apodData.url && target.src !== apodData.url) {
+                  target.src = apodData.url;
+                }
               }}
             />
-            <div className="button-row">
-              {apodData.hdurl && (
-                <button 
-                  className="hd-toggle" 
-                  onClick={() => setShowHD(!showHD)}
-                >
-                  {showHD ? '◀ Switch to Standard' : '▶ Switch to HD Quality'}
-                </button>
-              )}
-              {showHD && apodData.hdurl && (
+            {apodData.hdurl && (
+              <div className="button-row">
                 <a href={apodData.hdurl} target="_blank" rel="noopener noreferrer" className="download-link">
-                  Open Original HD File
+                  Open Full Resolution Original ↗
                 </a>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-        ) : 
- apodData.media_type === 'video' ? (
+        ) : apodData.media_type === 'video' ? (
           <div className="apod-video-container">
-            <iframe
-              src={apodData.url}
-              title={apodData.title}
-              className="apod-video"
-              allowFullScreen
-            />
+            {isDirectVideo ? (
+              <video
+                src={apodData.url}
+                controls
+                playsInline
+                className="apod-video"
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <iframe
+                src={apodData.url}
+                title={apodData.title}
+                className="apod-video"
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+            )}
           </div>
         ) : null}
         

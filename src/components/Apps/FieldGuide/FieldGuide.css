@@ -693,13 +693,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 16px 16px 80px 16px;
+  box-sizing: border-box;
 }
 
 .retro-modal-window {
   width: 520px;
   max-width: 95vw;
-  max-height: 85vh;
+  max-height: calc(85vh - 70px);
+  transform: translateY(-20px);
   background: #ECE9D8;
   border: 2px solid #505050;
   border-radius: 6px;

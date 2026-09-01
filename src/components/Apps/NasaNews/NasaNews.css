@@ -42,6 +42,7 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  width: 100%;
 }
 
 .quality-indicator {
@@ -78,9 +79,20 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.apod-video {
+video.apod-video {
   width: 100%;
-  min-height: 450px;
+  max-width: 720px;
+  height: auto;
+  max-height: 420px;
+  background: #000;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+iframe.apod-video {
+  width: 100%;
+  max-width: 720px;
+  height: 380px;
   border: none;
   border-radius: 4px;
 }
