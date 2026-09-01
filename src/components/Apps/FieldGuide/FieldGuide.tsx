@@ -43,8 +43,8 @@ interface LocationSuggestion {
 type TabType = 'all' | 'plants' | 'wildlife' | 'birds' | 'insects' | 'fungi';
 
 const POPULAR_LOCATIONS: { name: string; query: string; displayName: string; lat: number; lng: number }[] = [
-  { name: '⚡ Kanto (Tokyo)', query: 'Kanto Region, Japan', displayName: 'Kantō Region (Tokyo), Japan', lat: 35.6762, lng: 139.6503 },
-  { name: '🏯 Johto (Kyoto)', query: 'Kyoto, Kansai, Japan', displayName: 'Kansai Region (Kyoto), Japan', lat: 35.0116, lng: 135.7681 },
+  { name: '⚡ Kanto (Kantō/Tokyo)', query: 'Kanto Region, Japan', displayName: 'Kantō Region (Tokyo), Japan', lat: 35.6762, lng: 139.6503 },
+  { name: '🏯 Johto (Kyoto/Kansai)', query: 'Kyoto, Kansai, Japan', displayName: 'Kansai Region (Kyoto), Japan', lat: 35.0116, lng: 135.7681 },
   { name: '❄️ Sinnoh (Hokkaido)', query: 'Hokkaido, Japan', displayName: 'Hokkaido Region, Japan', lat: 43.0642, lng: 141.3469 },
   { name: '🗽 Unova (New York)', query: 'New York City, USA', displayName: 'New York City (Unova), USA', lat: 40.7128, lng: -74.0060 }
 ];
@@ -57,6 +57,8 @@ const TAXA_FILTER_MAP: Record<TabType, string> = {
   insects: 'Insecta,Arachnida',
   fungi: 'Fungi'
 };
+
+const PAGE_SIZE = 36;
 
 const FieldGuide: React.FC = () => {
   const [searchInput, setSearchInput] = useState('Kanto Region, Japan');
@@ -71,6 +73,12 @@ const FieldGuide: React.FC = () => {
   const [speciesList, setSpeciesList] = useState<SpeciesResult[]>([]);
   const [filterQuery, setFilterQuery] = useState('');
   
+  // Pagination & Infinite Scroll states
+  const [page, setPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [totalRecords, setTotalRecords] = useState<number | null>(null);
+  
   // UI states
   const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [isLoadingSpecies, setIsLoadingSpecies] = useState(false);
@@ -81,6 +89,9 @@ const FieldGuide: React.FC = () => {
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sentinel ref for infinite scroll observer
+  const observerTargetRef = useRef<HTMLDivElement | null>(null);
 
   // Inspector modal state
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesResult | null>(null);
@@ -173,18 +184,20 @@ const FieldGuide: React.FC = () => {
     setShowSuggestions(false);
   };
 
-  // Fetch species from iNaturalist API
+  // Initial fetch on location, radius, or tab change
   useEffect(() => {
     if (!currentLocation) return;
 
     let isMounted = true;
-    const fetchSpecies = async () => {
+    const fetchInitialSpecies = async () => {
       setIsLoadingSpecies(true);
       setErrorMessage(null);
+      setPage(1);
+      setHasMore(true);
 
       try {
         const taxaParam = TAXA_FILTER_MAP[activeTab];
-        const url = `https://api.inaturalist.org/v1/observations/species_counts?lat=${currentLocation.lat}&lng=${currentLocation.lng}&radius=${radiusKm}&iconic_taxa=${encodeURIComponent(taxaParam)}&quality_grade=research&hrank=species&per_page=45`;
+        const url = `https://api.inaturalist.org/v1/observations/species_counts?lat=${currentLocation.lat}&lng=${currentLocation.lng}&radius=${radiusKm}&iconic_taxa=${encodeURIComponent(taxaParam)}&quality_grade=research&hrank=species&page=1&per_page=${PAGE_SIZE}`;
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -193,7 +206,10 @@ const FieldGuide: React.FC = () => {
 
         const data = await response.json();
         if (isMounted) {
-          setSpeciesList(data.results || []);
+          const results: SpeciesResult[] = data.results || [];
+          setSpeciesList(results);
+          setTotalRecords(data.total_results || results.length);
+          setHasMore(results.length >= PAGE_SIZE);
         }
       } catch (err: unknown) {
         if (isMounted) {
@@ -206,12 +222,70 @@ const FieldGuide: React.FC = () => {
       }
     };
 
-    fetchSpecies();
+    fetchInitialSpecies();
 
     return () => {
       isMounted = false;
     };
   }, [currentLocation, radiusKm, activeTab]);
+
+  // Load more species for infinite scroll
+  const loadMoreSpecies = async () => {
+    if (!hasMore || isLoadingSpecies || isLoadingMore || !currentLocation) return;
+
+    setIsLoadingMore(true);
+    const nextPage = page + 1;
+
+    try {
+      const taxaParam = TAXA_FILTER_MAP[activeTab];
+      const url = `https://api.inaturalist.org/v1/observations/species_counts?lat=${currentLocation.lat}&lng=${currentLocation.lng}&radius=${radiusKm}&iconic_taxa=${encodeURIComponent(taxaParam)}&quality_grade=research&hrank=species&page=${nextPage}&per_page=${PAGE_SIZE}`;
+
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        const newResults: SpeciesResult[] = data.results || [];
+
+        if (newResults.length > 0) {
+          setSpeciesList(prev => {
+            const seen = new Set(prev.map(p => p.taxon.id));
+            const unique = newResults.filter(p => !seen.has(p.taxon.id));
+            return [...prev, ...unique];
+          });
+          setPage(nextPage);
+          setHasMore(newResults.length >= PAGE_SIZE);
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // IntersectionObserver for seamless infinite scrolling
+  useEffect(() => {
+    const target = observerTargetRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingSpecies && !isLoadingMore) {
+          loadMoreSpecies();
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '300px'
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingSpecies, isLoadingMore, page, currentLocation, radiusKm, activeTab]);
 
   // Fetch Wikipedia summary when species is selected
   useEffect(() => {
@@ -338,7 +412,7 @@ const FieldGuide: React.FC = () => {
         </form>
 
         <div className="fieldguide-quick-locations">
-          <span className="quick-label">Pokemon Regions:</span>
+          <span className="quick-label">Hotspots:</span>
           {POPULAR_LOCATIONS.map((loc) => (
             <button
               key={loc.name}
@@ -409,36 +483,42 @@ const FieldGuide: React.FC = () => {
       <div className="fieldguide-tabs-container">
         <div className="fieldguide-tabs">
           <button
+            type="button"
             className={`retro-tab ${activeTab === 'all' ? 'active' : ''}`}
             onClick={() => setActiveTab('all')}
           >
             🌍 All Species
           </button>
           <button
+            type="button"
             className={`retro-tab ${activeTab === 'plants' ? 'active' : ''}`}
             onClick={() => setActiveTab('plants')}
           >
             🌿 Plants (Flora)
           </button>
           <button
+            type="button"
             className={`retro-tab ${activeTab === 'wildlife' ? 'active' : ''}`}
             onClick={() => setActiveTab('wildlife')}
           >
             🦌 Wildlife (Fauna)
           </button>
           <button
+            type="button"
             className={`retro-tab ${activeTab === 'birds' ? 'active' : ''}`}
             onClick={() => setActiveTab('birds')}
           >
             🦅 Birds
           </button>
           <button
+            type="button"
             className={`retro-tab ${activeTab === 'insects' ? 'active' : ''}`}
             onClick={() => setActiveTab('insects')}
           >
             🦋 Insects
           </button>
           <button
+            type="button"
             className={`retro-tab ${activeTab === 'fungi' ? 'active' : ''}`}
             onClick={() => setActiveTab('fungi')}
           >
@@ -456,6 +536,7 @@ const FieldGuide: React.FC = () => {
           />
           {filterQuery && (
             <button
+              type="button"
               className="filter-clear-btn"
               onClick={() => setFilterQuery('')}
             >
@@ -550,6 +631,36 @@ const FieldGuide: React.FC = () => {
                 </div>
               );
             })}
+
+            {/* Infinite Scroll Sentinel & Status Indicator */}
+            {hasMore && !filterQuery && (
+              <div ref={observerTargetRef} className="infinite-scroll-footer">
+                {isLoadingMore ? (
+                  <div className="infinite-scroll-loading">
+                    <div className="mini-progress-bar">
+                      <div className="mini-progress-fill" />
+                    </div>
+                    <span className="infinite-loading-text">
+                      Loading more specimens from iNaturalist...
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="retro-button load-more-button"
+                    onClick={loadMoreSpecies}
+                  >
+                    ⬇ Load More Specimens ({speciesList.length}{totalRecords ? ` of ${totalRecords}` : ''} loaded)
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!hasMore && speciesList.length > 0 && !filterQuery && (
+              <div className="all-loaded-banner">
+                ✓ All {speciesList.length} cataloged specimens loaded for {currentLocation.name}
+              </div>
+            )}
           </div>
         )}
       </div>
