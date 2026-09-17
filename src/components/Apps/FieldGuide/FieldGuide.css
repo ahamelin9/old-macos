@@ -3,8 +3,16 @@
    ========================================================= */
 
 .fieldguide-app {
+  /* Colour key -- mirrored in palette.ts, which tints the map tiles. Change both. */
+  --fg-native: #5E9E4A;
+  --fg-introduced: #C4763A;
+  --fg-endemic: #8E5FBF;
+  --fg-present: #5B7FA6;
+  --fg-absent: #E8E8E8;
+  --fg-sightings: #C0392B;
   display: flex;
   flex-direction: column;
+  min-height: 100%;
   background-color: #ECE9D8;
   font-family: 'Geneva', 'Lucida Grande', 'Chicago', Helvetica, Arial, sans-serif;
   color: #111;
@@ -411,6 +419,7 @@
 /* Content Area - Natural Flow (no inner scrollbar) */
 .fieldguide-content-area {
   min-height: 200px;
+  flex: 1;
   background: #FFFFFF;
   border: 2px solid;
   border-color: #808080 #DFDFDF #DFDFDF #808080;
@@ -936,4 +945,670 @@
     padding: 3px 6px;
     white-space: nowrap;
   }
+}
+
+/* =========================================================
+   Search Mode Switch (Places vs. Species)
+   ========================================================= */
+
+.fieldguide-mode-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #C4C4C4;
+  padding-bottom: 5px;
+}
+
+.mode-switch-btn {
+  font-family: 'Geneva', 'Lucida Grande', sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 3px 10px;
+  background: linear-gradient(to bottom, #FFFFFF 0%, #E6E6E6 40%, #CCCCCC 100%);
+  border: 1px solid #909090;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0px #FFFFFF;
+  color: #555;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.mode-switch-btn:hover {
+  background: linear-gradient(to bottom, #FFFFFF 0%, #DCE8FA 100%);
+  color: #1A3668;
+}
+
+.mode-switch-btn.active {
+  background: linear-gradient(to bottom, #6D8CBE 0%, #3B5A96 100%);
+  border-color: #2A487B;
+  color: #FFF;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.mode-switch-hint {
+  font-size: 10px;
+  font-style: italic;
+  color: #666;
+  margin-left: 4px;
+}
+
+/* Species autocomplete rows */
+.taxon-suggestion-row {
+  gap: 7px;
+}
+
+.sug-thumb {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border: 1px solid #999;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: #DFE3E6;
+}
+
+.taxon-suggestion-row .sug-text {
+  flex: 1;
+}
+
+.sug-sci {
+  color: #666;
+  font-size: 10px;
+}
+
+.suggestion-row:hover .sug-sci,
+.suggestion-row:hover .sug-rank {
+  color: #DCE8FA;
+}
+
+.sug-rank {
+  font-size: 9px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.species-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+/* =========================================================
+   Species Range Panel
+   ========================================================= */
+
+.species-range-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.range-header-card {
+  display: flex;
+  gap: 10px;
+  background: #F8F8F8;
+  border: 1px solid #B0B0B0;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+}
+
+.range-header-photo {
+  width: 92px;
+  height: 92px;
+  flex-shrink: 0;
+  border: 2px solid;
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
+  background: #000;
+  border-radius: 3px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.range-header-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.range-header-photo .big-icon {
+  font-size: 40px;
+}
+
+.range-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.range-common-name {
+  font-size: 15px;
+  margin: 0;
+  color: #1A3668;
+}
+
+.range-scientific-name {
+  font-size: 11px;
+  margin: 0;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.range-rank-chip {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  background: #C9D4E8;
+  border: 1px solid #9BAAC6;
+  border-radius: 2px;
+  padding: 0 4px;
+  color: #33507E;
+  font-style: normal;
+}
+
+.range-lineage {
+  font-size: 9px;
+  color: #777;
+  margin: 2px 0 0 0;
+}
+
+.range-header-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.range-stat {
+  font-size: 10px;
+  background: #FFF;
+  border: 1px solid #B8B8B8;
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: #333;
+}
+
+.conservation-chip {
+  background: #FFF6E0;
+  border-color: #D9B25F;
+  color: #7A5A12;
+}
+
+.extinct-chip {
+  background: #F2F2F2;
+  border-color: #999;
+  color: #555;
+}
+
+/* Range map + layer legend */
+.range-map-wrapper {
+  border: 1px solid #B0B0B0;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.range-map-canvas {
+  height: 230px;
+  border-top: 1px solid #7A7A7A;
+}
+
+.range-map-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #DFDFDF;
+  border-top: 1px solid #A8A8A8;
+  padding: 4px 6px;
+  font-size: 10px;
+  color: #333;
+}
+
+.range-layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.legend-swatch {
+  width: 11px;
+  height: 11px;
+  border: 1px solid #666;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.swatch-range {
+  background: var(--fg-native);
+}
+
+.swatch-sightings {
+  background: var(--fg-sightings);
+}
+
+.range-missing-note {
+  font-style: italic;
+  color: #7A5A12;
+  margin-left: auto;
+}
+
+/* Establishment-means groups */
+.range-places-section {
+  background: #F8F8F8;
+  border: 1px solid #B0B0B0;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.range-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #DDD;
+  padding-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.range-section-header h4 {
+  margin: 0;
+  font-size: 12px;
+  color: #333;
+}
+
+.range-truncation-note {
+  font-size: 9px;
+  color: #888;
+  font-style: italic;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.range-no-places {
+  font-size: 11px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+}
+
+
+.range-summary-section {
+  background: #F8F8F8;
+  border: 1px solid #B0B0B0;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+}
+
+.range-summary-section h4 {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+  color: #333;
+}
+
+.range-links {
+  padding-bottom: 4px;
+}
+
+@media (max-width: 580px) {
+  .range-header-card {
+    flex-direction: column;
+  }
+
+  .range-header-photo {
+    width: 100%;
+    height: 120px;
+  }
+
+  .mode-switch-hint {
+    display: none;
+  }
+
+  .range-map-canvas {
+    height: 180px;
+  }
+}
+
+/* Continental native/introduced summary */
+
+
+
+
+
+
+
+
+
+.range-country-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-top: 1px solid #DDD;
+  padding-top: 6px;
+  font-size: 11px;
+  color: #333;
+}
+
+.range-country-hint {
+  font-size: 10px;
+  color: #777;
+  font-style: italic;
+}
+
+/* Keep the sample caveat on the right edge now that a hint follows the title */
+.range-country-header .range-truncation-note {
+  margin-left: auto;
+}
+
+/* Featured species gallery (species mode, nothing selected yet) */
+.featured-species-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.featured-intro {
+  border-bottom: 1px solid #DDD;
+  padding-bottom: 8px;
+}
+
+.featured-intro h3 {
+  margin: 0 0 3px 0;
+  font-size: 13px;
+  color: #1A3668;
+}
+
+.featured-intro p {
+  margin: 0;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Classic Platinum list view -- same construction as the iTunes track list */
+.platinum-list {
+  border: 2px solid;
+  border-color: #808080 #FFFFFF #FFFFFF #808080;
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+.platinum-list-header {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  background: linear-gradient(to bottom, #F9F9F9 0%, #E0E0E0 100%);
+  border-bottom: 1px solid #A0A0A0;
+  font-size: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.platinum-list-header > div {
+  padding: 3px 7px;
+  border-right: 1px solid #C0C0C0;
+}
+
+.platinum-list-header > div:last-child {
+  border-right: none;
+}
+
+.platinum-list-row {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  align-items: center;
+  font-size: 11px;
+  color: #000;
+  border-bottom: 1px solid #EAEAEA;
+}
+
+.platinum-list-row:nth-child(even) {
+  background-color: #F4F8FF;
+}
+
+.platinum-list-row:last-child {
+  border-bottom: none;
+}
+
+.platinum-list-row > div {
+  padding: 3px 7px;
+}
+
+.platinum-list-row.row-absent {
+  color: #999;
+}
+
+/* Small square status chips, the period way to key a list column */
+.status-swatch {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #6B6B6B;
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+.swatch-native {
+  background: var(--fg-native);
+}
+
+.swatch-endemic {
+  background: var(--fg-endemic);
+}
+
+.swatch-introduced {
+  background: var(--fg-introduced);
+}
+
+/* Seen here, but no checklist entry classifies how it got here */
+.swatch-present {
+  background: var(--fg-present);
+}
+
+.swatch-absent {
+  background: var(--fg-absent);
+}
+
+/* Country rows, built like the "Hotspots:" row in places mode */
+.range-means-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.range-means-row .quick-label {
+  white-space: nowrap;
+  line-height: 18px;
+  flex-shrink: 0;
+}
+
+/* Country names vary in width, so the row is height-clamped rather than
+   item-counted; CountryRow measures the overflow and offers the toggle. */
+.range-means-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* max-height is set from a measured button height in CountryRow */
+.range-means-buttons.clamped {
+  overflow: hidden;
+}
+
+.range-means-buttons.expanded {
+  max-height: none;
+}
+
+.range-expand-btn {
+  flex-shrink: 0;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.range-legend-line {
+  font-size: 9px;
+  color: #777;
+  margin: 0;
+  line-height: 1.6;
+  border-top: 1px solid #D4D4D4;
+  padding-top: 6px;
+}
+
+/* =========================================================
+   Similar Species (commonly-confused taxa)
+   ========================================================= */
+
+.similar-species-section {
+  background: #F8F8F8;
+  border: 1px solid #B0B0B0;
+  border-radius: 4px;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.similar-loading {
+  font-size: 10px;
+  color: #777;
+  font-style: italic;
+  margin: 0;
+}
+
+.similar-species-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  gap: 6px;
+}
+
+/* Compact sibling of .species-card -- same chrome, smaller footprint,
+   since this is a secondary section rather than the main results grid. */
+.similar-card {
+  all: unset;
+  box-sizing: border-box;
+  font-family: 'Geneva', 'Lucida Grande', sans-serif;
+  background: #FFFFFF;
+  border: 1px solid #B0B0B0;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.similar-card:hover {
+  border-color: #4769A5;
+  box-shadow: 0 0 0 1px #4769A5, 1px 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.similar-card:active {
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.similar-photo {
+  width: 100%;
+  height: 74px;
+  background: #E8E8E8;
+  border-bottom: 1px solid #CCC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.similar-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.similar-placeholder {
+  font-size: 26px;
+}
+
+.similar-info {
+  padding: 4px 6px 5px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.similar-common {
+  font-size: 11px;
+  font-weight: bold;
+  color: #1A3668;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.similar-scientific {
+  font-size: 9px;
+  font-style: italic;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.similar-count {
+  font-size: 9px;
+  color: #8A6D3B;
+  margin-top: 2px;
+}
+
+/* The one in-app action in a row of external links, so it takes the primary
+   (blue) treatment used by the Explore/Track buttons rather than looking
+   like a third "leave the app" link. */
+.range-jump-btn {
+  background: linear-gradient(to bottom, #74A6E8 0%, #4769A5 100%);
+  color: #FFF;
+  border-color: #2A487B;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  font-weight: bold;
+}
+
+.range-jump-btn:hover {
+  background: linear-gradient(to bottom, #86B5F5 0%, #3B5B94 100%);
+}
+
+.range-jump-btn:active {
+  background: linear-gradient(to bottom, #3B5B94 0%, #2A487B 100%);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.4);
 }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MapPreview from './MapPreview';
+import SpeciesRange, { TaxonSuggestion } from './SpeciesRange';
+import { useGridColumns } from './useGridColumns';
 import './FieldGuide.css';
 
 interface Taxon {
@@ -40,7 +42,13 @@ interface LocationSuggestion {
   lon: string;
 }
 
-type TabType = 'all' | 'plants' | 'wildlife' | 'birds' | 'insects' | 'fungi';
+type TabType = 'all' | 'plants' | 'wildlife' | 'birds' | 'insects';
+
+/**
+ * 'places' searches a location and lists what lives there.
+ * 'species' searches a plant or animal and maps where it is native.
+ */
+type SearchMode = 'places' | 'species';
 
 const POPULAR_LOCATIONS: { name: string; query: string; displayName: string; lat: number; lng: number }[] = [
   { name: '⚡ Kanto (Kantō/Tokyo)', query: 'Kanto Region, Japan', displayName: 'Kantō Region (Tokyo), Japan', lat: 35.6762, lng: 139.6503 },
@@ -54,9 +62,35 @@ const TAXA_FILTER_MAP: Record<TabType, string> = {
   plants: 'Plantae',
   wildlife: 'Mammalia,Reptilia,Amphibia',
   birds: 'Aves',
-  insects: 'Insecta,Arachnida',
-  fungi: 'Fungi'
+  insects: 'Insecta,Arachnida'
 };
+
+/**
+ * Ancestor taxon ids used to pull a random discovery feed. `/v1/taxa` ignores
+ * `iconic_taxa` entirely (it returns the same page whatever you pass), but
+ * `taxon_id` filters to descendants, so this is how you actually get "a random
+ * bird" rather than another page of common plants.
+ */
+const RANDOM_GROUPS: { id: number; name: string }[] = [
+  { id: 40151, name: 'Mammals' },
+  { id: 3, name: 'Birds' },
+  { id: 26036, name: 'Reptiles' },
+  { id: 20978, name: 'Amphibians' },
+  { id: 47158, name: 'Insects' },
+  { id: 47119, name: 'Arachnids' },
+  { id: 47126, name: 'Plants' },
+  { id: 47178, name: 'Fish' },
+  { id: 47115, name: 'Molluscs' }
+];
+
+// Each batch draws from a few groups at once so rows stay mixed. Page depth is
+// capped well inside every group's total so a draw never lands on an empty page.
+const GROUPS_PER_BATCH = 3;
+const PER_GROUP = 8;
+const MAX_RANDOM_PAGE = 25;
+
+const pickRandom = <T,>(items: T[], count: number): T[] =>
+  [...items].sort(() => Math.random() - 0.5).slice(0, count);
 
 const PAGE_SIZE = 36;
 
@@ -68,8 +102,9 @@ const FieldGuide: React.FC = () => {
     lat: 35.6762,
     lng: 139.6503
   });
-  const [radiusKm, setRadiusKm] = useState<number>(30);
+  const [radiusKm, setRadiusKm] = useState<number>(25);
   const [activeTab, setActiveTab] = useState<TabType>('all');
+  const [searchMode, setSearchMode] = useState<SearchMode>('places');
   const [speciesList, setSpeciesList] = useState<SpeciesResult[]>([]);
   const [filterQuery, setFilterQuery] = useState('');
   
@@ -89,6 +124,19 @@ const FieldGuide: React.FC = () => {
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Species-mode search ("where does this animal live?")
+  const [taxonSuggestions, setTaxonSuggestions] = useState<TaxonSuggestion[]>([]);
+  const [selectedTaxon, setSelectedTaxon] = useState<TaxonSuggestion | null>(null);
+  const [isSearchingTaxa, setIsSearchingTaxa] = useState(false);
+  const [featuredTaxa, setFeaturedTaxa] = useState<TaxonSuggestion[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(false);
+  const featuredRequestedRef = useRef(false);
+  const seenFeaturedIdsRef = useRef<Set<number>>(new Set());
+  const gallerySentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Full rows only, so the layout never ends on a ragged edge
+  const [galleryGridRef, galleryColumns] = useGridColumns(160, 8);
 
   // Sentinel ref for infinite scroll observer
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
@@ -139,7 +187,44 @@ const FieldGuide: React.FC = () => {
     }
   };
 
-  // Fetch location autocomplete suggestions
+  // Search species by name using the iNaturalist taxa autocomplete
+  const searchTaxa = async (query: string) => {
+    if (!query.trim()) return;
+    setIsSearchingTaxa(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch(
+        `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(query)}&per_page=8&is_active=true`
+      );
+      if (!res.ok) {
+        throw new Error(`iNaturalist API error: HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const results: TaxonSuggestion[] = data.results || [];
+
+      if (results.length === 0) {
+        setErrorMessage(`No species matched "${query}". Try a common name like "red fox" or a scientific name.`);
+        return;
+      }
+
+      // A single confident hit goes straight to the range map
+      setTaxonSuggestions(results);
+      if (results.length === 1) {
+        setSelectedTaxon(results[0]);
+        setShowSuggestions(false);
+      } else {
+        setShowSuggestions(true);
+      }
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Error looking up species.');
+    } finally {
+      setIsSearchingTaxa(false);
+    }
+  };
+
+  // Debounced autocomplete — hits Nominatim or iNaturalist depending on mode
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchInput(val);
@@ -148,9 +233,25 @@ const FieldGuide: React.FC = () => {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (val.trim().length > 2) {
-      searchTimeoutRef.current = setTimeout(async () => {
-        try {
+    if (val.trim().length <= 2) {
+      setLocationSuggestions([]);
+      setTaxonSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        if (searchMode === 'species') {
+          const res = await fetch(
+            `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(val)}&per_page=8&is_active=true`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setTaxonSuggestions(data.results || []);
+            setShowSuggestions(true);
+          }
+        } else {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=4`,
             {
@@ -162,14 +263,54 @@ const FieldGuide: React.FC = () => {
             setLocationSuggestions(data);
             setShowSuggestions(true);
           }
-        } catch {
-          // ignore background suggestion errors
         }
-      }, 400);
-    } else {
-      setLocationSuggestions([]);
-      setShowSuggestions(false);
+      } catch {
+        // ignore background suggestion errors
+      }
+    }, 400);
+  };
+
+  const switchMode = (mode: SearchMode) => {
+    if (mode === searchMode) return;
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    setSearchMode(mode);
+    setSearchInput('');
+    setShowSuggestions(false);
+    setLocationSuggestions([]);
+    setTaxonSuggestions([]);
+    setErrorMessage(null);
+  };
+
+  const selectTaxon = (taxon: TaxonSuggestion) => {
+    setSelectedTaxon(taxon);
+    setSearchInput(taxon.preferred_common_name || taxon.name);
+    setShowSuggestions(false);
+    setErrorMessage(null);
+  };
+
+  // Jump from the places-mode inspector into that species' range map.
+  // Sets searchMode directly rather than going through switchMode, which
+  // deliberately clears the search box.
+  const viewRangeFromInspector = (inspected: Taxon) => {
+    setSelectedSpecies(null);
+    setSearchMode('species');
+    setSelectedTaxon(inspected);
+    setSearchInput(inspected.preferred_common_name || inspected.name);
+    setTaxonSuggestions([]);
+    setShowSuggestions(false);
+    setErrorMessage(null);
+  };
+
+  // Jump from a species' range back into place mode for that region
+  const explorePlaceFromRange = (placeName: string) => {
+    setSearchMode('places');
+    setSearchInput(placeName);
+    setSelectedTaxon(null);
+    setTaxonSuggestions([]);
+    setShowSuggestions(false);
+    searchLocation(placeName);
   };
 
   const selectSuggestion = (sug: LocationSuggestion) => {
@@ -273,7 +414,15 @@ const FieldGuide: React.FC = () => {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingSpecies && !isLoadingMore) {
+        // While a filter is active the sentinel is usually already on screen,
+        // so auto-loading would fire page after page. Users page manually then.
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !filterQuery &&
+          !isLoadingSpecies &&
+          !isLoadingMore
+        ) {
           loadMoreSpecies();
         }
       },
@@ -285,7 +434,71 @@ const FieldGuide: React.FC = () => {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, isLoadingSpecies, isLoadingMore, page, currentLocation, radiusKm, activeTab]);
+  }, [hasMore, isLoadingSpecies, isLoadingMore, page, currentLocation, radiusKm, activeTab, filterQuery, searchMode]);
+
+  // Pull one more batch of random species for the discovery gallery
+  const loadFeaturedBatch = async () => {
+    if (isLoadingFeatured) return;
+    setIsLoadingFeatured(true);
+
+    try {
+      const groups = pickRandom(RANDOM_GROUPS, GROUPS_PER_BATCH);
+      const batches = await Promise.all(
+        groups.map(async (group) => {
+          const page = Math.floor(Math.random() * MAX_RANDOM_PAGE) + 1;
+          try {
+            const res = await fetch(
+              `https://api.inaturalist.org/v1/taxa?is_active=true&rank=species&taxon_id=${group.id}` +
+                `&order_by=observations_count&order=desc&per_page=${PER_GROUP}&page=${page}`
+            );
+            if (!res.ok) return [];
+            const data = await res.json();
+            return (data.results || []) as TaxonSuggestion[];
+          } catch {
+            return [];
+          }
+        })
+      );
+
+      // Interleave the groups so a row is a mix rather than eight beetles
+      const fresh = pickRandom(batches.flat(), Number.MAX_SAFE_INTEGER).filter(
+        t => t.default_photo && !seenFeaturedIdsRef.current.has(t.id)
+      );
+      fresh.forEach(t => seenFeaturedIdsRef.current.add(t.id));
+      if (fresh.length > 0) setFeaturedTaxa(prev => [...prev, ...fresh]);
+    } finally {
+      setIsLoadingFeatured(false);
+    }
+  };
+
+  // Seed the gallery the first time species mode is opened. The ref guard
+  // matters: tracking "already requested" in state would change a dependency
+  // mid-flight, and the re-run's cleanup would cancel the request.
+  useEffect(() => {
+    if (searchMode !== 'species' || featuredRequestedRef.current) return;
+    featuredRequestedRef.current = true;
+    loadFeaturedBatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchMode]);
+
+  // Endless discovery scroll for the gallery
+  useEffect(() => {
+    const target = gallerySentinelRef.current;
+    if (!target || searchMode !== 'species' || selectedTaxon) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingFeatured) {
+          loadFeaturedBatch();
+        }
+      },
+      { threshold: 0.1, rootMargin: '300px' }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchMode, selectedTaxon, isLoadingFeatured, featuredTaxa.length]);
 
   // Fetch Wikipedia summary when species is selected
   useEffect(() => {
@@ -343,6 +556,12 @@ const FieldGuide: React.FC = () => {
     return common.includes(query) || scientific.includes(query) || taxonName.includes(query);
   });
 
+  // Show whole rows only; the remainder waits for the next draw to fill it in
+  const visibleFeaturedTaxa = featuredTaxa.slice(
+    0,
+    Math.max(galleryColumns, Math.floor(featuredTaxa.length / galleryColumns) * galleryColumns)
+  );
+
   const getTaxonIcon = (iconicName: string) => {
     switch (iconicName) {
       case 'Plantae': return '🌿';
@@ -362,36 +581,78 @@ const FieldGuide: React.FC = () => {
     <div className="fieldguide-app">
       {/* App Toolbar / Search Header */}
       <div className="fieldguide-toolbar">
+        {/* Search mode switch: browse a place, or look up one species' range */}
+        <div className="fieldguide-mode-switch" role="group" aria-label="Search mode">
+          <button
+            type="button"
+            className={`mode-switch-btn ${searchMode === 'places' ? 'active' : ''}`}
+            onClick={() => switchMode('places')}
+            aria-pressed={searchMode === 'places'}
+          >
+            📍 Search Places
+          </button>
+          <button
+            type="button"
+            className={`mode-switch-btn ${searchMode === 'species' ? 'active' : ''}`}
+            onClick={() => switchMode('species')}
+            aria-pressed={searchMode === 'species'}
+          >
+            🐾 Search Species
+          </button>
+          <span className="mode-switch-hint">
+            {searchMode === 'places'
+              ? 'What lives near a location?'
+              : 'Where in the world is it native?'}
+          </span>
+        </div>
+
         <form
           className="fieldguide-search-form"
           onSubmit={(e) => {
             e.preventDefault();
-            searchLocation(searchInput);
+            if (searchMode === 'species') {
+              searchTaxa(searchInput);
+            } else {
+              searchLocation(searchInput);
+            }
           }}
         >
           <div className="fieldguide-input-wrapper">
-            <span className="fieldguide-search-icon">🔍</span>
+            <span className="fieldguide-search-icon">{searchMode === 'species' ? '🐾' : '🔍'}</span>
             <input
               type="text"
               className="fieldguide-search-input"
               value={searchInput}
               onChange={handleInputChange}
-              onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
-              placeholder="Search location (e.g. Kanto, Kyoto, Yellowstone, Maui...)"
+              onFocus={() => {
+                const pool = searchMode === 'species' ? taxonSuggestions : locationSuggestions;
+                if (pool.length > 0) setShowSuggestions(true);
+              }}
+              placeholder={
+                searchMode === 'species'
+                  ? 'Search a plant or animal (e.g. red fox, monarch butterfly, giant sequoia...)'
+                  : 'Search location (e.g. Kanto, Kyoto, Yellowstone, Maui...)'
+              }
             />
             {searchInput && (
               <button
                 type="button"
                 className="fieldguide-clear-btn"
+                title={searchMode === 'species' ? 'Clear and return to the gallery' : 'Clear'}
                 onClick={() => {
                   setSearchInput('');
                   setShowSuggestions(false);
+                  // In species mode this is also the way back to the gallery
+                  if (searchMode === 'species') {
+                    setSelectedTaxon(null);
+                    setTaxonSuggestions([]);
+                  }
                 }}
               >
                 ×
               </button>
             )}
-            {showSuggestions && locationSuggestions.length > 0 && (
+            {showSuggestions && searchMode === 'places' && locationSuggestions.length > 0 && (
               <ul className="fieldguide-suggestions-box">
                 {locationSuggestions.map((sug, i) => (
                   <li key={i} onClick={() => selectSuggestion(sug)} className="suggestion-row">
@@ -401,17 +662,53 @@ const FieldGuide: React.FC = () => {
                 ))}
               </ul>
             )}
+            {showSuggestions && searchMode === 'species' && taxonSuggestions.length > 0 && (
+              <ul className="fieldguide-suggestions-box">
+                {taxonSuggestions.map((sug) => (
+                  <li
+                    key={sug.id}
+                    onClick={() => selectTaxon(sug)}
+                    className="suggestion-row taxon-suggestion-row"
+                  >
+                    {sug.default_photo?.square_url ? (
+                      <img
+                        src={sug.default_photo.square_url}
+                        alt=""
+                        className="sug-thumb"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="sug-pin">
+                        {getTaxonIcon(sug.iconic_taxon_name || '')}
+                      </span>
+                    )}
+                    <span className="sug-text">
+                      <strong>{sug.preferred_common_name || sug.name}</strong>
+                      {sug.preferred_common_name && (
+                        <em className="sug-sci"> · {sug.name}</em>
+                      )}
+                    </span>
+                    <span className="sug-rank">{sug.rank}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <button
             type="submit"
             className="retro-button search-btn"
-            disabled={isSearchingLocation}
+            disabled={searchMode === 'species' ? isSearchingTaxa : isSearchingLocation}
           >
-            {isSearchingLocation ? 'Locating...' : 'Explore'}
+            {searchMode === 'species'
+              ? (isSearchingTaxa ? 'Tracking...' : 'Track')
+              : (isSearchingLocation ? 'Locating...' : 'Explore')}
           </button>
         </form>
 
-        <div className="fieldguide-quick-locations">
+        <div
+          className="fieldguide-quick-locations"
+          style={searchMode === 'species' ? { display: 'none' } : undefined}
+        >
           <span className="quick-label">Hotspots:</span>
           {POPULAR_LOCATIONS.map((loc) => (
             <button
@@ -435,116 +732,113 @@ const FieldGuide: React.FC = () => {
         </div>
       </div>
 
-      {/* Location Status & Map Area */}
-      <div className="fieldguide-location-banner">
-        <div className="location-info-bar">
-          <div className="location-title-row">
-            <span className="location-badge">📍 {currentLocation.name}</span>
-            <span className="location-coords">
-              ({currentLocation.lat.toFixed(4)}°, {currentLocation.lng.toFixed(4)}°)
-            </span>
-          </div>
-          <div className="location-controls-row">
-            <div className="radius-selector-group">
-              <label htmlFor="radius-select">Radius:</label>
-              <select
-                id="radius-select"
-                className="retro-select"
-                value={radiusKm}
-                onChange={(e) => setRadiusKm(Number(e.target.value))}
-              >
-                <option value={10}>10 km</option>
-                <option value={25}>25 km</option>
-                <option value={50}>50 km</option>
-                <option value={100}>100 km</option>
-              </select>
+      {/* Location Status, Map & Category Tabs (places mode only) */}
+      {searchMode === 'places' && (
+        <>
+          <div className="fieldguide-location-banner">
+            <div className="location-info-bar">
+              <div className="location-title-row">
+                <span className="location-badge">📍 {currentLocation.name}</span>
+                <span className="location-coords">
+                  ({currentLocation.lat.toFixed(4)}°, {currentLocation.lng.toFixed(4)}°)
+                </span>
+              </div>
+              <div className="location-controls-row">
+                <div className="radius-selector-group">
+                  <label htmlFor="radius-select">Radius:</label>
+                  <select
+                    id="radius-select"
+                    className="retro-select"
+                    value={radiusKm}
+                    onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  >
+                    <option value={10}>10 km</option>
+                    <option value={25}>25 km</option>
+                    <option value={50}>50 km</option>
+                    <option value={100}>100 km</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="retro-button map-toggle-btn"
+                  onClick={() => setShowMap(!showMap)}
+                >
+                  {showMap ? '▲ Hide Map' : '▼ Show Map'}
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              className="retro-button map-toggle-btn"
-              onClick={() => setShowMap(!showMap)}
-            >
-              {showMap ? '▲ Hide Map' : '▼ Show Map'}
-            </button>
+
+            {showMap && (
+              <MapPreview
+                lat={currentLocation.lat}
+                lng={currentLocation.lng}
+                locationName={currentLocation.name}
+                radiusKm={radiusKm}
+              />
+            )}
           </div>
-        </div>
 
-        {showMap && (
-          <MapPreview
-            lat={currentLocation.lat}
-            lng={currentLocation.lng}
-            locationName={currentLocation.name}
-            radiusKm={radiusKm}
-          />
-        )}
-      </div>
+          {/* Category Tabs */}
+          <div className="fieldguide-tabs-container">
+            <div className="fieldguide-tabs">
+              <button
+                type="button"
+                className={`retro-tab ${activeTab === 'all' ? 'active' : ''}`}
+                onClick={() => setActiveTab('all')}
+              >
+                🌍 All Species
+              </button>
+              <button
+                type="button"
+                className={`retro-tab ${activeTab === 'plants' ? 'active' : ''}`}
+                onClick={() => setActiveTab('plants')}
+              >
+                🌿 Plants (Flora)
+              </button>
+              <button
+                type="button"
+                className={`retro-tab ${activeTab === 'wildlife' ? 'active' : ''}`}
+                onClick={() => setActiveTab('wildlife')}
+              >
+                🦌 Wildlife (Fauna)
+              </button>
+              <button
+                type="button"
+                className={`retro-tab ${activeTab === 'birds' ? 'active' : ''}`}
+                onClick={() => setActiveTab('birds')}
+              >
+                🦅 Birds
+              </button>
+              <button
+                type="button"
+                className={`retro-tab ${activeTab === 'insects' ? 'active' : ''}`}
+                onClick={() => setActiveTab('insects')}
+              >
+                🦋 Insects
+              </button>
+            </div>
 
-      {/* Category Tabs */}
-      <div className="fieldguide-tabs-container">
-        <div className="fieldguide-tabs">
-          <button
-            type="button"
-            className={`retro-tab ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all')}
-          >
-            🌍 All Species
-          </button>
-          <button
-            type="button"
-            className={`retro-tab ${activeTab === 'plants' ? 'active' : ''}`}
-            onClick={() => setActiveTab('plants')}
-          >
-            🌿 Plants (Flora)
-          </button>
-          <button
-            type="button"
-            className={`retro-tab ${activeTab === 'wildlife' ? 'active' : ''}`}
-            onClick={() => setActiveTab('wildlife')}
-          >
-            🦌 Wildlife (Fauna)
-          </button>
-          <button
-            type="button"
-            className={`retro-tab ${activeTab === 'birds' ? 'active' : ''}`}
-            onClick={() => setActiveTab('birds')}
-          >
-            🦅 Birds
-          </button>
-          <button
-            type="button"
-            className={`retro-tab ${activeTab === 'insects' ? 'active' : ''}`}
-            onClick={() => setActiveTab('insects')}
-          >
-            🦋 Insects
-          </button>
-          <button
-            type="button"
-            className={`retro-tab ${activeTab === 'fungi' ? 'active' : ''}`}
-            onClick={() => setActiveTab('fungi')}
-          >
-            🍄 Fungi
-          </button>
-        </div>
-
-        <div className="fieldguide-filter-box">
-          <input
-            type="text"
-            className="fieldguide-subfilter-input"
-            placeholder="Filter list..."
-            value={filterQuery}
-            onChange={(e) => setFilterQuery(e.target.value)}
-          />
-          {filterQuery && (
-            <button
-              type="button"
-              className="filter-clear-btn"
-              onClick={() => setFilterQuery('')}
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+            <div className="fieldguide-filter-box">
+              <input
+                type="text"
+                className="fieldguide-subfilter-input"
+                placeholder="Filter list..."
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+              />
+              {filterQuery && (
+                <button
+                  type="button"
+                  className="filter-clear-btn"
+                  onClick={() => setFilterQuery('')}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Error Message */}
       {errorMessage && (
@@ -553,7 +847,9 @@ const FieldGuide: React.FC = () => {
           <span className="error-text">{errorMessage}</span>
           <button
             className="retro-mini-button retry-btn"
-            onClick={() => searchLocation(searchInput)}
+            onClick={() =>
+              searchMode === 'species' ? searchTaxa(searchInput) : searchLocation(searchInput)
+            }
           >
             Retry
           </button>
@@ -562,7 +858,115 @@ const FieldGuide: React.FC = () => {
 
       {/* Results Content Area */}
       <div className="fieldguide-content-area">
-        {isLoadingSpecies ? (
+        {searchMode === 'species' ? (
+          selectedTaxon ? (
+            <SpeciesRange
+              taxon={selectedTaxon}
+              onExplorePlace={explorePlaceFromRange}
+              onSelectTaxon={selectTaxon}
+              getTaxonIcon={getTaxonIcon}
+            />
+          ) : (
+            <div className="featured-species-view">
+              <div className="featured-intro">
+                <h3>🐾 Track a species across the globe</h3>
+                <p>
+                  Search any plant or animal above to see its native range, where it has been
+                  introduced, and everywhere it has been recorded — or keep scrolling for a
+                  random draw from the archive.
+                </p>
+              </div>
+
+              {isLoadingFeatured && featuredTaxa.length === 0 ? (
+                <div className="fieldguide-loading-box">
+                  <div className="retro-progress-container">
+                    <div className="retro-progress-bar-animated" />
+                  </div>
+                  <p className="loading-caption">Opening the specimen archive...</p>
+                </div>
+              ) : (
+                <div
+                  className="species-grid"
+                  ref={galleryGridRef}
+                  style={{ gridTemplateColumns: `repeat(${galleryColumns}, 1fr)` }}
+                >
+                  {visibleFeaturedTaxa.map((taxon) => {
+                    const photoUrl =
+                      taxon.default_photo?.medium_url ||
+                      taxon.default_photo?.square_url ||
+                      taxon.default_photo?.url;
+
+                    return (
+                      <div
+                        key={taxon.id}
+                        className="species-card"
+                        onClick={() => selectTaxon(taxon)}
+                      >
+                        <div className="species-photo-container">
+                          {photoUrl ? (
+                            <img
+                              src={photoUrl}
+                              alt={taxon.name}
+                              className="species-photo"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="species-photo-placeholder">
+                              <span className="placeholder-icon">
+                                {getTaxonIcon(taxon.iconic_taxon_name || '')}
+                              </span>
+                            </div>
+                          )}
+                          <span className="species-badge">
+                            {getTaxonIcon(taxon.iconic_taxon_name || '')}{' '}
+                            {taxon.iconic_taxon_name || 'Specimen'}
+                          </span>
+                        </div>
+
+                        <div className="species-info">
+                          <h4 className="species-common-name">
+                            {taxon.preferred_common_name || taxon.name}
+                          </h4>
+                          <p className="species-scientific-name">{taxon.name}</p>
+                          <div className="species-footer">
+                            <span className="observation-count">
+                              📊 {(taxon.observations_count ?? 0).toLocaleString()} sightings
+                            </span>
+                            <span className="inspect-link">Range ▶</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Endless draw: loading more keeps the last row complete */}
+              {featuredTaxa.length > 0 && (
+                <div ref={gallerySentinelRef} className="infinite-scroll-footer">
+                  {isLoadingFeatured ? (
+                    <div className="infinite-scroll-loading">
+                      <div className="mini-progress-bar">
+                        <div className="mini-progress-fill" />
+                      </div>
+                      <span className="infinite-loading-text">
+                        Drawing more specimens from the archive...
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="retro-button load-more-button"
+                      onClick={loadFeaturedBatch}
+                    >
+                      ⬇ Draw More Specimens ({visibleFeaturedTaxa.length} shown)
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        ) : isLoadingSpecies ? (
           <div className="fieldguide-loading-box">
             <div className="retro-progress-container">
               <div className="retro-progress-bar-animated" />
@@ -571,69 +975,89 @@ const FieldGuide: React.FC = () => {
               Cataloging native species in {currentLocation.name}...
             </p>
           </div>
-        ) : filteredSpecies.length === 0 ? (
-          <div className="fieldguide-empty-box">
-            <div className="empty-icon">🔎</div>
-            <h3>No species recorded in this category</h3>
-            <p>
-              Try expanding the observation radius or switching tabs to explore other taxa.
-            </p>
-          </div>
         ) : (
-          <div className="species-grid">
-            {filteredSpecies.map((item) => {
-              const photoUrl =
-                item.taxon.default_photo?.medium_url ||
-                item.taxon.default_photo?.square_url ||
-                item.taxon.default_photo?.url;
+          <>
+            {filteredSpecies.length === 0 ? (
+              <div className="fieldguide-empty-box">
+                <div className="empty-icon">🔎</div>
+                {filterQuery ? (
+                  <>
+                    <h3>No loaded specimens match "{filterQuery}"</h3>
+                    <p>
+                      {hasMore
+                        ? 'Load more specimens below to widen the search, or clear the filter.'
+                        : 'Every specimen for this area is already loaded. Try another term or clear the filter.'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3>No species recorded in this category</h3>
+                    <p>
+                      Try expanding the observation radius or switching tabs to explore other taxa.
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="species-grid">
+                {filteredSpecies.map((item) => {
+                  const photoUrl =
+                    item.taxon.default_photo?.medium_url ||
+                    item.taxon.default_photo?.square_url ||
+                    item.taxon.default_photo?.url;
 
-              return (
-                <div
-                  key={item.taxon.id}
-                  className="species-card"
-                  onClick={() => setSelectedSpecies(item)}
-                >
-                  <div className="species-photo-container">
-                    {photoUrl ? (
-                      <img
-                        src={photoUrl}
-                        alt={item.taxon.name}
-                        className="species-photo"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="species-photo-placeholder">
-                        <span className="placeholder-icon">
-                          {getTaxonIcon(item.taxon.iconic_taxon_name)}
+                  return (
+                    <div
+                      key={item.taxon.id}
+                      className="species-card"
+                      onClick={() => setSelectedSpecies(item)}
+                    >
+                      <div className="species-photo-container">
+                        {photoUrl ? (
+                          <img
+                            src={photoUrl}
+                            alt={item.taxon.name}
+                            className="species-photo"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="species-photo-placeholder">
+                            <span className="placeholder-icon">
+                              {getTaxonIcon(item.taxon.iconic_taxon_name)}
+                            </span>
+                          </div>
+                        )}
+                        <span className="species-badge">
+                          {getTaxonIcon(item.taxon.iconic_taxon_name)}{' '}
+                          {item.taxon.iconic_taxon_name || 'Specimen'}
                         </span>
                       </div>
-                    )}
-                    <span className="species-badge">
-                      {getTaxonIcon(item.taxon.iconic_taxon_name)}{' '}
-                      {item.taxon.iconic_taxon_name || 'Specimen'}
-                    </span>
-                  </div>
 
-                  <div className="species-info">
-                    <h4 className="species-common-name">
-                      {item.taxon.preferred_common_name || item.taxon.name}
-                    </h4>
-                    <p className="species-scientific-name">
-                      {item.taxon.name}
-                    </p>
-                    <div className="species-footer">
-                      <span className="observation-count">
-                        📊 {item.count.toLocaleString()} sightings
-                      </span>
-                      <span className="inspect-link">Details ▶</span>
+                      <div className="species-info">
+                        <h4 className="species-common-name">
+                          {item.taxon.preferred_common_name || item.taxon.name}
+                        </h4>
+                        <p className="species-scientific-name">
+                          {item.taxon.name}
+                        </p>
+                        <div className="species-footer">
+                          <span className="observation-count">
+                            📊 {item.count.toLocaleString()} sightings
+                          </span>
+                          <span className="inspect-link">Details ▶</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
 
-            {/* Infinite Scroll Sentinel & Status Indicator */}
-            {hasMore && !filterQuery && (
+            {/* Infinite scroll sentinel. It stays mounted while a filter is active
+                so the list can keep growing, but auto-loading is suspended then:
+                a filter with no matches would otherwise page through the whole
+                dataset in a burst of requests. The button still works. */}
+            {hasMore && (
               <div ref={observerTargetRef} className="infinite-scroll-footer">
                 {isLoadingMore ? (
                   <div className="infinite-scroll-loading">
@@ -656,12 +1080,12 @@ const FieldGuide: React.FC = () => {
               </div>
             )}
 
-            {!hasMore && speciesList.length > 0 && !filterQuery && (
+            {!hasMore && speciesList.length > 0 && (
               <div className="all-loaded-banner">
                 ✓ All {speciesList.length} cataloged specimens loaded for {currentLocation.name}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
@@ -762,6 +1186,15 @@ const FieldGuide: React.FC = () => {
                   </div>
 
                   <div className="inspector-external-links">
+                    {/* Completes the loop: species mode sends you to a country,
+                        this sends a country's species back to its range map. */}
+                    <button
+                      type="button"
+                      className="retro-button external-btn range-jump-btn"
+                      onClick={() => viewRangeFromInspector(selectedSpecies.taxon)}
+                    >
+                      🌍 Where Else It Lives
+                    </button>
                     {selectedSpecies.taxon.wikipedia_url && (
                       <a
                         href={selectedSpecies.taxon.wikipedia_url}
