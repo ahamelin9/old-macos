@@ -1060,7 +1060,9 @@
   padding: 8px;
 }
 
+/* A button, not a frame: clicking the photo opens the Specimen Inspector */
 .range-header-photo {
+  position: relative;
   width: 92px;
   height: 92px;
   flex-shrink: 0;
@@ -1072,6 +1074,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.range-header-photo:hover {
+  border-color: #4769A5 #9DB8E0 #9DB8E0 #4769A5;
+}
+
+.range-header-photo:active {
+  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+}
+
+.range-header-photo:focus-visible {
+  outline: 2px solid #4769A5;
+  outline-offset: 1px;
+}
+
+/* Caption slides up on hover so the photo reads as an action */
+.range-header-photo-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(26, 54, 104, 0.82);
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: bold;
+  padding: 2px 0;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.12s ease-in-out;
+  pointer-events: none;
+}
+
+.range-header-photo:hover .range-header-photo-hint,
+.range-header-photo:focus-visible .range-header-photo-hint {
+  opacity: 1;
 }
 
 .range-header-photo img {

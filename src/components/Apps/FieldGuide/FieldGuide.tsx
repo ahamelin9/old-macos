@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MapPreview from './MapPreview';
-import SpeciesRange, { TaxonSuggestion } from './SpeciesRange';
+import SpeciesRange, { TaxonSuggestion, TaxonDetail } from './SpeciesRange';
 import { useGridColumns } from './useGridColumns';
 import './FieldGuide.css';
 
@@ -270,6 +270,11 @@ const FieldGuide: React.FC = () => {
     }, 400);
   };
 
+  // Switching modes by hand is a fresh start, so the pinned species goes with
+  // the search box. Leaving it behind meant coming back to species mode showed
+  // the last animal's range with an empty search field, as if it had half
+  // cleared itself. The two jump helpers below set searchMode directly to keep
+  // the species they are carrying across.
   const switchMode = (mode: SearchMode) => {
     if (mode === searchMode) return;
     if (searchTimeoutRef.current) {
@@ -277,6 +282,7 @@ const FieldGuide: React.FC = () => {
     }
     setSearchMode(mode);
     setSearchInput('');
+    setSelectedTaxon(null);
     setShowSuggestions(false);
     setLocationSuggestions([]);
     setTaxonSuggestions([]);
@@ -292,7 +298,7 @@ const FieldGuide: React.FC = () => {
 
   // Jump from the places-mode inspector into that species' range map.
   // Sets searchMode directly rather than going through switchMode, which
-  // deliberately clears the search box.
+  // deliberately clears the search box and the pinned species.
   const viewRangeFromInspector = (inspected: Taxon) => {
     setSelectedSpecies(null);
     setSearchMode('species');
@@ -301,6 +307,20 @@ const FieldGuide: React.FC = () => {
     setTaxonSuggestions([]);
     setShowSuggestions(false);
     setErrorMessage(null);
+  };
+
+  // Open the same Specimen Inspector from the range view's header photo. The
+  // modal is shaped for a places-mode row, so the worldwide observation total
+  // stands in for that row's local count -- the label reads accordingly.
+  const inspectRangeTaxon = (inspected: TaxonDetail, observationCount: number) => {
+    setSelectedSpecies({
+      count: observationCount,
+      taxon: {
+        ...inspected,
+        rank: inspected.rank || 'species',
+        iconic_taxon_name: inspected.iconic_taxon_name || ''
+      }
+    });
   };
 
   // Jump from a species' range back into place mode for that region
@@ -864,6 +884,7 @@ const FieldGuide: React.FC = () => {
               taxon={selectedTaxon}
               onExplorePlace={explorePlaceFromRange}
               onSelectTaxon={selectTaxon}
+              onInspect={inspectRangeTaxon}
               getTaxonIcon={getTaxonIcon}
             />
           ) : (
@@ -1156,9 +1177,12 @@ const FieldGuide: React.FC = () => {
                       </span>
                     </div>
                     <div className="stat-row">
-                      <span className="stat-label">Local Sightings:</span>
+                      <span className="stat-label">
+                        {searchMode === 'species' ? 'Worldwide Sightings:' : 'Local Sightings:'}
+                      </span>
                       <span className="stat-value">
-                        {selectedSpecies.count.toLocaleString()} research observations
+                        {selectedSpecies.count.toLocaleString()}{' '}
+                        {searchMode === 'species' ? 'observations' : 'research observations'}
                       </span>
                     </div>
                   </div>
@@ -1187,14 +1211,17 @@ const FieldGuide: React.FC = () => {
 
                   <div className="inspector-external-links">
                     {/* Completes the loop: species mode sends you to a country,
-                        this sends a country's species back to its range map. */}
-                    <button
-                      type="button"
-                      className="retro-button external-btn range-jump-btn"
-                      onClick={() => viewRangeFromInspector(selectedSpecies.taxon)}
-                    >
-                      🌍 Where Else It Lives
-                    </button>
+                        this sends a country's species back to its range map.
+                        Hidden when the inspector was opened from that very map. */}
+                    {searchMode !== 'species' && (
+                      <button
+                        type="button"
+                        className="retro-button external-btn range-jump-btn"
+                        onClick={() => viewRangeFromInspector(selectedSpecies.taxon)}
+                      >
+                        🌍 Where Else It Lives
+                      </button>
+                    )}
                     {selectedSpecies.taxon.wikipedia_url && (
                       <a
                         href={selectedSpecies.taxon.wikipedia_url}

@@ -29,7 +29,7 @@ interface ListedTaxon {
   };
 }
 
-interface TaxonDetail extends TaxonSuggestion {
+export interface TaxonDetail extends TaxonSuggestion {
   extinct?: boolean;
   wikipedia_url?: string;
   wikipedia_summary?: string;
@@ -48,6 +48,8 @@ interface SpeciesRangeProps {
   taxon: TaxonSuggestion;
   onExplorePlace: (placeName: string) => void;
   onSelectTaxon: (taxon: TaxonSuggestion) => void;
+  /** Opens the shared Specimen Inspector on the species in the header card. */
+  onInspect: (taxon: TaxonDetail, observationCount: number) => void;
   getTaxonIcon: (iconicName: string) => string;
 }
 
@@ -188,6 +190,7 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
   taxon,
   onExplorePlace,
   onSelectTaxon,
+  onInspect,
   getTaxonIcon
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -484,13 +487,20 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
     <div className="species-range-panel" ref={panelRef}>
       {/* Identity header */}
       <div className="range-header-card">
-        <div className="range-header-photo">
+        <button
+          type="button"
+          className="range-header-photo"
+          onClick={() => onInspect(detail, totalObservations ?? detail.observations_count ?? 0)}
+          title={`Inspect ${detail.preferred_common_name || detail.name}`}
+          aria-label={`Open the specimen inspector for ${detail.preferred_common_name || detail.name}`}
+        >
           {photoUrl ? (
             <img src={photoUrl} alt={detail.name} />
           ) : (
             <span className="big-icon">{getTaxonIcon(detail.iconic_taxon_name || '')}</span>
           )}
-        </div>
+          <span className="range-header-photo-hint">🔍 Inspect</span>
+        </button>
         <div className="range-header-text">
           <h3 className="range-common-name">
             {detail.preferred_common_name || detail.name}
