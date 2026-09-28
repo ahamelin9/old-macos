@@ -2,6 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import MapPreview from './MapPreview';
 import SpeciesRange, { TaxonSuggestion, TaxonDetail } from './SpeciesRange';
 import { useGridColumns } from './useGridColumns';
+import {
+  ChecklistPlace,
+  EstablishmentStatus,
+  StatusResult,
+  StatusTotals,
+  countEstablishmentStatuses,
+  getEstablishmentStatuses,
+  resolveChecklistPlaces
+} from './establishmentStatus';
 import './FieldGuide.css';
 
 interface Taxon {
@@ -49,6 +58,22 @@ type TabType = 'all' | 'plants' | 'wildlife' | 'birds' | 'insects';
  * 'species' searches a plant or animal and maps where it is native.
  */
 type SearchMode = 'places' | 'species';
+
+type StatusFilter = 'all' | EstablishmentStatus;
+
+const STATUS_LABELS: Record<EstablishmentStatus, string> = {
+  native: 'Native',
+  introduced: 'Introduced',
+  unknown: 'Unknown'
+};
+
+// Same colour key as the range view. "Unknown" is its "Present": seen here,
+// but no checklist says how it arrived.
+const STATUS_SWATCHES: Record<EstablishmentStatus, string> = {
+  native: 'swatch-native',
+  introduced: 'swatch-introduced',
+  unknown: 'swatch-present'
+};
 
 const POPULAR_LOCATIONS: { name: string; query: string; displayName: string; lat: number; lng: number }[] = [
   { name: '⚡ Kanto (Kantō/Tokyo)', query: 'Kanto Region, Japan', displayName: 'Kantō Region (Tokyo), Japan', lat: 35.6762, lng: 139.6503 },
@@ -107,6 +132,20 @@ const FieldGuide: React.FC = () => {
   const [searchMode, setSearchMode] = useState<SearchMode>('places');
   const [speciesList, setSpeciesList] = useState<SpeciesResult[]>([]);
   const [filterQuery, setFilterQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+
+  // Native/introduced status comes from iNaturalist checklists for the places
+  // containing the search point -- never from how often a species is seen.
+  // Both are tagged with the location they belong to so a slow response for
+  // an old location is never shown against a new one.
+  const [checklistPlaces, setChecklistPlaces] = useState<{ key: string; places: ChecklistPlace[] } | null>(null);
+  const [statuses, setStatuses] = useState<{ key: string; byTaxon: Record<number, StatusResult> }>({
+    key: '',
+    byTaxon: {}
+  });
+  // Counts across every species in the area, not just the loaded pages.
+  // `totals` is null when counting failed.
+  const [statusTotals, setStatusTotals] = useState<{ key: string; totals: StatusTotals | null } | null>(null);
   
   // Pagination & Infinite Scroll states
   const [page, setPage] = useState<number>(1);
@@ -390,6 +429,92 @@ const FieldGuide: React.FC = () => {
     };
   }, [currentLocation, radiusKm, activeTab]);
 
+  const locationKey = `${currentLocation.lat},${currentLocation.lng}`;
+  const statusKey = `${locationKey},${radiusKm}`;
+
+  // Which country / prefecture / city checklists apply to this point
+  useEffect(() => {
+    let cancelled = false;
+    const key = `${currentLocation.lat},${currentLocation.lng}`;
+    resolveChecklistPlaces(currentLocation.lat, currentLocation.lng)
+      .catch(() => [] as ChecklistPlace[])
+      .then(places => {
+        if (!cancelled) setChecklistPlaces({ key, places });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLocation]);
+
+  // Classify everything loaded so far. Re-running on each new page is cheap:
+  // lookups are cached per place, so only the new taxa hit the network.
+  useEffect(() => {
+    if (isLoadingSpecies || speciesList.length === 0) return;
+    if (!checklistPlaces || checklistPlaces.key !== locationKey) return;
+
+    let cancelled = false;
+    getEstablishmentStatuses(
+      speciesList.map(s => s.taxon.id),
+      checklistPlaces.places,
+      { lat: currentLocation.lat, lng: currentLocation.lng, radiusKm }
+    ).then(result => {
+      if (!cancelled) setStatuses({ key: statusKey, byTaxon: Object.fromEntries(result) });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [speciesList, isLoadingSpecies, checklistPlaces, locationKey, statusKey, currentLocation, radiusKm]);
+
+  // Whole-area totals for the summary line above the list
+  const totalsKey = `${statusKey},${activeTab}`;
+  useEffect(() => {
+    if (!checklistPlaces || checklistPlaces.key !== locationKey) return;
+
+    let cancelled = false;
+    countEstablishmentStatuses(
+      checklistPlaces.places,
+      { lat: currentLocation.lat, lng: currentLocation.lng, radiusKm },
+      TAXA_FILTER_MAP[activeTab]
+    )
+      .then(totals => {
+        if (!cancelled) setStatusTotals({ key: totalsKey, totals });
+      })
+      .catch(() => {
+        if (!cancelled) setStatusTotals({ key: totalsKey, totals: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [checklistPlaces, locationKey, totalsKey, currentLocation, radiusKm, activeTab]);
+
+  const currentTotals = statusTotals?.key === totalsKey ? statusTotals : undefined;
+  const totalsByStatus = currentTotals?.totals?.byStatus;
+
+  const statusOf = (taxonId: number): StatusResult | undefined =>
+    statuses.key === statusKey ? statuses.byTaxon[taxonId] : undefined;
+
+  // A chip over the card photo, or plain swatch + label in the inspector
+  const renderStatusBadge = (taxonId: number, inline = false) => {
+    const result = statusOf(taxonId);
+    const className = inline ? 'status-inline' : 'status-badge';
+    if (!result) {
+      return <span className={`${className} status-pending`}>Checking…</span>;
+    }
+    return (
+      <span
+        className={className}
+        title={
+          result.source
+            ? `${STATUS_LABELS[result.status]} — per ${result.source}`
+            : 'No checklist or sighting data says whether it is native here'
+        }
+      >
+        <span className={`status-swatch ${STATUS_SWATCHES[result.status]}`} />
+        {STATUS_LABELS[result.status]}
+      </span>
+    );
+  };
+
   // Load more species for infinite scroll
   const loadMoreSpecies = async () => {
     if (!hasMore || isLoadingSpecies || isLoadingMore || !currentLocation) return;
@@ -427,6 +552,38 @@ const FieldGuide: React.FC = () => {
     }
   };
 
+  const filteredSpecies = speciesList.filter(item => {
+    if (statusFilter !== 'all' && statusOf(item.taxon.id)?.status !== statusFilter) return false;
+    if (!filterQuery.trim()) return true;
+    const query = filterQuery.toLowerCase();
+    const common = item.taxon.preferred_common_name?.toLowerCase() || '';
+    const scientific = item.taxon.name.toLowerCase();
+    const taxonName = item.taxon.iconic_taxon_name?.toLowerCase() || '';
+    return common.includes(query) || scientific.includes(query) || taxonName.includes(query);
+  });
+
+  // Under a status filter, how many matches were showing when the last page
+  // was auto-loaded. -1 means "not yet", so the first load always goes ahead.
+  const [statusAutoLoadFloor, setStatusAutoLoadFloor] = useState(-1);
+  useEffect(() => {
+    setStatusAutoLoadFloor(-1);
+  }, [statusFilter, currentLocation, radiusKm, activeTab]);
+
+  // Whether scrolling will keep loading pages by itself. The footer shows a
+  // progress bar while this holds and the Load More button only when it does
+  // not, so the button never flashes up just before an automatic load.
+  //  - A text filter pauses it: its sentinel is usually already on screen, so
+  //    auto-loading would page through the whole dataset in a burst.
+  //  - Under a status filter, new species stay hidden until classified, so the
+  //    next page waits for that (otherwise pages load back to back). A page
+  //    that adds no matches -- e.g. "Unknown" where every species has a
+  //    checklist entry -- pauses it too.
+  const statusesPending = speciesList.some(item => !statusOf(item.taxon.id));
+  const autoLoadEnabled =
+    !filterQuery &&
+    (statusFilter === 'all' || statusesPending || filteredSpecies.length > statusAutoLoadFloor);
+  const canAutoLoadNow = autoLoadEnabled && (statusFilter === 'all' || !statusesPending);
+
   // IntersectionObserver for seamless infinite scrolling
   useEffect(() => {
     const target = observerTargetRef.current;
@@ -434,15 +591,14 @@ const FieldGuide: React.FC = () => {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // While a filter is active the sentinel is usually already on screen,
-        // so auto-loading would fire page after page. Users page manually then.
         if (
           entries[0].isIntersecting &&
           hasMore &&
-          !filterQuery &&
+          canAutoLoadNow &&
           !isLoadingSpecies &&
           !isLoadingMore
         ) {
+          if (statusFilter !== 'all') setStatusAutoLoadFloor(filteredSpecies.length);
           loadMoreSpecies();
         }
       },
@@ -454,7 +610,7 @@ const FieldGuide: React.FC = () => {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, isLoadingSpecies, isLoadingMore, page, currentLocation, radiusKm, activeTab, filterQuery, searchMode]);
+  }, [hasMore, isLoadingSpecies, isLoadingMore, page, currentLocation, radiusKm, activeTab, canAutoLoadNow, statusFilter, filteredSpecies.length, searchMode]);
 
   // Pull one more batch of random species for the discovery gallery
   const loadFeaturedBatch = async () => {
@@ -566,15 +722,6 @@ const FieldGuide: React.FC = () => {
       isMounted = false;
     };
   }, [selectedSpecies]);
-
-  const filteredSpecies = speciesList.filter(item => {
-    if (!filterQuery.trim()) return true;
-    const query = filterQuery.toLowerCase();
-    const common = item.taxon.preferred_common_name?.toLowerCase() || '';
-    const scientific = item.taxon.name.toLowerCase();
-    const taxonName = item.taxon.iconic_taxon_name?.toLowerCase() || '';
-    return common.includes(query) || scientific.includes(query) || taxonName.includes(query);
-  });
 
   // Show whole rows only; the remainder waits for the next draw to fill it in
   const visibleFeaturedTaxa = featuredTaxa.slice(
@@ -798,63 +945,68 @@ const FieldGuide: React.FC = () => {
             )}
           </div>
 
-          {/* Category Tabs */}
-          <div className="fieldguide-tabs-container">
-            <div className="fieldguide-tabs">
-              <button
-                type="button"
-                className={`retro-tab ${activeTab === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveTab('all')}
-              >
-                🌍 All Species
-              </button>
-              <button
-                type="button"
-                className={`retro-tab ${activeTab === 'plants' ? 'active' : ''}`}
-                onClick={() => setActiveTab('plants')}
-              >
-                🌿 Plants (Flora)
-              </button>
-              <button
-                type="button"
-                className={`retro-tab ${activeTab === 'wildlife' ? 'active' : ''}`}
-                onClick={() => setActiveTab('wildlife')}
-              >
-                🦌 Wildlife (Fauna)
-              </button>
-              <button
-                type="button"
-                className={`retro-tab ${activeTab === 'birds' ? 'active' : ''}`}
-                onClick={() => setActiveTab('birds')}
-              >
-                🦅 Birds
-              </button>
-              <button
-                type="button"
-                className={`retro-tab ${activeTab === 'insects' ? 'active' : ''}`}
-                onClick={() => setActiveTab('insects')}
-              >
-                🦋 Insects
-              </button>
-            </div>
-
-            <div className="fieldguide-filter-box">
-              <input
-                type="text"
-                className="fieldguide-subfilter-input"
-                placeholder="Filter list..."
-                value={filterQuery}
-                onChange={(e) => setFilterQuery(e.target.value)}
-              />
-              {filterQuery && (
+          {/* Category Tabs. The bar is a size container so the filters can move
+              above the tabs when the *window* is narrow, whatever the viewport. */}
+          <div className="fieldguide-tabs-bar">
+            <div className="fieldguide-tabs-container">
+              <div className="fieldguide-tabs">
                 <button
                   type="button"
-                  className="filter-clear-btn"
-                  onClick={() => setFilterQuery('')}
+                  className={`retro-tab ${activeTab === 'all' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('all')}
                 >
-                  ×
+                  🌍 All Species
                 </button>
-              )}
+                <button
+                  type="button"
+                  className={`retro-tab ${activeTab === 'plants' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('plants')}
+                >
+                  🌿 Plants (Flora)
+                </button>
+                <button
+                  type="button"
+                  className={`retro-tab ${activeTab === 'wildlife' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('wildlife')}
+                >
+                  🦌 Wildlife (Fauna)
+                </button>
+                <button
+                  type="button"
+                  className={`retro-tab ${activeTab === 'birds' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('birds')}
+                >
+                  🦅 Birds
+                </button>
+                <button
+                  type="button"
+                  className={`retro-tab ${activeTab === 'insects' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('insects')}
+                >
+                  🦋 Insects
+                </button>
+              </div>
+
+              <div className="fieldguide-filter-box">
+                <div className="subfilter-field">
+                  <input
+                    type="text"
+                    className="fieldguide-subfilter-input"
+                    placeholder="Filter list..."
+                    value={filterQuery}
+                    onChange={(e) => setFilterQuery(e.target.value)}
+                  />
+                  {filterQuery && (
+                    <button
+                      type="button"
+                      className="filter-clear-btn"
+                      onClick={() => setFilterQuery('')}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </>
@@ -993,17 +1145,58 @@ const FieldGuide: React.FC = () => {
               <div className="retro-progress-bar-animated" />
             </div>
             <p className="loading-caption">
-              Cataloging native species in {currentLocation.name}...
+              Cataloging species in {currentLocation.name}...
             </p>
           </div>
         ) : (
           <>
+            {/* Whole-area breakdown, and the status filter: each count is a
+                toggle. The buttons stay even without counts (still counting,
+                area too big, request failed) so filtering always works. */}
+            <div className="status-summary">
+              <span className="quick-label">
+                {!currentTotals ? (
+                  <span className="status-summary-note">Counting species by status…</span>
+                ) : currentTotals.totals && totalsByStatus ? (
+                  `Of ${currentTotals.totals.total.toLocaleString()} species within ${radiusKm} km:`
+                ) : currentTotals.totals ? (
+                  <>
+                    {currentTotals.totals.total.toLocaleString()} species within {radiusKm} km
+                    <span className="status-summary-note">
+                      {' '}— too many to count by status; show:
+                    </span>
+                  </>
+                ) : (
+                  'Show:'
+                )}
+              </span>
+              {(Object.keys(STATUS_LABELS) as EstablishmentStatus[]).map(status => (
+                <button
+                  key={status}
+                  type="button"
+                  className={`retro-mini-button ${statusFilter === status ? 'active-filter' : ''}`}
+                  aria-pressed={statusFilter === status}
+                  title={statusFilter === status ? 'Show all statuses' : `Show only ${STATUS_LABELS[status].toLowerCase()} species`}
+                  onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
+                >
+                  <span className={`status-swatch ${STATUS_SWATCHES[status]}`} />
+                  {totalsByStatus && `${totalsByStatus[status].toLocaleString()} `}
+                  {STATUS_LABELS[status]}
+                </button>
+              ))}
+            </div>
+
             {filteredSpecies.length === 0 ? (
               <div className="fieldguide-empty-box">
                 <div className="empty-icon">🔎</div>
-                {filterQuery ? (
+                {filterQuery || statusFilter !== 'all' ? (
                   <>
-                    <h3>No loaded specimens match "{filterQuery}"</h3>
+                    <h3>
+                      No loaded specimens match
+                      {statusFilter !== 'all' && ` "${STATUS_LABELS[statusFilter]}"`}
+                      {filterQuery && statusFilter !== 'all' && ' and'}
+                      {filterQuery && ` "${filterQuery}"`}
+                    </h3>
                     <p>
                       {hasMore
                         ? 'Load more specimens below to widen the search, or clear the filter.'
@@ -1052,6 +1245,7 @@ const FieldGuide: React.FC = () => {
                           {getTaxonIcon(item.taxon.iconic_taxon_name)}{' '}
                           {item.taxon.iconic_taxon_name || 'Specimen'}
                         </span>
+                        {renderStatusBadge(item.taxon.id)}
                       </div>
 
                       <div className="species-info">
@@ -1074,19 +1268,20 @@ const FieldGuide: React.FC = () => {
               </div>
             )}
 
-            {/* Infinite scroll sentinel. It stays mounted while a filter is active
-                so the list can keep growing, but auto-loading is suspended then:
-                a filter with no matches would otherwise page through the whole
-                dataset in a burst of requests. The button still works. */}
+            {/* Infinite scroll sentinel. It stays mounted while auto-loading is
+                paused (see autoLoadEnabled) so the list can keep growing by
+                hand; the button only appears then. */}
             {hasMore && (
               <div ref={observerTargetRef} className="infinite-scroll-footer">
-                {isLoadingMore ? (
+                {isLoadingMore || autoLoadEnabled ? (
                   <div className="infinite-scroll-loading">
                     <div className="mini-progress-bar">
                       <div className="mini-progress-fill" />
                     </div>
                     <span className="infinite-loading-text">
-                      Loading more specimens from iNaturalist...
+                      {!isLoadingMore && statusFilter !== 'all' && statusesPending
+                        ? 'Checking which new specimens are native or introduced...'
+                        : 'Loading more specimens from iNaturalist...'}
                     </span>
                   </div>
                 ) : (
@@ -1176,6 +1371,19 @@ const FieldGuide: React.FC = () => {
                         {selectedSpecies.taxon.iconic_taxon_name}
                       </span>
                     </div>
+                    {searchMode === 'places' && (
+                      <div className="stat-row">
+                        <span className="stat-label">Status Here:</span>
+                        <span className="stat-value">
+                          {renderStatusBadge(selectedSpecies.taxon.id, true)}
+                          {statusOf(selectedSpecies.taxon.id)?.source && (
+                            <span className="status-source">
+                              per {statusOf(selectedSpecies.taxon.id)!.source}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                     <div className="stat-row">
                       <span className="stat-label">
                         {searchMode === 'species' ? 'Worldwide Sightings:' : 'Local Sightings:'}

@@ -67,7 +67,8 @@
   border-color: #4769A5;
 }
 
-.retro-mini-button.active-location {
+.retro-mini-button.active-location,
+.retro-mini-button.active-filter {
   background: #4769A5;
   color: white;
   border-color: #2A487B;
@@ -313,6 +314,12 @@
 }
 
 /* Category Tabs (Authentic Classic Mac OS Platinum Notebook Tabs) */
+.fieldguide-tabs-bar {
+  container-type: inline-size;
+}
+
+/* One row when wide. It never wraps: a wrapped filter box used to land
+   between the tabs and the line they sit on. Narrow windows restack below. */
 .fieldguide-tabs-container {
   display: flex;
   justify-content: space-between;
@@ -320,7 +327,7 @@
   border-bottom: 2px solid #808080;
   padding: 0 2px;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   position: relative;
   margin-top: 4px;
 }
@@ -373,19 +380,37 @@
 }
 
 .fieldguide-filter-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Centred on the inactive tabs' labels rather than sitting on the line */
+  margin-bottom: 3px;
+  /* Clear air after the last tab, so the controls do not read as a tab */
+  margin-left: 20px;
+  /* Takes whatever the tabs leave, so the search spans the rest of the row */
+  flex: 1;
+  min-width: 0;
+}
+
+/* Holds the clear button inside the search field */
+.subfilter-field {
   position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .fieldguide-subfilter-input {
   font-family: 'Geneva', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
+  box-sizing: border-box;
+  height: 20px;
   padding: 2px 18px 2px 6px;
   border: 1px solid #888;
   border-radius: 2px;
-  width: 110px;
+  flex: 1;
+  min-width: 0;
   background: #FFF;
 }
 
@@ -397,6 +422,19 @@
   font-size: 11px;
   color: #888;
   cursor: pointer;
+}
+
+/* Narrow window: filters on their own full-width row above, so the tabs
+   stay attached to the list they switch. ~700px is what one row needs. */
+@container (max-width: 760px) {
+  .fieldguide-tabs-container {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .fieldguide-filter-box {
+    margin: 0;
+  }
 }
 
 /* Error Banner */
@@ -568,6 +606,60 @@
   padding: 1px 5px;
   border-radius: 3px;
   backdrop-filter: blur(2px);
+}
+
+/* Native / Introduced / Unknown, from place checklists (not sighting counts).
+   Built like .species-badge, keyed with the same swatches as the range view. */
+.status-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #FFF;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  backdrop-filter: blur(2px);
+}
+
+.status-badge .status-swatch {
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-color: rgba(255, 255, 255, 0.8);
+  vertical-align: 0;
+}
+
+.status-pending {
+  color: #999;
+}
+
+.status-badge.status-pending {
+  color: #DDD;
+}
+
+/* Whole-area Native / Introduced / Unknown counts above the species grid */
+.status-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  margin-bottom: 8px;
+}
+
+.status-summary-note {
+  font-size: 10px;
+  font-weight: normal;
+  color: #777;
+}
+
+.status-source {
+  display: block;
+  font-weight: normal;
+  font-size: 9px;
+  color: #555;
+  margin-top: 2px;
 }
 
 .species-info {
