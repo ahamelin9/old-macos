@@ -17,17 +17,23 @@
  * filled a gap the state left in testing, only added disputed calls. Nothing
  * broader than a country is used either: "native to Asia" includes white clover.
  *
+ * Endemic is native and found nowhere else: a checklist marks a species
+ * endemic to the place it covers. It is kept apart from native so the app can
+ * call out the species an area has that nowhere else does.
+ *
  * Last resort for species no checklist covers: iNaturalist's per-observation
  * native/introduced flags inside the search circle, only when they agree.
  * Anything else is 'unknown' -- a missing status is never read as native.
  */
 
-export type EstablishmentStatus = 'native' | 'introduced' | 'unknown';
+export type EstablishmentStatus = 'native' | 'endemic' | 'introduced' | 'unknown';
 
 export interface StatusResult {
   status: EstablishmentStatus;
   /** Where the answer came from, e.g. "Japan checklist"; null when unknown */
   source: string | null;
+  /** For 'endemic': the place it is found only in, e.g. "Japan" */
+  endemicTo?: string;
 }
 
 export interface ChecklistPlace {
@@ -42,7 +48,9 @@ export interface SearchCircle {
   radiusKm: number;
 }
 
-type Means = 'native' | 'introduced';
+type Means = 'native' | 'endemic' | 'introduced';
+/** The per-observation flags iNaturalist can filter sightings by */
+type SightingFlag = 'native' | 'introduced';
 
 const API = 'https://api.inaturalist.org/v1';
 
@@ -61,14 +69,15 @@ const FLAG_BATCH_SIZE = 100;
 export const MAX_SPECIES_FOR_BREAKDOWN = 4000;
 
 /**
- * iNaturalist's establishment_means vocabulary. Endemic is a kind of native;
- * the older naturalised/invasive/managed values are all kinds of introduced.
+ * iNaturalist's establishment_means vocabulary. The older naturalised /
+ * invasive / managed values are all kinds of introduced.
  */
 export const normalizeMeans = (raw: string | null | undefined): Means | null => {
   switch ((raw || '').toLowerCase()) {
     case 'native':
-    case 'endemic':
       return 'native';
+    case 'endemic':
+      return 'endemic';
     case 'introduced':
     case 'naturalised':
     case 'naturalized':
@@ -85,9 +94,10 @@ export interface ChecklistEntry {
   means: Means | null;
 }
 
-const fromChecklist = (entry: ChecklistEntry & { means: Means }): StatusResult => ({
-  status: entry.means,
-  source: `${entry.placeName} checklist`
+const fromChecklist = (entry: ChecklistEntry, status: Means): StatusResult => ({
+  status,
+  source: `${entry.placeName} checklist`,
+  ...(status === 'endemic' ? { endemicTo: entry.placeName } : {})
 });
 
 /** The classification rule, free of any fetching. */
@@ -97,9 +107,15 @@ export const classifyStatus = (
 ): StatusResult => {
   const { country, region } = checklist;
 
-  if (country?.means === 'introduced') return fromChecklist({ ...country, means: 'introduced' });
-  if (region?.means) return fromChecklist({ ...region, means: region.means });
-  if (country?.means) return fromChecklist({ ...country, means: country.means });
+  // Introduced at either level means introduced here
+  if (country?.means === 'introduced') return fromChecklist(country, 'introduced');
+  if (region?.means === 'introduced') return fromChecklist(region, 'introduced');
+  // Endemic to the state, or to the country with the state agreeing it is
+  // native: either way it lives here and nowhere outside that place
+  if (region?.means === 'endemic') return fromChecklist(region, 'endemic');
+  if (country?.means === 'endemic') return fromChecklist(country, 'endemic');
+  if (region?.means) return fromChecklist(region, region.means);
+  if (country?.means) return fromChecklist(country, country.means);
 
   if (flags) {
     if (flags.native > 0 && flags.introduced === 0) {
@@ -117,7 +133,7 @@ export const classifyStatus = (
 // would show up as a page of "Unknown" badges that are really failed requests.
 const RETRY_DELAYS_MS = [1000, 3000];
 
-const fetchWithRetry = async (url: string): Promise<Response> => {
+export const fetchWithRetry = async (url: string): Promise<Response> => {
   for (let attempt = 0; ; attempt++) {
     const delay = RETRY_DELAYS_MS[attempt];
     try {
@@ -286,7 +302,7 @@ const fetchSightingFlags = async (
   const known = byTaxon;
   const missing = taxonIds.filter(id => !known.has(id));
 
-  const countFlag = async (ids: number[], flag: Means) => {
+  const countFlag = async (ids: number[], flag: SightingFlag) => {
     const rows = await fetchAllSpeciesCounts(
       `lat=${circle.lat}&lng=${circle.lng}&radius=${circle.radiusKm}` +
         `&quality_grade=research&${flag}=true&taxon_id=${ids.join(',')}`
@@ -363,15 +379,27 @@ export const getEstablishmentStatuses = async (
   return out;
 };
 
+/** Which species a list or a count covers, as species_counts params. */
+export interface SpeciesFilter {
+  /** The group, e.g. "iconic_taxa=Aves" or "taxon_id=47178"; empty for all life */
+  taxa?: string;
+  /** Only species recorded in this calendar month (1-12), any year */
+  month?: number | null;
+}
+
+/** The filter as a query-string suffix, each param with its leading "&". */
+export const speciesFilterParams = ({ taxa, month }: SpeciesFilter) =>
+  (taxa ? `&${taxa}` : '') + (month ? `&month=${month}` : '');
+
 export interface StatusTotals {
-  /** Every species recorded in the circle for these iconic taxa */
+  /** Every species recorded in the circle that the filter lets through */
   total: number;
   /** Null when the area is too big to classify everything */
   byStatus: Record<EstablishmentStatus, number> | null;
 }
 
 /**
- * Native / introduced / unknown counts across *every* species in the circle,
+ * Native / endemic / introduced / unknown counts across *every* species in the circle,
  * not just the page loaded so far -- by the same rule as the badges.
  *
  * `preferred_place_id` makes species_counts annotate each species with its
@@ -383,17 +411,20 @@ export interface StatusTotals {
 export const countEstablishmentStatuses = async (
   places: ChecklistPlace[],
   circle: SearchCircle,
-  iconicTaxa: string
+  filter: SpeciesFilter = {}
 ): Promise<StatusTotals> => {
   const country = places.find(p => p.adminLevel === COUNTRY_LEVEL);
   const region = places.find(p => p.adminLevel === REGION_LEVEL);
-  const key = `${country?.id},${region?.id},${circleKey(circle)},${iconicTaxa}`;
+  const key = `${country?.id},${region?.id},${circleKey(circle)}${speciesFilterParams(filter)}`;
   const cached = totalsCache.get(key);
   if (cached) return cached;
 
-  const base =
+  // `base` lists the species; `allYear` drops the month for the sighting
+  // flags, so a species gets the same answer here as on its badge
+  const allYear =
     `lat=${circle.lat}&lng=${circle.lng}&radius=${circle.radiusKm}` +
-    `&iconic_taxa=${encodeURIComponent(iconicTaxa)}&quality_grade=research&hrank=species`;
+    `${speciesFilterParams({ taxa: filter.taxa })}&quality_grade=research&hrank=species`;
+  const base = `${allYear}${speciesFilterParams({ month: filter.month })}`;
 
   const sizeRes = await fetchWithRetry(`${API}/observations/species_counts?${base}&per_page=0`);
   if (!sizeRes.ok) throw new Error(`iNaturalist API error: HTTP ${sizeRes.status}`);
@@ -445,7 +476,7 @@ export const countEstablishmentStatuses = async (
   if (open.length > 0) {
     const [native, introduced] = await Promise.all(
       (['native', 'introduced'] as const).map(async flag =>
-        new Map((await fetchAllSpeciesCounts(`${base}&${flag}=true`)).map(r => [r.taxon.id, r.count]))
+        new Map((await fetchAllSpeciesCounts(`${allYear}&${flag}=true`)).map(r => [r.taxon.id, r.count]))
       )
     );
     for (const id of open) {
@@ -453,7 +484,7 @@ export const countEstablishmentStatuses = async (
     }
   }
 
-  const byStatus: Record<EstablishmentStatus, number> = { native: 0, introduced: 0, unknown: 0 };
+  const byStatus: Record<EstablishmentStatus, number> = { native: 0, endemic: 0, introduced: 0, unknown: 0 };
   for (const id of ids) {
     const f = flags.get(id);
     byStatus[classifyStatus(checklists.get(id)!, f && { ...f, label: '' }).status]++;

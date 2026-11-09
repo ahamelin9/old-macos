@@ -95,7 +95,16 @@ const MapPreview: React.FC<MapPreviewProps> = ({
   }, [lat, lng, radiusKm, zoom, locationName]);
 
   useEffect(() => {
+    // Leaflet only watches the browser window. This map also changes size
+    // with the app window (maximize, drag-resize), which left it half grey.
+    const container = mapContainerRef.current;
+    const resizeObserver = new ResizeObserver(() => {
+      if (container && container.clientWidth > 0) mapInstanceRef.current?.invalidateSize();
+    });
+    if (container) resizeObserver.observe(container);
+
     return () => {
+      resizeObserver.disconnect();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;

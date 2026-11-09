@@ -9,6 +9,7 @@
   --fg-endemic: #8E5FBF;
   --fg-present: #5B7FA6;
   --fg-absent: #E8E8E8;
+  --fg-range: #5F6B7A;
   --fg-sightings: #C0392B;
   display: flex;
   flex-direction: column;
@@ -76,13 +77,15 @@
 }
 
 /* Toolbar & Search Form */
+/* The search panel. Its top border is the line the mode tabs stand on, the
+   same weight as the category tabs' line. */
 .fieldguide-toolbar {
   background: #DFDFDF;
   border: 1px solid #999;
-  border-top-color: #FFF;
+  border-top: 2px solid #808080;
   border-left-color: #FFF;
-  border-radius: 4px;
-  padding: 6px 8px;
+  border-radius: 0 0 4px 4px;
+  padding: 8px 8px 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -296,7 +299,32 @@
 .location-controls-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+/* "In season now": a checkbox that reads as one of the row's controls */
+.season-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  padding: 1px 6px 1px 3px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
+.season-toggle input {
+  margin: 0;
+}
+
+.season-toggle.active {
+  background: #FFF6E0;
+  border-color: #D9B25F;
+  color: #5A420C;
 }
 
 .radius-selector-group {
@@ -467,8 +495,8 @@
 }
 
 /* Narrow window: filters on their own full-width row above, so the tabs
-   stay attached to the list they switch. ~700px is what one row needs. */
-@container (max-width: 760px) {
+   stay attached to the list they switch. The nine tabs alone take ~810px. */
+@container (max-width: 1000px) {
   .fieldguide-tabs-container {
     flex-direction: column-reverse;
     align-items: stretch;
@@ -476,6 +504,22 @@
 
   .fieldguide-filter-box {
     margin: 0;
+  }
+}
+
+/* Too narrow for every label: the closed tabs keep just their icon (the
+   tooltip names them) and the open one keeps its name... */
+@container (max-width: 830px) {
+  .category-tab:not(.active) .category-tab-label {
+    display: none;
+  }
+}
+
+/* ...until even that would wrap; the summary line under the tabs still says
+   which group is showing ("Of 312 bird species..."). */
+@container (max-width: 480px) {
+  .category-tab .category-tab-label {
+    display: none;
   }
 }
 
@@ -980,6 +1024,27 @@
   text-align: right;
 }
 
+/* Global Status: the IUCN code + name, with the authority underneath */
+.iucn-link {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.iucn-link:hover {
+  text-decoration: underline;
+}
+
+.iucn-link .status-source {
+  flex-basis: 100%;
+  text-align: right;
+  margin-top: 0;
+}
+
 .inspector-details {
   display: flex;
   flex-direction: column;
@@ -1044,6 +1109,122 @@
   padding: 3px 8px;
 }
 
+/* Lineage: an indented tree, one classic rank per row, the specimen last */
+.inspector-lineage,
+.inspector-season {
+  background: #FFF;
+  border: 2px solid;
+  border-color: #808080 #FFF #FFF #808080;
+  border-radius: 2px;
+  padding: 8px;
+}
+
+.inspector-lineage h4,
+.inspector-season h4 {
+  margin: 0 0 6px 0;
+  font-size: 11px;
+  color: #333;
+}
+
+.lineage-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lineage-node {
+  position: relative;
+  padding-left: calc(var(--depth) * 14px);
+  line-height: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Elbow from under the parent's first letter into this row */
+.lineage-node + .lineage-node::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--depth) * 14px - 10px);
+  top: 0;
+  width: 7px;
+  height: 50%;
+  border-left: 1px solid #A0A0A0;
+  border-bottom: 1px solid #A0A0A0;
+}
+
+.lineage-hint {
+  font-weight: normal;
+  font-size: 9px;
+  font-style: italic;
+  color: #888;
+  margin-left: 6px;
+}
+
+.lineage-label {
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+/* Ancestor rows are buttons that open that group's range */
+button.lineage-link {
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  margin: 0;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+button.lineage-link:hover {
+  background: #D8E4F8;
+}
+
+button.lineage-link:hover .lineage-name {
+  text-decoration: underline;
+}
+
+.lineage-rank {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #888;
+  margin-right: 5px;
+}
+
+.lineage-name {
+  font-size: 11px;
+  font-weight: bold;
+  color: #1A3668;
+}
+
+.lineage-name.italic {
+  font-style: italic;
+}
+
+.lineage-common {
+  font-size: 10px;
+  color: #666;
+  margin-left: 4px;
+}
+
+/* The specimen itself, highlighted like a selected Finder row */
+.lineage-node.current .lineage-label {
+  background: #4769A5;
+}
+
+.lineage-node.current .lineage-rank,
+.lineage-node.current .lineage-name,
+.lineage-node.current .lineage-common {
+  color: #FFF;
+}
+
 .inspector-footer {
   display: flex;
   justify-content: flex-end;
@@ -1082,50 +1263,104 @@
 }
 
 /* =========================================================
-   Search Mode Switch (Places vs. Species)
+   Header: Back + Search Mode Tabs (Places vs. Species)
    ========================================================= */
 
-.fieldguide-mode-switch {
+/* No gap between the mode row and the search panel: the tabs stand on it */
+.fieldguide-header {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  flex-direction: column;
+}
+
+/* Always one row: Back (left) shortens with an ellipsis if it must, the tabs
+   (right) never move, and the hint between them shows only when it fits.
+   Pulled 2px down over the panel's top border, which the tabs stand on. */
+.fieldguide-mode-switch {
+  container-type: inline-size;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 0 10px 0 2px;
+  margin-bottom: -2px;
+}
+
+/* The category row's notebook tabs (.retro-tab). The open one takes the
+   search panel's grey rather than the window's, so it runs into the panel. */
+.mode-switch-buttons {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.mode-tab.active {
+  background: #DFDFDF;
+  border-bottom-color: #DFDFDF;
+}
+
+/* Small windows: "📍 Places" / "🐾 Species", leaving Back room to read */
+@container (max-width: 480px) {
+  .mode-tab-verb {
+    display: none;
+  }
+}
+
+/* Takes whatever room is left, right-aligned against the tabs. The hint shows
+   only if it fits whole: the empty ::before holds the first line, so a hint
+   too long for it wraps onto a second line, which the fixed height clips. */
+.mode-switch-hint-box {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 21px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  display: flex;
   flex-wrap: wrap;
-  border-bottom: 1px solid #C4C4C4;
-  padding-bottom: 5px;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-.mode-switch-btn {
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 3px 10px;
-  background: linear-gradient(to bottom, #FFFFFF 0%, #E6E6E6 40%, #CCCCCC 100%);
-  border: 1px solid #909090;
-  border-radius: 3px;
-  box-shadow: inset 1px 1px 0px #FFFFFF;
-  color: #555;
-  cursor: pointer;
-  line-height: 1.3;
-}
-
-.mode-switch-btn:hover {
-  background: linear-gradient(to bottom, #FFFFFF 0%, #DCE8FA 100%);
-  color: #1A3668;
-}
-
-.mode-switch-btn.active {
-  background: linear-gradient(to bottom, #6D8CBE 0%, #3B5A96 100%);
-  border-color: #2A487B;
-  color: #FFF;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+.mode-switch-hint-box::before {
+  content: '';
+  height: 21px;
 }
 
 .mode-switch-hint {
   font-size: 10px;
   font-style: italic;
   color: #666;
-  margin-left: 4px;
+  white-space: nowrap;
+}
+
+/* Back: a plain button floating above the panel, unlike the tabs on it.
+   Fixed height, as an emoji in the label (⚡ Kanto) would otherwise make it
+   taller and lift the whole row. */
+.fieldguide-back-btn {
+  font-family: 'Geneva', 'Lucida Grande', sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1.3;
+  padding: 3px 10px;
+  height: 21px;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+  background: linear-gradient(to bottom, #FFFFFF 0%, #E6E6E6 40%, #CCCCCC 100%);
+  border: 1px solid #909090;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0px #FFFFFF;
+  color: #555;
+  cursor: pointer;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fieldguide-back-btn:hover {
+  background: linear-gradient(to bottom, #FFFFFF 0%, #DCE8FA 100%);
+  color: #1A3668;
 }
 
 /* Species autocomplete rows */
@@ -1316,10 +1551,41 @@
 }
 
 .conservation-chip {
-  background: #FFF6E0;
-  border-color: #D9B25F;
-  color: #7A5A12;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
 }
+
+a.conservation-chip:hover {
+  border-color: #777;
+  color: #000;
+}
+
+/* The IUCN category code in the Red List's own colours, which readers of
+   field guides already know. Text colour picked per fill for contrast. */
+.iucn-code {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 3px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: bold;
+  line-height: 13px;
+  text-align: center;
+  letter-spacing: 0.02em;
+  color: #1A1A1A;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.iucn-dd { background: #D1D1C6; }
+.iucn-lc { background: #60C659; }
+.iucn-nt { background: #CCE226; }
+.iucn-vu { background: #F9E814; }
+.iucn-en { background: #FC7F3F; }
+.iucn-cr { background: #D81E05; color: #FFF; }
+.iucn-ew { background: #542344; color: #FFF; }
+.iucn-ex { background: #000; color: #FFF; }
 
 .extinct-chip {
   background: #F2F2F2;
@@ -1368,11 +1634,16 @@
 }
 
 .swatch-range {
-  background: var(--fg-native);
+  background: var(--fg-range);
 }
 
 .swatch-sightings {
   background: var(--fg-sightings);
+}
+
+.range-legend-note {
+  color: #666;
+  font-style: italic;
 }
 
 .range-missing-note {
@@ -1785,4 +2056,188 @@
 .range-jump-btn:active {
   background: linear-gradient(to bottom, #3B5B94 0%, #2A487B 100%);
   box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* =========================================================
+   When to look: sightings by month
+   ========================================================= */
+
+.season-headline {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+  color: #333;
+}
+
+.season-caveat {
+  font-size: 9px;
+  font-style: italic;
+  color: #777;
+}
+
+.month-chart {
+  /* Room above the plot for the peak label and the hover readout */
+  padding: 26px 0 0 28px;
+  font-size: 9px;
+  color: #555;
+}
+
+.month-chart-plot {
+  position: relative;
+  height: 72px;
+}
+
+/* Hairline gridlines, labelled on the left; the plot's own baseline is the 0 line */
+.month-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid #E4E4E4;
+}
+
+.month-grid:first-child {
+  border-top-color: #9A9A9A;
+}
+
+.month-grid-label {
+  position: absolute;
+  right: calc(100% + 4px);
+  top: -6px;
+  font-variant-numeric: tabular-nums;
+  color: #777;
+  white-space: nowrap;
+}
+
+.month-cols {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+}
+
+/* The whole column is the hover target, not just the bar */
+.month-col {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  outline: none;
+  cursor: default;
+}
+
+/* This month: a warm wash behind the column, matching "In season now" */
+.month-col.now {
+  background: #FFF6E0;
+}
+
+.month-col:focus-visible {
+  box-shadow: inset 0 0 0 1px #1A3668;
+}
+
+.month-bar {
+  width: min(16px, 60%);
+  background: var(--fg-sightings);
+  /* Rounded at the data end, square on the baseline */
+  border-radius: 3px 3px 0 0;
+  min-height: 1px;
+}
+
+.month-col.hovered .month-bar {
+  filter: brightness(1.15);
+}
+
+.month-peak-label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -2px);
+  font-weight: bold;
+  color: #333;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.month-tooltip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 6px;
+  background: #FFFFE1;
+  border: 1px solid #555;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1.25;
+}
+
+.month-tooltip strong {
+  font-size: 11px;
+  color: #111;
+}
+
+.month-tooltip span {
+  color: #555;
+}
+
+/* Keep the end months' readouts inside the box */
+.month-tooltip.align-left {
+  left: 0;
+  transform: none;
+  align-items: flex-start;
+}
+
+.month-tooltip.align-right {
+  left: auto;
+  right: 0;
+  transform: none;
+  align-items: flex-end;
+}
+
+.month-axis {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  margin-top: 2px;
+  text-align: center;
+  color: #666;
+}
+
+.month-axis .now {
+  font-weight: bold;
+  color: #111;
+}
+
+.month-chart-table {
+  margin-top: 6px;
+}
+
+.month-chart-table summary {
+  cursor: pointer;
+  color: #1A3668;
+  width: max-content;
+}
+
+.month-table-scroll {
+  overflow-x: auto;
+}
+
+.month-chart-table table {
+  border-collapse: collapse;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-chart-table th,
+.month-chart-table td {
+  border: 1px solid #DDD;
+  padding: 1px 4px;
+  text-align: right;
+  font-weight: normal;
+}
+
+.month-chart-table th {
+  background: #F2F2F2;
+  color: #555;
 }

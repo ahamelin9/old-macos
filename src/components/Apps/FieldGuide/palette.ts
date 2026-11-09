@@ -15,6 +15,12 @@ export const FIELD_GUIDE_PALETTE = {
   endemic: '#8E5FBF',
   present: '#5B7FA6',
   absent: '#E8E8E8',
+  /**
+   * The range map layer. Deliberately not "native" green: iNaturalist's range
+   * maps show where a species lives now, introduced areas included (house
+   * sparrows across North America), so they cannot vouch for native status.
+   */
+  range: '#5F6B7A',
   /** Observation density on the map; deliberately outside the establishment set */
   sightings: '#C0392B'
 } as const;

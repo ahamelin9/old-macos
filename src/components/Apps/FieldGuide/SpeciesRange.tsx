@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import RangeMap, { ObservationBounds } from './RangeMap';
 import { useGridColumns } from './useGridColumns';
+import { ConservationStatusRecord, globalIucnStatus } from './conservation';
 
 export interface TaxonSuggestion {
   id: number;
@@ -15,6 +16,11 @@ export interface TaxonSuggestion {
     url?: string;
     attribution?: string;
   };
+}
+
+/** An entry in a taxon record's `ancestors`: a full taxon, rank always set. */
+export interface TaxonAncestor extends TaxonSuggestion {
+  rank: string;
 }
 
 interface ListedTaxon {
@@ -35,8 +41,8 @@ export interface TaxonDetail extends TaxonSuggestion {
   wikipedia_summary?: string;
   listed_taxa?: ListedTaxon[];
   listed_taxa_count?: number;
-  conservation_status?: { status_name?: string };
-  ancestors?: { rank: string; name: string }[];
+  conservation_statuses?: ConservationStatusRecord[];
+  ancestors?: TaxonAncestor[];
 }
 
 interface SimilarSpecies {
@@ -193,7 +199,6 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
   onInspect,
   getTaxonIcon
 }) => {
-  const panelRef = useRef<HTMLDivElement>(null);
   const [similarSpecies, setSimilarSpecies] = useState<SimilarSpecies[]>([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(true);
 
@@ -434,12 +439,6 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
     };
   }, [taxon.id]);
 
-  // Jumping to a similar species swaps the whole panel; bring the new
-  // specimen's header back into view instead of leaving the reader mid-page.
-  useEffect(() => {
-    panelRef.current?.scrollIntoView({ block: 'start' });
-  }, [taxon.id]);
-
   if (isLoading) {
     return (
       <div className="fieldguide-loading-box">
@@ -477,6 +476,7 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
     detail.default_photo?.square_url;
 
   const summary = detail.wikipedia_summary ? stripHtml(detail.wikipedia_summary) : null;
+  const iucn = globalIucnStatus(detail.conservation_statuses);
 
   const lineage = (detail.ancestors || [])
     .filter(a => ['kingdom', 'class', 'order', 'family'].includes(a.rank))
@@ -484,7 +484,7 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
     .join(' › ');
 
   return (
-    <div className="species-range-panel" ref={panelRef}>
+    <div className="species-range-panel">
       {/* Identity header */}
       <div className="range-header-card">
         <button
@@ -519,12 +519,21 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
                 📊 {totalObservations.toLocaleString()} sightings worldwide
               </span>
             )}
-            {detail.conservation_status?.status_name && (
-              <span className="range-stat conservation-chip">
-                🛡️ {detail.conservation_status.status_name}
-              </span>
+            {iucn && (
+              <a
+                className="range-stat conservation-chip"
+                href={iucn.url || 'https://www.iucnredlist.org/'}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`IUCN Red List: ${iucn.label}. A worldwide assessment, not for any one place.`}
+              >
+                <span className={`iucn-code iucn-${iucn.code.toLowerCase()}`}>{iucn.code}</span>
+                {iucn.label}
+              </a>
             )}
-            {detail.extinct && <span className="range-stat extinct-chip">🦴 Extinct</span>}
+            {detail.extinct && iucn?.code !== 'EX' && (
+              <span className="range-stat extinct-chip">🦴 Extinct</span>
+            )}
           </div>
         </div>
       </div>

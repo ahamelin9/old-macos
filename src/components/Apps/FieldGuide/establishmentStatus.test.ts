@@ -22,6 +22,7 @@ const COMMELINA = 52927;
 const CAUSONIS = 795186;
 const BLACK_LOCUST = 56088;
 const BLACK_NIGHTSHADE = 79141;
+const GREEN_PHEASANT = 1446088; // endemic to Japan
 
 const KANTO_PLACES: ChecklistPlace[] = [
   { id: JAPAN, name: 'Japan', adminLevel: 0 },
@@ -123,9 +124,10 @@ afterEach(() => {
 });
 
 describe('normalizeMeans', () => {
-  it('folds endemic into native and legacy values into introduced', () => {
+  it('keeps endemic apart and folds legacy values into introduced', () => {
     expect(normalizeMeans('native')).toBe('native');
-    expect(normalizeMeans('endemic')).toBe('native');
+    expect(normalizeMeans('endemic')).toBe('endemic');
+    expect(normalizeMeans('Endemic')).toBe('endemic');
     expect(normalizeMeans('Introduced')).toBe('introduced');
     expect(normalizeMeans('naturalised')).toBe('introduced');
     expect(normalizeMeans('invasive')).toBe('introduced');
@@ -140,8 +142,9 @@ describe('normalizeMeans', () => {
 });
 
 describe('classifyStatus', () => {
-  const japan = (means: 'native' | 'introduced' | null) => ({ placeName: 'Japan', means });
-  const hokkaido = (means: 'native' | 'introduced' | null) => ({ placeName: 'Hokkaido, JP', means });
+  type Means = 'native' | 'endemic' | 'introduced' | null;
+  const japan = (means: Means) => ({ placeName: 'Japan', means });
+  const hokkaido = (means: Means) => ({ placeName: 'Hokkaido, JP', means });
 
   it('prefers the state/prefecture over the country', () => {
     // Houttuynia is native to Japan but was brought to Hokkaido from Honshu
@@ -166,6 +169,35 @@ describe('classifyStatus', () => {
       source: 'Japan checklist'
     });
     expect(classifyStatus({ country: japan('native') }).status).toBe('native');
+  });
+
+  it('marks a species endemic to the state, or to the country when the state agrees', () => {
+    expect(classifyStatus({ country: japan('native'), region: hokkaido('endemic') })).toEqual({
+      status: 'endemic',
+      source: 'Hokkaido, JP checklist',
+      endemicTo: 'Hokkaido, JP'
+    });
+    expect(classifyStatus({ country: japan('endemic'), region: hokkaido('native') })).toEqual({
+      status: 'endemic',
+      source: 'Japan checklist',
+      endemicTo: 'Japan'
+    });
+    expect(classifyStatus({ country: japan('endemic'), region: hokkaido(null) }).endemicTo).toBe('Japan');
+    // The narrower endemism is the more telling one
+    expect(classifyStatus({ country: japan('endemic'), region: hokkaido('endemic') }).endemicTo).toBe(
+      'Hokkaido, JP'
+    );
+  });
+
+  it('lets "introduced" at either level beat "endemic" at the other', () => {
+    // Endemic to Japan, but carried to Hokkaido from Honshu
+    expect(classifyStatus({ country: japan('endemic'), region: hokkaido('introduced') })).toEqual({
+      status: 'introduced',
+      source: 'Hokkaido, JP checklist'
+    });
+    expect(classifyStatus({ country: japan('introduced'), region: hokkaido('endemic') }).status).toBe(
+      'introduced'
+    );
   });
 
   it('uses sighting flags only when no checklist answers and the flags agree', () => {
@@ -398,30 +430,50 @@ describe('getEstablishmentStatuses', () => {
 
 describe('countEstablishmentStatuses', () => {
   const checklists: Checklists = {
-    [JAPAN]: { [WHITE_CLOVER]: 'introduced', [HOUTTUYNIA]: 'native' },
-    [TOKYO]: { [WHITE_CLOVER]: 'introduced', [HOUTTUYNIA]: 'introduced' }
+    [JAPAN]: { [WHITE_CLOVER]: 'introduced', [HOUTTUYNIA]: 'native', [GREEN_PHEASANT]: 'endemic' },
+    [TOKYO]: { [WHITE_CLOVER]: 'introduced', [HOUTTUYNIA]: 'introduced', [GREEN_PHEASANT]: 'native' }
   };
   const flags: Flags = {
     native: { [COMMELINA]: 1118 },
     introduced: { [WHITE_CLOVER]: 1096, [HOUTTUYNIA]: 1388 }
   };
-  const species = [WHITE_CLOVER, HOUTTUYNIA, COMMELINA, CAUSONIS];
+  const species = [WHITE_CLOVER, HOUTTUYNIA, COMMELINA, CAUSONIS, GREEN_PHEASANT];
 
   it('counts every species in the circle by the same rule as the badges', async () => {
     mockInat(checklists, flags, { species, pageSize: 3 });
-    const totals = await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, 'Plantae');
+    const totals = await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE);
 
-    expect(totals).toEqual({ total: 4, byStatus: { native: 1, introduced: 2, unknown: 1 } });
+    expect(totals).toEqual({ total: 5, byStatus: { native: 1, endemic: 1, introduced: 2, unknown: 1 } });
 
     const badges = await getEstablishmentStatuses(species, KANTO_PLACES, KANTO_CIRCLE);
-    const tally = { native: 0, introduced: 0, unknown: 0 };
+    const tally = { native: 0, endemic: 0, introduced: 0, unknown: 0 };
     for (const r of badges.values()) tally[r.status]++;
     expect(tally).toEqual(totals.byStatus);
   });
 
+  it('sends the group and month filters, but reads sighting flags across the whole year', async () => {
+    const fetchMock = mockInat(checklists, flags, { species });
+    await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, { taxa: 'iconic_taxa=Aves', month: 11 });
+
+    const counts = requestedUrls(fetchMock).filter(u => u.pathname === '/v1/observations/species_counts');
+    expect(counts.every(u => u.searchParams.get('iconic_taxa') === 'Aves')).toBe(true);
+    const flagged = counts.filter(u => u.searchParams.get('native') || u.searchParams.get('introduced'));
+    expect(flagged.length).toBeGreaterThan(0);
+    expect(flagged.every(u => !u.searchParams.has('month'))).toBe(true);
+    expect(counts.filter(u => !flagged.includes(u)).every(u => u.searchParams.get('month') === '11')).toBe(true);
+  });
+
+  it('counts with no group filter at all for "All Species"', async () => {
+    const fetchMock = mockInat(checklists, flags, { species });
+    await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, {});
+    expect(
+      requestedUrls(fetchMock).some(u => u.searchParams.has('iconic_taxa') || u.searchParams.has('taxon_id'))
+    ).toBe(false);
+  });
+
   it('leaves the badges nothing to look up in the checklists afterwards', async () => {
     mockInat(checklists, flags, { species });
-    await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, 'Plantae');
+    await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, { taxa: 'iconic_taxa=Plantae' });
 
     const fetchMock = mockInat(checklists, flags, { species });
     await getEstablishmentStatuses(species, KANTO_PLACES, KANTO_CIRCLE);
@@ -431,7 +483,7 @@ describe('countEstablishmentStatuses', () => {
   it('gives only a plain total when the area is too big to classify', async () => {
     const many = Array.from({ length: MAX_SPECIES_FOR_BREAKDOWN + 1 }, (_, i) => i + 1);
     const fetchMock = mockInat({}, { native: {}, introduced: {} }, { species: many });
-    const totals = await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, 'Plantae');
+    const totals = await countEstablishmentStatuses(KANTO_PLACES, KANTO_CIRCLE, { taxa: 'iconic_taxa=Plantae' });
 
     expect(totals).toEqual({ total: MAX_SPECIES_FOR_BREAKDOWN + 1, byStatus: null });
     expect(fetchMock).toHaveBeenCalledTimes(1);

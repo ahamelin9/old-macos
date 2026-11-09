@@ -17,14 +17,16 @@ interface RangeMapProps {
 }
 
 // iNaturalist serves two useful raster overlays per taxon:
-//  - taxon_ranges: expert-drawn native range polygons (only some taxa have them)
+//  - taxon_ranges: curated range polygons (only some taxa have them). These are
+//    the *current* range, introduced areas included, so they are labelled
+//    "Known range" in a neutral colour rather than passed off as native.
 //  - grid: binned counts of verifiable observations
 // Both accept `color`, so they are tinted from the app's own key rather than
 // left on iNaturalist's defaults (pink ranges, orange grid) which matched
 // nothing else on the page.
 const RANGE_TILES = (id: number) =>
   `https://api.inaturalist.org/v1/taxon_ranges/${id}/{z}/{x}/{y}.png` +
-  `?color=${tileColor(FIELD_GUIDE_PALETTE.native)}`;
+  `?color=${tileColor(FIELD_GUIDE_PALETTE.range)}`;
 const GRID_TILES = (id: number) =>
   `https://api.inaturalist.org/v1/grid/{z}/{x}/{y}.png?taxon_id=${id}&verifiable=true` +
   `&color=${tileColor(FIELD_GUIDE_PALETTE.sightings)}`;
@@ -61,7 +63,17 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     mapInstanceRef.current = map;
 
+    // Leaflet only watches the browser window. This map also changes size
+    // with the app window, and is hidden while a place opened from it is
+    // shown, so re-measure whenever its own box changes.
+    const container = mapContainerRef.current;
+    const resizeObserver = new ResizeObserver(() => {
+      if (container.clientWidth > 0) map.invalidateSize();
+    });
+    resizeObserver.observe(container);
+
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -125,7 +137,10 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
     else layer.remove();
   }, [showSightings]);
 
-  // Frame the map on where the species has actually been recorded
+  // Frame the map on where the species has actually been recorded. No
+  // animation: the map is brand new here, and an animated zoom that is still
+  // running when the panel is swapped (a quick Back or lineage click) fires
+  // its end handler on a removed map and throws.
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -136,10 +151,10 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
           [bounds.swlat, bounds.swlng],
           [bounds.nelat, bounds.nelng]
         ),
-        { padding: [12, 12], maxZoom: 9 }
+        { padding: [12, 12], maxZoom: 9, animate: false }
       );
     } else {
-      map.setView([20, 0], 2);
+      map.setView([20, 0], 2, { animate: false });
     }
 
     const timeout = setTimeout(() => map.invalidateSize(), 250);
@@ -160,14 +175,18 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
       <div ref={mapContainerRef} className="fieldguide-map-canvas range-map-canvas" />
 
       <div className="range-map-legend">
-        <label className="range-layer-toggle">
+        <label
+          className="range-layer-toggle"
+          title="Where the species is known to live today, from range maps curated on iNaturalist. It can include places it was introduced to; the list below says which countries it is native to."
+        >
           <input
             type="checkbox"
             checked={showRange}
             onChange={(e) => setShowRange(e.target.checked)}
           />
           <span className="legend-swatch swatch-range" />
-          Native range
+          Known range
+          <span className="range-legend-note">(may include introduced areas)</span>
         </label>
         <label className="range-layer-toggle">
           <input
@@ -180,7 +199,7 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
         </label>
         {hasRangeData === false && (
           <span className="range-missing-note">
-            No expert range map published for this taxon — sightings only.
+            No range map published for this taxon — sightings only.
           </span>
         )}
       </div>
