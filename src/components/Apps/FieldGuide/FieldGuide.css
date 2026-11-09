@@ -155,6 +155,48 @@
   background: linear-gradient(to bottom, #86B5F5 0%, #3B5B94 100%);
 }
 
+.search-btn,
+.near-me-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Lit up while the results are for the user's own location */
+.near-me-btn.active {
+  background: linear-gradient(to bottom, #DCE7FA 0%, #B9CDF0 100%);
+  border-color: #4769A5;
+  color: #1F3A6B;
+}
+
+/* Square icon button, same height as Explore */
+.near-me-btn {
+  padding: 4px 7px;
+}
+
+.near-me-icon {
+  display: block;
+}
+
+.near-me-btn:disabled {
+  cursor: progress;
+}
+
+/* Blink the crosshair while waiting for a fix */
+.near-me-btn.locating .near-me-icon {
+  animation: near-me-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes near-me-pulse {
+  50% { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .near-me-btn.locating .near-me-icon {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
 /* Autocomplete Suggestions Box */
 .fieldguide-suggestions-box {
   position: absolute;

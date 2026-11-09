@@ -42,6 +42,8 @@ interface LocationInfo {
   displayName: string;
   lat: number;
   lng: number;
+  /** True when the point came from the device's location, not a search. */
+  fromDevice?: boolean;
 }
 
 interface LocationSuggestion {
@@ -164,6 +166,12 @@ const FieldGuide: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // "Near Me": the device's own location. Each request gets an id so a fix
+  // that arrives after the user has picked somewhere else is ignored.
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+  const locateRequestRef = useRef(0);
+
   // Species-mode search ("where does this animal live?")
   const [taxonSuggestions, setTaxonSuggestions] = useState<TaxonSuggestion[]>([]);
   const [selectedTaxon, setSelectedTaxon] = useState<TaxonSuggestion | null>(null);
@@ -185,9 +193,98 @@ const FieldGuide: React.FC = () => {
   const [wikiSummary, setWikiSummary] = useState<string | null>(null);
   const [isLoadingWiki, setIsLoadingWiki] = useState(false);
 
+  // Drop any pending "Near Me" request: the user has chosen a place by hand.
+  const cancelLocateUser = () => {
+    locateRequestRef.current++;
+    setIsLocatingUser(false);
+    setLocateError(null);
+  };
+
+  // Turn a GPS fix into a short place name for the banner. Returns null on
+  // failure; the species search only needs the coordinates anyway.
+  const describeCoordinates = async (lat: number, lng: number) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
+        { headers: { 'Accept-Language': 'en' }, signal: controller.signal }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const a = data.address || {};
+      const locality = a.city || a.town || a.village || a.hamlet || a.suburb || a.municipality || a.county;
+      const region = a.state || a.province || a.region;
+      const parts = [...new Set([locality, region, a.country].filter(Boolean))] as string[];
+      if (parts.length === 0) return null;
+      return {
+        name: parts[0],
+        fullName: parts.join(', '),
+        displayName: (data.display_name as string) || parts.join(', ')
+      };
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  // Ask the browser where the user is and search around that point
+  const locateUser = () => {
+    const requestId = ++locateRequestRef.current;
+    setLocateError(null);
+    setErrorMessage(null);
+    setShowSuggestions(false);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!('geolocation' in navigator)) {
+      setLocateError("This browser can't share its location. Type a place instead.");
+      return;
+    }
+    if (!window.isSecureContext) {
+      setLocateError('Your location can only be shared over a secure (https) connection. Type a place instead.');
+      return;
+    }
+
+    setIsLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude: lat, longitude: lng } = position.coords;
+        const place = await describeCoordinates(lat, lng);
+        if (locateRequestRef.current !== requestId) return;
+        setCurrentLocation({
+          name: place?.name || 'My Location',
+          displayName: place?.displayName || 'Your current location',
+          lat,
+          lng,
+          fromDevice: true
+        });
+        setSearchInput(place?.fullName || '');
+        setLocationSuggestions([]);
+        setIsLocatingUser(false);
+      },
+      (err) => {
+        if (locateRequestRef.current !== requestId) return;
+        setIsLocatingUser(false);
+        setLocateError(
+          err.code === err.PERMISSION_DENIED
+            ? 'Location access is blocked. Allow it for this site in your browser settings, then try again.'
+            : err.code === err.TIMEOUT
+              ? 'Finding your location took too long. Try again, or type a place instead.'
+              : "Your location isn't available right now. Try again, or type a place instead."
+        );
+      },
+      // Low accuracy is plenty for a 10 km+ radius, and much faster
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 5 * 60 * 1000 }
+    );
+  };
+
   // Search location using OpenStreetMap Nominatim API
   const searchLocation = async (query: string) => {
     if (!query.trim()) return;
+    cancelLocateUser();
     setIsSearchingLocation(true);
     setErrorMessage(null);
     setShowSuggestions(false);
@@ -319,6 +416,7 @@ const FieldGuide: React.FC = () => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+    cancelLocateUser();
     setSearchMode(mode);
     setSearchInput('');
     setSelectedTaxon(null);
@@ -379,6 +477,7 @@ const FieldGuide: React.FC = () => {
       lat: parseFloat(sug.lat),
       lng: parseFloat(sug.lon)
     };
+    cancelLocateUser();
     setSearchInput(newLoc.name);
     setCurrentLocation(newLoc);
     setShowSuggestions(false);
@@ -870,6 +969,29 @@ const FieldGuide: React.FC = () => {
               ? (isSearchingTaxa ? 'Tracking...' : 'Track')
               : (isSearchingLocation ? 'Locating...' : 'Explore')}
           </button>
+          {searchMode === 'places' && (
+            <button
+              type="button"
+              className={`retro-button near-me-btn ${currentLocation.fromDevice ? 'active' : ''} ${isLocatingUser ? 'locating' : ''}`}
+              onClick={locateUser}
+              disabled={isLocatingUser}
+              aria-pressed={!!currentLocation.fromDevice}
+              aria-label={isLocatingUser ? 'Finding your location' : 'Use my location'}
+              title={isLocatingUser ? 'Finding your location…' : 'Use my location to see what lives nearby'}
+            >
+              {/* Crosshair "my location" mark; currentColor follows the button state */}
+              <svg className="near-me-icon" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+                <circle cx="8" cy="8" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="8" cy="8" r="1.75" fill="currentColor" />
+                <path
+                  d="M8 0.75V3.5M8 12.5v2.75M0.75 8H3.5M12.5 8h2.75"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          )}
         </form>
 
         <div
@@ -883,6 +1005,7 @@ const FieldGuide: React.FC = () => {
               type="button"
               className={`retro-mini-button ${currentLocation.name === loc.name ? 'active-location' : ''}`}
               onClick={() => {
+                cancelLocateUser();
                 setSearchInput(loc.query);
                 setCurrentLocation({
                   name: loc.name,
@@ -1013,15 +1136,17 @@ const FieldGuide: React.FC = () => {
       )}
 
       {/* Error Message */}
-      {errorMessage && (
+      {(errorMessage || locateError) && (
         <div className="fieldguide-error-banner">
           <span className="error-icon">⚠️</span>
-          <span className="error-text">{errorMessage}</span>
+          <span className="error-text">{errorMessage || locateError}</span>
           <button
             className="retro-mini-button retry-btn"
-            onClick={() =>
-              searchMode === 'species' ? searchTaxa(searchInput) : searchLocation(searchInput)
-            }
+            onClick={() => {
+              if (!errorMessage) locateUser();
+              else if (searchMode === 'species') searchTaxa(searchInput);
+              else searchLocation(searchInput);
+            }}
           >
             Retry
           </button>
