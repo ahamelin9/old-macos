@@ -13,10 +13,13 @@ file first.
 | For | Read |
 |---|---|
 | How the site fits together: desktop, windows, dock, every app, the Spotify login, deploy and the live address | the `system-map` skill |
+| The Apple menu (🍎): About This Mac, Force Quit, Sleep, Restart, and `showApp`, which brings an app's window forward or opens one | the `system-map` skill, `apple-menu.md` |
 | Any outside API (NASA, PokeAPI, iNaturalist, Wikipedia, OpenStreetMap, Brave, Spotify, iTunes): setup, keys and env vars, limits, known issues, live probes, the API audit | the `apis` skill (an index, one file per service) |
 | Adding a new app to the dock | the `system-map` skill, **Adding an app** |
+| System Preferences and its settings: the store, the early script in `index.html`, the desktop picture, the theme, adding a setting | the `system-map` skill, **Settings** |
 | Anything in the Field Guide: places, species, tabs, native/endemic/introduced, maps, Back, the inspector | the `field-guide` skill |
 | Any CSS or visual change: the shared tokens, base and kit, the design check, before-and-after screenshots | the `design` skill |
+| Dark mode: how it switches, which token to use, an app's own colours, the contrast scan | the `design` skill, `dark-mode.md` |
 | A problem that may have been solved before, or proving a change in a real browser | the `know-how` skill (an index pointing into topic files) |
 | Where a learning, preference or decision goes; the end of a session | the `wrap-up` skill |
 
@@ -79,3 +82,6 @@ Each skill opens with its own contents list. To search all of them at once:
   `src/styles/tokens.css`, and every selector in an app's stylesheet starts
   with that app's class, because every stylesheet is global. The design
   check in `npm run lint` enforces both (the `design` skill).
+- **Every app works in light and dark.** Text, fills and borders use a
+  role, tone, face or tint, so dark mode reaches them, and light must not
+  change when dark does (the `design` skill, `dark-mode.md`).

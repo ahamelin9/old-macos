@@ -1,7 +1,8 @@
 .terminal-content {
-  /* The terminal's own colours; `theme dark` swaps them (terminal-dark) */
+  /* The terminal's own colours: the page's, so it follows the site's light
+     or dark. `theme dark` makes this one terminal dark (terminal-dark) */
   --term-bg: var(--color-surface);
-  --term-text: var(--grey-0);
+  --term-text: var(--tone-0);
   --term-prompt: var(--blue-500);
   --term-error: var(--red-400);
 

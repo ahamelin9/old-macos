@@ -29,7 +29,7 @@ All of these are free, and only Spotify needs a key (a secret one). Each service
 | iTunes Search | Music (guest previews) | No | About 20 requests a minute: look up on play, never a whole playlist | [itunes.md](itunes.md) |
 
 Where the code is: each file names it. The Spotify login's two backends are
-in `system-map`, section 5. What iNaturalist's fields mean is in the
+in `system-map`, section 6. What iNaturalist's fields mean is in the
 `field-guide` skill, section 3.
 
 ## 2. Rules every API call follows
@@ -94,7 +94,7 @@ hour) to 5 (a day).
 | 9 | The Brave worker answers any website (`Access-Control-Allow-Origin: *`), so others could spend the 2,000 a month | 1 | 1 | 5 | 2 | 3.5 | Open, Alex's worker |
 | 10 | `VITE_ENABLE_CORS_PROXY` is declared but nothing reads it | 1 | 1 | 1 | 1 | 3 | Fixed 2026-11-15 |
 | 11 | Music's guest mode plays nothing: Spotify returns no previews (0 of 327 tracks) | 8 | 3 | 3 | 5 | 2.8 | Fixed 2026-11-15 |
-| 12 | Music's Premium player may lose its token after an hour (`system-map`, section 8) | 3 | 1 | 2 | 3 | 2 | Open, needs a Premium login to test |
+| 12 | Music's Premium player may lose its token after an hour (`system-map`, section 9) | 3 | 1 | 2 | 3 | 2 | Open, needs a Premium login to test |
 
 Item 11 scores low only because it's the biggest job; it's the one that
 matters most to visitors once the quick ones are done.

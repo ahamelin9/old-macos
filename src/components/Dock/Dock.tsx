@@ -1,25 +1,36 @@
+// React
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 // Context
 import { useWindows } from '../../contexts/useWindows';
 // Apps
-import Finder from '../Apps/Finder/Finder';
-import NasaNews from '../Apps/NasaNews/NasaNews';
-import Notes from '../Apps/Notes/Notes';
-import Preferences from '../Apps/Preferences/Preferences';
-import Terminal from '../Apps/Terminal/Terminal';
-import Calculator from '../Apps/Calculator/Calculator';
-import Trash from '../Apps/Trash/Trash';
-import Music from '../Apps/Music/Music';
-import Camera from '../Apps/Camera/Camera';
-import PokemonSearch from '../Apps/PokemonSearch/PokemonSearch';
-import Safari from '../Apps/Safari/Safari';
-import FieldGuide from '../Apps/FieldGuide/FieldGuide';
+import { appInfo, type AppId } from '../Apps/apps';
+import { dockApps, runningApps, windowTiles } from './dockItems';
 // Styling
 import './styles.css';
-import { useEffect, useState } from 'react';
 
+/** The least room the Dock leaves at each side of the screen */
+const SIDE_ROOM = 8;
+
+/** Shrink the Dock to fit the screen (Dock/styles.css reads --dock-fit) */
+const fitToScreen = (dock: HTMLElement) => {
+  // offsetWidth is its width before the scale, so measuring never feeds back
+  const room = window.innerWidth - SIDE_ROOM * 2;
+  const scale = dock.offsetWidth > room ? room / dock.offsetWidth : 1;
+  dock.style.setProperty('--dock-fit', String(Math.round(scale * 1000) / 1000));
+};
+
+/**
+ * The Dock, as in Mac OS X: the apps, a thin divider, then each minimized
+ * window as a small window with its app's icon on it, and the Trash. What it
+ * shows is worked out in dockItems.ts. A click on an app is showApp: its
+ * window comes to the front (restored if minimized), or one opens. A triangle
+ * under an app says it has a window open. When it is wider than the screen
+ * it shrinks to fit, as the real one did.
+ */
 const Dock = () => {
-  const { windows, openWindow, restoreWindow } = useWindows();
+  const { windows, showApp, restoreWindow } = useWindows();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 800);
+  const dockRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -30,101 +41,65 @@ const Dock = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const apps = [
-    { 
-      name: 'Finder', 
-      icon: '/finder-icon.webp',
-      action: () => openWindow('Finder', <Finder />)
-    },
-    { 
-      name: 'Safari', 
-      icon: '/safari-icon.png',
-      action: () => openWindow('Safari', <Safari />)
-    },
-    { 
-      name: 'Nasa News', 
-      icon: '/nasa-icon.png',
-      action: () => openWindow('Nasa News', <NasaNews />)
-    },
-    { 
-      name: 'Pokemon', 
-      icon: '/pokemon-icon.png',
-      action: () => openWindow('Pokemon Search', <PokemonSearch />)
-    },
-    { 
-      name: 'Field Guide', 
-      icon: '/fieldguide-icon.png',
-      action: () => openWindow('Field Guide (Flora & Fauna)', <FieldGuide />)
-    },
-    { 
-      name: 'Music', 
-      icon: '/music-icon.png',
-      action: () => openWindow('Music', <Music />)
-    },
-    { 
-      name: 'Notes', 
-      icon: '/notes-icon.png',
-      action: () => openWindow('Notes', <Notes />)
-    },
-    {
-      name: 'Camera',
-      icon: '/camera-icon.png',
-      action: () => openWindow('Camera', <Camera />)
-    },
-    { 
-      name: 'Calculator', 
-      icon: '/calculator-icon.png',
-      action: () => openWindow('Calculator', <Calculator />)
-    },
-    { 
-      name: 'Terminal', 
-      icon: '/terminal-icon.png',
-      action: () => openWindow('Terminal', <Terminal />)
-    },
-    { 
-      name: 'System Preferences', 
-      icon: '/preferences-icon.png',
-      action: () => openWindow('Preferences', <Preferences />)
-    },
-    { 
-      name: 'Trash', 
-      icon: '/trash-icon.png',
-      action: () => openWindow('Trash', <Trash />)
-    }
-  ];
+  // Under 800px only the five apps marked onPhone show, and two or more
+  // minimized windows fold into one tile
+  const { apps, trash } = dockApps(isMobile);
+  const running = runningApps(windows);
+  const tiles = windowTiles(windows, { fold: isMobile });
 
-  // Choose which apps to show on mobile
-  const visibleApps = isMobile
-    ? apps.filter(app => 
-        ['Finder', 'Safari', 'Field Guide', 'Nasa News', 'Pokemon'].includes(app.name)
-      )
-    : apps;
+  // Shrink to fit the screen: at once when tiles come or go (before a window
+  // aims its Scale effect at one), and whenever its size or the screen's
+  // changes (a Dock size or text size in System Preferences, say)
+  const tileKey = tiles.map(t => `${t.key}:${t.count}`).join(' ');
+  useLayoutEffect(() => {
+    if (dockRef.current) fitToScreen(dockRef.current);
+  }, [tileKey, isMobile]);
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+    const fit = () => fitToScreen(dock);
+    const observer = new ResizeObserver(fit);
+    observer.observe(dock);
+    window.addEventListener('resize', fit);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', fit);
+    };
+  }, []);
 
-  const minimizedWindows = windows.filter(w => w.minimized);
+  const appItem = (app: { id: AppId; name: string; icon: string }) => (
+    <div key={app.id} className="dock-item" onClick={() => showApp(app.id)}>
+      <img src={app.icon} alt={app.name} className="dock-icon" />
+      <span className="dock-label">{app.name}</span>
+      {running.has(app.id) && <span className="dock-running" aria-hidden="true" />}
+    </div>
+  );
 
   return (
-    <div className="dock">
-      {visibleApps.map((app, index) => (
-        <div 
-          key={`app-${index}`}
-          className="dock-item"
-          onClick={app.action}
+    <div className="dock" ref={dockRef}>
+      {apps.map(appItem)}
+
+      {(tiles.length > 0 || trash) && <div className="dock-divider" aria-hidden="true" />}
+
+      {tiles.map(tile => (
+        <div
+          key={tile.key}
+          className="dock-item minimized-window"
+          data-window-ids={tile.windowIds.join(' ')}
+          title={tile.count > 1 ? `${tile.title} and ${tile.count - 1} more` : tile.title}
+          onClick={() => restoreWindow(tile.restoreId)}
         >
-          <img src={app.icon} alt={app.name} className="dock-icon" />
-          <span className="dock-label">{app.name}</span>
+          <div className="dock-icon dock-thumb">
+            <div className="dock-thumb-window">
+              {tile.appId && <img src={appInfo(tile.appId).icon} alt="" className="dock-thumb-icon" />}
+            </div>
+            {tile.count > 1 && <span className="dock-thumb-count">{tile.count}</span>}
+          </div>
+          <span className="dock-label">{tile.title}</span>
         </div>
       ))}
 
-      {minimizedWindows.map(window => (
-        <div 
-          key={`min-${window.id}`}
-          className="dock-item minimized-window"
-          onClick={() => restoreWindow(window.id)}
-        >
-          <div className="dock-icon">📄</div>
-          <span className="dock-label">{window.title}</span>
-        </div>
-      ))}
+      {trash && appItem(trash)}
     </div>
   );
 };

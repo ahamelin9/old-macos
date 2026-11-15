@@ -5,6 +5,24 @@
     <link rel="icon" type="image/png" href="/macintosh-favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alex Hamelin - MacOS</title>
+    <script>
+      // System Preferences' choices, put on <html> before the first paint so a
+      // returning visitor never sees the default look first. Each saved setting
+      // becomes a data-* attribute (textSize -> data-text-size) that tokens.css
+      // turns into values; SettingsContext does the same once React loads, and
+      // settings.test.ts checks the two agree. Anything odd is skipped.
+      (function () {
+        try {
+          var s = JSON.parse(localStorage.getItem('macos-1999-settings-v1'));
+          for (var k in s) {
+            var v = s[k];
+            if (/^[a-zA-Z]{1,30}$/.test(k) && (typeof v == 'boolean' || (typeof v == 'string' && /^[\w-]{1,30}$/.test(v)))) {
+              document.documentElement.setAttribute('data-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }), String(v));
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

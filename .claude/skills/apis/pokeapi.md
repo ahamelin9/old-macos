@@ -110,7 +110,7 @@ for n in pikachu deoxys deoxys-normal; do curl -s -o /dev/null -w "%{http_code} 
 Should print 200, 404, 200.
 
 The forms, against the app at three sizes, with spot-checks of three forms:
-know-how's `pokemon-forms-check.mjs` (`checking.md`). One species' varieties:
+know-how's `pokemon-forms-check.mjs` (`feature-checks.md`). One species' varieties:
 
 ```bash
 curl -s -A 'macos-1999-pokemon-check/1.0' https://pokeapi.co/api/v2/pokemon-species/charizard | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).varieties.map(v=>v.pokemon.name).join(" ")))'

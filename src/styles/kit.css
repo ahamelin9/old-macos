@@ -83,4 +83,103 @@
   .mac-list-row.mac-selected {
     background: var(--color-selection);
   }
+
+  /* A pull-down menu, as in Mac OS X 10.0-10.2: a little see-through in the
+     theme's colours, square under the menu bar and rounded below. It is a
+     role="menu" of role="menuitem" rows and role="separator" lines; the row
+     under the pointer or the keyboard gets mac-highlighted (Aqua, or grey
+     with Graphite, with white text), and so does a row whose submenu is
+     open (aria-expanded). A row with a submenu ends in a mac-menu-arrow (▸)
+     and sits in a mac-menu-parent with its mac-submenu. First used by the
+     Apple menu (Desktop/AppleMenu.tsx). */
+  .mac-menu {
+    min-width: 190px;
+    max-width: calc(100vw - 8px);
+    padding: 4px 0;
+    background: var(--color-menu);
+    border: 1px solid var(--color-border-light);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    box-shadow: var(--shadow-window);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: normal;
+    color: var(--color-text-strong);
+    text-align: left;
+    outline: none;
+  }
+
+  .mac-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    /* Room on the left for a checkmark, as in Mac OS X */
+    padding: 2px 14px 2px 20px;
+    line-height: 1.4;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+    outline: none;
+  }
+
+  .mac-menu-item.mac-highlighted,
+  .mac-menu-item[aria-expanded="true"] {
+    background: var(--gradient-highlight);
+    color: var(--color-text-on-accent);
+  }
+
+  .mac-menu-arrow {
+    font-size: var(--text-sm);
+  }
+
+  .mac-menu-separator {
+    height: 1px;
+    margin: 5px 0;
+    background: var(--color-border-light);
+  }
+
+  .mac-menu-parent {
+    position: relative;
+  }
+
+  /* A submenu beside its row, top rows level; rounded all round */
+  .mac-submenu {
+    position: absolute;
+    top: -5px;
+    left: 100%;
+    z-index: 1;
+    border-top: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+  }
+
+  /* No room on the right: on the left instead */
+  .mac-submenu.mac-submenu-left {
+    left: auto;
+    right: 100%;
+  }
+
+  /* No room either side (a phone): inside the menu, under its row, indented */
+  .mac-submenu.mac-submenu-inline {
+    position: static;
+    min-width: 0;
+    max-width: none;
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .mac-submenu.mac-submenu-inline .mac-menu-item {
+    padding-left: 34px;
+  }
+
+  /* Bigger rows for a finger */
+  @media (pointer: coarse) {
+    .mac-menu-item {
+      padding-top: 7px;
+      padding-bottom: 7px;
+    }
+  }
 }

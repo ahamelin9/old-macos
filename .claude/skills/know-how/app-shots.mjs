@@ -4,8 +4,16 @@
 // of each (changed pixels in red over a faded copy of the "after" shot) and
 // a pair-<name> image with before on the left and after on the right.
 //
-//   node .claude/skills/know-how/app-shots.mjs <appUrl> <outDir> [App name…]
+//   node .claude/skills/know-how/app-shots.mjs <appUrl> <outDir> [App name…] [--settings '<json>'] [--scheme dark]
 //   node .claude/skills/know-how/app-shots.mjs --compare <beforeDir> <afterDir> <diffDir>
+//
+// --settings saves System Preferences' choices before the page loads, e.g.
+// --settings '{"textSize":"larger"}', '{"highlight":"graphite"}' or
+// '{"theme":"dark"}' (the keys and values are CHOICES in
+// src/contexts/settings.ts).
+// --scheme says whether the computer is in light or dark mode (what System
+// follows). It is light unless you say dark, so a run doesn't depend on
+// the Mac it runs on.
 //
 // Per app it saves laptop-<app>-small.png (the 400x300 window it opens in),
 // laptop-<app>-max.png (maximized), and, for the five apps the phone dock
@@ -20,6 +28,15 @@ import { join } from 'node:path';
 import { launch, sleep } from './cdp.mjs';
 
 const args = process.argv.slice(2);
+// System Preferences' choices to save before the page loads (--settings '<json>')
+const settingsAt = args.indexOf('--settings');
+const SETTINGS = settingsAt >= 0 ? args.splice(settingsAt, 2)[1] : null;
+// The computer's light or dark mode, for System (--scheme dark)
+const schemeAt = args.indexOf('--scheme');
+const SCHEME = schemeAt >= 0 ? args.splice(schemeAt, 2)[1] : 'light';
+const SAVE_SETTINGS = SETTINGS
+  ? `try { localStorage.setItem('macos-1999-settings-v1', ${JSON.stringify(JSON.stringify(JSON.parse(SETTINGS)))}); } catch {}`
+  : '';
 const slug = (name) => name.replace(/\W+/g, '-').toLowerCase();
 
 // The same "random" numbers on every run, and fixed NASA pictures of the day
@@ -81,7 +98,8 @@ const shoot = async (appUrl, outDir, only) => {
   for (const [device, width, height] of [['laptop', 1400, 900], ['phone', 390, 844]]) {
     const t = await launch(appUrl, outDir, { width, height });
     try {
-      await t.s('Page.addScriptToEvaluateOnNewDocument', { source: SEEDED_RANDOM });
+      await t.s('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: SCHEME }] });
+      await t.s('Page.addScriptToEvaluateOnNewDocument', { source: SEEDED_RANDOM + SAVE_SETTINGS });
       await t.s('Page.reload');
       await t.waitFor(`document.querySelectorAll('.dock-item').length > 0`, 'the dock');
       await t.ev(STEADY);

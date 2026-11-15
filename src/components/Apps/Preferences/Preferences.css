@@ -1,12 +1,598 @@
-.preferences-window {
-  padding: 15px;
+/* System Preferences, Mac OS X style: a toolbar with Show All, then either
+   the grid of panes or one pane, which scrolls under the toolbar. Sized from
+   the window with container queries (the narrow layout is at the end). */
+.preferences-app {
+  /* The two highlight colours as swatches: these stay put whichever is chosen */
+  --preferences-swatch-blue: #4769a5;
+  --preferences-swatch-graphite: #646e7c;
+
+  /* The pane icons' own greys: icons look the same in light and dark */
+  --preferences-icon-bezel: var(--grey-87);
+  --preferences-icon-edge: var(--grey-50);
+  --preferences-clock-face: radial-gradient(circle, var(--grey-100) 55%, var(--grey-87) 100%);
+  --preferences-clock-hand: var(--grey-13);
+  --preferences-clock-hand-long: var(--grey-20);
+
+  /* The Appearance pane's pictures of a light and a dark window. They stay
+     put whichever theme is on; the dark one copies tokens.css's dark page
+     (--tone-100), chrome (--tone-87) and text (--tone-40, --tone-60) */
+  --preferences-light-page: var(--grey-100);
+  --preferences-light-text: var(--grey-63);
+  --preferences-light-text-soft: var(--grey-80);
+  --preferences-dark-page: #1d1f23;
+  --preferences-dark-text: #a0a5ad;
+  --preferences-dark-text-soft: #5a5e66;
+
+  container-type: inline-size;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
-.preferences-category {
-  padding: 10px;
-  margin-bottom: 10px;
-  background-color: var(--color-surface-alt);
-  border-radius: var(--radius);
-  cursor: pointer;
+/* ---- The toolbar: Show All on the left, the pane's name in the middle */
+.preferences-app .preferences-toolbar {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  padding: 4px 8px;
+}
+
+.preferences-app .preferences-show-all {
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.preferences-app .preferences-show-all:disabled {
+  background: var(--gradient-platinum);
+  box-shadow: none;
+  cursor: default;
+}
+
+.preferences-app .preferences-title {
+  min-width: 0;
+  font-family: var(--font-system);
+  font-size: var(--text-base);
   color: var(--color-text-strong);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preferences-app .preferences-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---- Show All: a row per group, striped as in Mac OS X */
+.preferences-app .preferences-grid {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.preferences-app .preferences-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.preferences-app .preferences-group:nth-of-type(odd) {
+  background: var(--color-surface-alt);
+}
+
+.preferences-app .preferences-group-name {
+  flex: none;
+  width: 5.5em;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.preferences-app .preferences-group-panes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* A pane's icon and name: a flat button that highlights under the pointer */
+.preferences-app .preferences-pane-button {
+  width: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: normal;
+  color: var(--color-text-strong);
+}
+
+.preferences-app .preferences-pane-button:hover,
+.preferences-app .preferences-pane-button:active {
+  background: var(--color-selection);
+  box-shadow: none;
+}
+
+.preferences-app .preferences-pane-button:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+}
+
+.preferences-app .preferences-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+}
+
+/* ---- The icons, drawn in CSS from the shared values */
+.preferences-app .preferences-icon {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.preferences-app .preferences-icon::before,
+.preferences-app .preferences-icon::after {
+  content: '';
+  position: absolute;
+  /* base.css's border-box reset doesn't reach pseudo-elements */
+  box-sizing: border-box;
+}
+
+/* Desktop: a little screen showing a wallpaper, on a stand */
+.preferences-app .preferences-icon-desktop::before {
+  left: 1px;
+  right: 1px;
+  top: 3px;
+  height: 22px;
+  border: 3px solid var(--preferences-icon-bezel);
+  border-radius: var(--radius-sm);
+  background: var(--wallpaper-ripple);
+  box-shadow: 0 0 0 1px var(--preferences-icon-edge), var(--shadow-raised);
+}
+
+.preferences-app .preferences-icon-desktop::after {
+  left: 11px;
+  right: 11px;
+  bottom: 2px;
+  height: 5px;
+  border: 1px solid var(--preferences-icon-edge);
+  border-top: none;
+  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+  background: var(--gradient-platinum);
+}
+
+/* Appearance: a graphite gel and a blue one */
+.preferences-app .preferences-icon-appearance::before,
+.preferences-app .preferences-icon-appearance::after {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--black-a30);
+  border-radius: var(--radius-round);
+  box-shadow: var(--shadow-raised);
+}
+
+.preferences-app .preferences-icon-appearance::before {
+  left: 1px;
+  top: 2px;
+  background: var(--gradient-gloss) top / 100% 50% no-repeat, var(--preferences-swatch-graphite);
+}
+
+.preferences-app .preferences-icon-appearance::after {
+  right: 1px;
+  bottom: 2px;
+  background: var(--gradient-gloss) top / 100% 50% no-repeat, var(--preferences-swatch-blue);
+}
+
+/* Dock: a screen with a shelf of three icons along the bottom */
+.preferences-app .preferences-icon-dock::before {
+  inset: 4px 1px;
+  border: 1px solid var(--preferences-icon-edge);
+  border-radius: var(--radius-sm);
+  background: var(--wallpaper-sky);
+  box-shadow: var(--shadow-raised);
+}
+
+.preferences-app .preferences-icon-dock::after {
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  height: 7px;
+  border: 1px solid var(--white-a80);
+  border-radius: var(--radius-xs);
+  background:
+    linear-gradient(var(--red-400), var(--red-400)) 3px 1px / 4px 4px no-repeat,
+    linear-gradient(var(--green-400), var(--green-400)) 8px 1px / 4px 4px no-repeat,
+    linear-gradient(var(--yellow-400), var(--yellow-400)) 13px 1px / 4px 4px no-repeat,
+    var(--white-a60);
+}
+
+/* Date & Time: a clock at a quarter to four */
+.preferences-app .preferences-icon-datetime {
+  border: 2px solid var(--preferences-icon-edge);
+  border-radius: var(--radius-round);
+  background: var(--preferences-clock-face);
+  box-shadow: var(--shadow-raised);
+}
+
+.preferences-app .preferences-icon-datetime::before {
+  left: 13px;
+  top: 6px;
+  width: 2px;
+  height: 8px;
+  border-radius: var(--radius-xs);
+  background: var(--preferences-clock-hand);
+  transform: rotate(112deg);
+  transform-origin: 50% 100%;
+}
+
+.preferences-app .preferences-icon-datetime::after {
+  left: 13px;
+  top: 3px;
+  width: 2px;
+  height: 11px;
+  border-radius: var(--radius-xs);
+  background: var(--preferences-clock-hand-long);
+  transform: rotate(-90deg);
+  transform-origin: 50% 100%;
+}
+
+/* ---- A pane: rows of "Label:  choices", as in Mac OS X */
+.preferences-app .preferences-pane {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preferences-app .preferences-row {
+  display: grid;
+  grid-template-columns: 8.5em minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: start;
+}
+
+.preferences-app .preferences-label {
+  text-align: right;
+  color: var(--color-text-strong);
+  line-height: 1.5;
+}
+
+.preferences-app .preferences-options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.preferences-app .preferences-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.preferences-app .preferences-example {
+  color: var(--color-text-muted);
+}
+
+/* Aqua radio buttons and checkboxes: platinum, turning Aqua when chosen
+   (graphite with Graphite, since they're built from the shared gradient) */
+.preferences-app .preferences-radio,
+.preferences-app .preferences-checkbox {
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 1.15em;
+  height: 1.15em;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  background: var(--gradient-platinum);
+  box-shadow: var(--shadow-raised);
+  cursor: pointer;
+}
+
+.preferences-app .preferences-radio {
+  border-radius: var(--radius-round);
+}
+
+.preferences-app .preferences-checkbox {
+  border-radius: var(--radius-sm);
+}
+
+.preferences-app .preferences-radio:checked,
+.preferences-app .preferences-checkbox:checked {
+  border-color: var(--blue-800);
+  background: var(--gradient-gloss) top / 100% 50% no-repeat, var(--gradient-aqua);
+}
+
+.preferences-app .preferences-radio:checked::after {
+  content: '';
+  width: 0.4em;
+  height: 0.4em;
+  border-radius: var(--radius-round);
+  background: var(--color-text-strong);
+}
+
+.preferences-app .preferences-checkbox:checked::after {
+  content: '✓';
+  font-size: var(--text-sm);
+  font-weight: bold;
+  line-height: 1;
+  color: var(--color-text-strong);
+}
+
+.preferences-app .preferences-radio:focus-visible,
+.preferences-app .preferences-checkbox:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: 1px;
+}
+
+/* Appearance: three pictures of a window, light, dark and half of each */
+.preferences-app .preferences-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.preferences-app .preferences-theme {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+/* The radio button itself is hidden; its picture shows the choice */
+.preferences-app .preferences-theme-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+}
+
+.preferences-app .preferences-theme-picture {
+  position: relative;
+  display: block;
+  width: 64px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--wallpaper-aqua);
+  box-shadow: var(--shadow-raised);
+}
+
+.preferences-app .preferences-theme-input:checked + .preferences-theme-picture {
+  border-color: var(--blue-800);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+
+.preferences-app .preferences-theme-input:focus-visible + .preferences-theme-picture {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* A little window: a title bar, two lines of text, on its page */
+.preferences-app .preferences-theme-window {
+  position: absolute;
+  inset: 7px 8px -2px;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  box-shadow: var(--shadow-raised);
+}
+
+.preferences-app .preferences-theme-window-light {
+  background:
+    linear-gradient(var(--preferences-light-text), var(--preferences-light-text)) 5px 12px / 55% 3px no-repeat,
+    linear-gradient(var(--preferences-light-text-soft), var(--preferences-light-text-soft)) 5px 18px / 75% 3px no-repeat,
+    linear-gradient(var(--preferences-light-text-soft), var(--preferences-light-text-soft)) 5px 24px / 40% 3px no-repeat,
+    linear-gradient(var(--blue-500), var(--blue-600)) top / 100% 7px no-repeat,
+    var(--preferences-light-page);
+}
+
+.preferences-app .preferences-theme-window-dark {
+  background:
+    linear-gradient(var(--preferences-dark-text), var(--preferences-dark-text)) 5px 12px / 55% 3px no-repeat,
+    linear-gradient(var(--preferences-dark-text-soft), var(--preferences-dark-text-soft)) 5px 18px / 75% 3px no-repeat,
+    linear-gradient(var(--preferences-dark-text-soft), var(--preferences-dark-text-soft)) 5px 24px / 40% 3px no-repeat,
+    linear-gradient(var(--blue-600), var(--blue-800)) top / 100% 7px no-repeat,
+    var(--preferences-dark-page);
+}
+
+/* System: the light window over the dark one, cut on the diagonal */
+.preferences-app .preferences-theme-window-dark + .preferences-theme-window-light {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+/* The highlight colours, as little gels beside their names */
+.preferences-app .preferences-dot {
+  flex: none;
+  width: 0.9em;
+  height: 0.9em;
+  border: 1px solid var(--black-a30);
+  border-radius: var(--radius-round);
+}
+
+.preferences-app .preferences-dot-blue {
+  background: var(--gradient-gloss) top / 100% 50% no-repeat, var(--preferences-swatch-blue);
+}
+
+.preferences-app .preferences-dot-graphite {
+  background: var(--gradient-gloss) top / 100% 50% no-repeat, var(--preferences-swatch-graphite);
+}
+
+.preferences-app .preferences-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.preferences-app .preferences-error {
+  color: var(--color-error);
+}
+
+.preferences-app .preferences-warning {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 12px 12px;
+}
+
+/* ---- Desktop: the pictures as swatches, then the visitor's own */
+.preferences-app .preferences-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+
+.preferences-app .preferences-swatch {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 3px;
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: normal;
+  color: var(--color-text);
+}
+
+.preferences-app .preferences-swatch:hover,
+.preferences-app .preferences-swatch:active {
+  background: var(--color-surface-alt);
+  box-shadow: none;
+}
+
+.preferences-app .preferences-swatch-selected,
+.preferences-app .preferences-swatch-selected:hover {
+  background: var(--color-selection);
+  border-color: var(--color-accent-light);
+}
+
+.preferences-app .preferences-swatch:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+}
+
+.preferences-app .preferences-swatch-picture {
+  display: block;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+}
+
+.preferences-app .preferences-swatch-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.preferences-app .preferences-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---- Restore Defaults: a sheet that drops from under the title bar */
+.preferences-app .preferences-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: var(--black-a10);
+}
+
+.preferences-app .preferences-sheet {
+  width: min(340px, calc(100% - 16px));
+  max-height: 100%;
+  overflow: auto;
+  padding: 14px 16px 12px;
+  background: var(--color-chrome);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-window);
+  animation: preferences-sheet-in 0.2s ease-out;
+}
+
+@keyframes preferences-sheet-in {
+  from { transform: translateY(-100%); }
+  to { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preferences-app .preferences-sheet {
+    animation: none;
+  }
+}
+
+.preferences-app .preferences-sheet-title {
+  margin-bottom: 6px;
+  font-size: var(--text-base);
+  font-weight: bold;
+  color: var(--color-text-strong);
+}
+
+.preferences-app .preferences-sheet-text {
+  margin-bottom: 12px;
+  font-size: var(--text-sm);
+}
+
+.preferences-app .preferences-sheet-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---- A wide window: bigger swatches */
+@container (min-width: 520px) {
+  .preferences-app .preferences-swatches {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 8px;
+  }
+}
+
+/* ---- A narrow window: names above what they name */
+@container (max-width: 359px) {
+  .preferences-app .preferences-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .preferences-app .preferences-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .preferences-app .preferences-label {
+    text-align: left;
+  }
 }

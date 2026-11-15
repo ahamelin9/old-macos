@@ -39,6 +39,13 @@
     cursor: pointer;
   }
 
+  /* Its text: black in light, as the browser's own was, and light in
+     dark. A disabled one keeps the browser's greyed text, which
+     color-scheme turns light in dark */
+  button:not(:disabled) {
+    color: var(--tone-0);
+  }
+
   button:hover {
     background: var(--gradient-platinum-hover);
   }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { SpotifyContext } from './useSpotify';
+import { readStored, removeStored, writeStored } from './storage';
 
 const ACCESS_KEY = 'spotify_access_token';
 const REFRESH_KEY = 'spotify_refresh_token';
@@ -17,8 +18,8 @@ const readLoginRedirect = () => {
 };
 
 export const SpotifyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [accessToken, setAccessToken] = useState<string | null>(localStorage.getItem(ACCESS_KEY));
-  const [refreshToken, setRefreshToken] = useState<string | null>(localStorage.getItem(REFRESH_KEY));
+  const [accessToken, setAccessToken] = useState<string | null>(() => readStored(ACCESS_KEY));
+  const [refreshToken, setRefreshToken] = useState<string | null>(() => readStored(REFRESH_KEY));
   const [authError, setAuthError] = useState<string | null>(null);
   const [isPremium, setIsPremium] = useState<boolean>(false);
   // When the token was last refreshed, so a token Spotify rejects right after
@@ -32,8 +33,8 @@ export const SpotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (access && refresh) {
       setAccessToken(access);
       setRefreshToken(refresh);
-      localStorage.setItem(ACCESS_KEY, access);
-      localStorage.setItem(REFRESH_KEY, refresh);
+      writeStored(ACCESS_KEY, access);
+      writeStored(REFRESH_KEY, refresh);
     }
     if (access || refresh || error) {
       window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
@@ -45,8 +46,8 @@ export const SpotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setRefreshToken(null);
     setIsPremium(false);
     setAuthError(null);
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
+    removeStored(ACCESS_KEY);
+    removeStored(REFRESH_KEY);
   }, []);
 
   const refreshAccessToken = useCallback(async (): Promise<boolean> => {
@@ -61,11 +62,11 @@ export const SpotifyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const data = (await response.json()) as { access_token?: string; refresh_token?: string };
       if (!response.ok || !data.access_token) return false;
       setAccessToken(data.access_token);
-      localStorage.setItem(ACCESS_KEY, data.access_token);
+      writeStored(ACCESS_KEY, data.access_token);
       // Spotify sometimes rotates the refresh token; the old one then stops working
       if (data.refresh_token) {
         setRefreshToken(data.refresh_token);
-        localStorage.setItem(REFRESH_KEY, data.refresh_token);
+        writeStored(REFRESH_KEY, data.refresh_token);
       }
       return true;
     } catch (error) {

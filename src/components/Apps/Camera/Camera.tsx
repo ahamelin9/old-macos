@@ -1,5 +1,7 @@
 // React
 import React, { useState, useRef, useEffect } from 'react';
+// Context
+import { useOwnWindow } from '../../../contexts/useWindows';
 //Styling
 import './Camera.css';
 
@@ -10,12 +12,19 @@ const Camera: React.FC = () => {
   // (a cleanup that read state saw the stream from the first render, null, and
   // left the webcam on after the window closed)
   const streamRef = useRef<MediaStream | null>(null);
-  const [streaming, setStreaming] = useState(false);
+  // The stream itself too, so the <video> is handed each new one (after a restore)
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streaming = stream !== null;
+  // A minimized window stays mounted (Window.tsx), so the webcam is turned
+  // off here while it is, and the camera light isn't on for a hidden window
+  const { minimized } = useOwnWindow();
   const [error, setError] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
 
-  // The webcam is on while the window is open, and off once it closes
+  // The webcam is on while the window is open and showing, and off once it
+  // closes or is minimized
   useEffect(() => {
+    if (minimized) return;
     let cancelled = false;
     const start = async () => {
       try {
@@ -29,7 +38,7 @@ const Camera: React.FC = () => {
           return;
         }
         streamRef.current = mediaStream;
-        setStreaming(true);
+        setStream(mediaStream);
         setError(null);
       } catch (err) {
         if (cancelled) return;
@@ -42,15 +51,17 @@ const Camera: React.FC = () => {
       cancelled = true;
       streamRef.current?.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+      setStream(null);
     };
-  }, []);
+  }, [minimized]);
 
-  // Retake brings back a new <video> element, so hand the stream to it again
+  // Retake brings back a new <video> element, and a restore a new stream, so
+  // hand the stream to the video again
   useEffect(() => {
-    if (streaming && !photo && videoRef.current) {
-      videoRef.current.srcObject = streamRef.current;
+    if (stream && !photo && videoRef.current) {
+      videoRef.current.srcObject = stream;
     }
-  }, [streaming, photo]);
+  }, [stream, photo]);
 
   const takePhoto = () => {
     if (videoRef.current && canvasRef.current) {

@@ -11,16 +11,26 @@
   --pokemon-blue: #2a75bb;
   --pokemon-blue-dark: #1b4f7c;
   --pokemon-blue-deep: #153c60;
+  /* The dark blue as text on the page: lighter in dark mode. light-dark()
+     follows the theme (dark sets color-scheme: dark) */
+  --pokemon-blue-ink: light-dark(#1b4f7c, #8fc0ee);
+  /* The logo blue as text (the arrows in the evolution line), and
+     Gigantamax's red, lighter in dark mode */
+  --pokemon-blue-text: light-dark(#2a75bb, #7fb2e6);
+  --pokemon-gmax-ink: light-dark(var(--red-700), #ff8a80);
 
-  /* The type chart's tints for damage taken */
+  /* The type chart's tints for damage taken. The chips keep these in
+     both themes, like the type colours; immune is near-black in both */
   --pokemon-weak-tint: #fee2e2;
   --pokemon-resist-tint: #dcfce7;
   --pokemon-resist-strong: #86efac;
   --pokemon-resist-ink: #14532d;
+  --pokemon-immune: var(--grey-13);
+  --pokemon-immune-tag: var(--grey-7);
 
-  /* The Pokédex entry's paper */
-  --pokemon-dex-paper: #fffff8;
-  --pokemon-dex-edge: #d8d2c0;
+  /* The Pokédex entry's paper, and its dark-mode twin */
+  --pokemon-dex-paper: light-dark(#fffff8, #26261f);
+  --pokemon-dex-edge: light-dark(#d8d2c0, #4d4a3e);
 
   /* The 18 type colours, as the games show them */
   --pokemon-type-normal: #a8a878;
@@ -41,6 +51,9 @@
   --pokemon-type-dark: #705848;
   --pokemon-type-steel: #b8b8d0;
   --pokemon-type-fairy: #ee99ac;
+  /* Dark text on the pale type colours, the same in both themes */
+  --pokemon-type-ink: var(--grey-13);
+  --pokemon-type-ink-soft: var(--grey-20);
 
   /* Labels in the dense type chart, smaller than any site text size */
   --pokemon-text-micro: 8px;
@@ -82,9 +95,9 @@
 
 .pokemon-container .search-input {
   padding: 6px 10px;
-  border: 1px solid var(--grey-40);
-  border-top-color: var(--grey-33);
-  border-left-color: var(--grey-33);
+  border: 1px solid var(--tone-40);
+  border-top-color: var(--tone-33);
+  border-left-color: var(--tone-33);
   background-color: var(--color-surface);
   color: var(--color-text-strong);
   border-radius: var(--radius);
@@ -143,7 +156,7 @@
   list-style: none;
   margin-top: 2px;
   padding: 0;
-  border: 1px solid var(--grey-40);
+  border: 1px solid var(--tone-40);
   background: var(--color-surface);
   max-height: 150px;
   overflow-y: auto;
@@ -178,7 +191,7 @@
 .pokemon-container .loading-spinner {
   width: 36px;
   height: 36px;
-  border: 4px solid var(--grey-87);
+  border: 4px solid var(--tone-87);
   border-top: 4px solid var(--pokemon-blue);
   border-radius: var(--radius-round);
   animation: pokemon-spin 1s linear infinite;
@@ -213,14 +226,14 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 12px;
-  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 4px var(--black-a10);
+  box-shadow: inset 1px 1px 0 var(--color-bevel-light), 1px 1px 4px var(--black-a10);
 }
 
 .pokemon-container .pokemon-name {
   margin-top: 0;
   text-align: center;
   font-size: var(--text-2xl);
-  color: var(--grey-7);
+  color: var(--tone-7);
   font-weight: bold;
 }
 
@@ -245,8 +258,8 @@
 }
 
 .pokemon-container .nav-button:disabled {
-  background: var(--grey-93);
-  color: var(--grey-60);
+  background: var(--tone-93);
+  color: var(--tone-60);
   border-color: var(--color-border-light);
   cursor: not-allowed;
   box-shadow: none;
@@ -260,7 +273,7 @@
   border-radius: var(--radius-round);
   overflow: hidden;
   border: 3px solid var(--pokemon-yellow);
-  background: var(--grey-97);
+  background: var(--tone-97);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -279,7 +292,7 @@
 }
 
 .pokemon-container .shiny-toggle {
-  background: var(--grey-93);
+  background: var(--tone-93);
   color: var(--color-text);
   border: 1px solid var(--color-border);
   padding: 2px 10px;
@@ -287,12 +300,12 @@
   cursor: pointer;
   font-size: var(--text-sm);
   font-weight: bold;
-  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a10);
+  box-shadow: inset 1px 1px 0 var(--color-bevel-light), 1px 1px 2px var(--black-a10);
   transition: all 0.15s ease;
 }
 
 .pokemon-container .shiny-toggle:hover {
-  background: var(--grey-87);
+  background: var(--tone-87);
 }
 
 .pokemon-container .shiny-toggle.active {
@@ -300,7 +313,7 @@
   color: var(--pokemon-blue-dark);
   border-color: var(--pokemon-yellow-dark);
   box-shadow:
-    inset 1px 1px 0 var(--grey-100),
+    inset 1px 1px 0 var(--color-bevel-light),
     0 0 6px color-mix(in srgb, var(--pokemon-yellow) 50%, transparent);
 }
 
@@ -313,10 +326,10 @@
 .pokemon-container .evolution-chain,
 .pokemon-container .matchup-panel,
 .pokemon-container .type-chart-card {
-  background: var(--grey-97);
-  border: 1px solid var(--grey-77);
+  background: var(--tone-97);
+  border: 1px solid var(--tone-77);
   border-radius: var(--radius);
-  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
+  box-shadow: inset 1px 1px 0 var(--color-bevel-light), 1px 1px 2px var(--black-a05);
 }
 
 .pokemon-container .pokemon-forms,
@@ -333,7 +346,7 @@
   margin-bottom: 8px;
   flex-wrap: wrap;
   gap: 4px;
-  border-bottom: 1px solid var(--grey-90);
+  border-bottom: 1px solid var(--tone-90);
   padding-bottom: 4px;
 }
 
@@ -427,12 +440,12 @@
   justify-content: flex-start;
   gap: 4px;
   background: var(--color-surface);
-  border: 1px solid var(--grey-87);
+  border: 1px solid var(--tone-87);
   border-radius: var(--radius-md);
   padding: 6px;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
+  box-shadow: inset 1px 1px 0 var(--color-bevel-light), 1px 1px 2px var(--black-a05);
 }
 
 .pokemon-container .evo-card-top-pokemon {
@@ -457,7 +470,7 @@
   align-items: center;
   gap: 4px;
   width: 100%;
-  border-top: 1px dashed var(--grey-90);
+  border-top: 1px dashed var(--tone-90);
   padding-top: 4px;
   margin-top: 2px;
 }
@@ -471,8 +484,8 @@
 
 /* Badges & Icons */
 .pokemon-container .evo-trigger-pill {
-  background: var(--grey-97);
-  border: 1px solid var(--grey-84);
+  background: var(--tone-97);
+  border: 1px solid var(--tone-84);
   border-radius: var(--radius-xl);
   padding: 2px 6px;
   display: inline-flex;
@@ -502,7 +515,7 @@
 
 .pokemon-container .evo-arrow-icon {
   font-size: var(--text-sm);
-  color: var(--pokemon-blue);
+  color: var(--pokemon-blue-text);
   font-weight: bold;
   line-height: 1;
 }
@@ -514,12 +527,12 @@
   align-items: center;
   justify-content: center;
   background: var(--color-surface);
-  border: 1px solid var(--grey-69);
+  border: 1px solid var(--tone-69);
   border-radius: var(--radius);
   padding: 3px 5px;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
+  box-shadow: inset 1px 1px 0 var(--color-bevel-light), 1px 1px 2px var(--black-a05);
   text-shadow: none;
   min-width: 56px;
   min-height: var(--pokemon-stage-height);
@@ -534,7 +547,7 @@
 
 .pokemon-container .evolution-stage.current-evolution-stage {
   border: 2px solid var(--pokemon-blue);
-  background: var(--blue-50);
+  background: var(--tint-50);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--pokemon-blue) 30%, transparent);
 }
 
@@ -570,7 +583,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  border: 1px dotted var(--grey-69);
+  border: 1px dotted var(--tone-69);
   border-radius: var(--radius);
   color: var(--color-text-muted);
   font-size: var(--text-md);
@@ -609,7 +622,7 @@
 .pokemon-container .pokemon-evo-tray-link {
   display: block;
   height: 14px;
-  border-left: 2px dashed var(--grey-60);
+  border-left: 2px dashed var(--color-border);
   flex-shrink: 0;
 }
 
@@ -618,7 +631,7 @@
   height: 0;
   margin-top: calc(var(--pokemon-stage-height) / 2);
   border-left: none;
-  border-top: 2px dashed var(--grey-60);
+  border-top: 2px dashed var(--color-border);
 }
 
 .pokemon-container .pokemon-evo-tray {
@@ -627,7 +640,7 @@
   align-items: center;
   gap: 4px;
   padding: 3px 4px 4px;
-  border: 1px dashed var(--grey-60);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
   min-width: 0;
 }
@@ -650,12 +663,12 @@
 }
 
 .pokemon-container .pokemon-evo-tray-mega .pokemon-evo-tray-label {
-  color: var(--pokemon-blue-dark);
+  color: var(--pokemon-blue-ink);
 }
 
 /* Gigantamax's red clouds */
 .pokemon-container .pokemon-evo-tray-gmax .pokemon-evo-tray-label {
-  color: var(--red-700);
+  color: var(--pokemon-gmax-ink);
 }
 
 /* Side by side when there's room, one above the other when there isn't */
@@ -709,7 +722,7 @@
 }
 
 .pokemon-container .pokemon-forms-toggle:hover {
-  color: var(--pokemon-blue-dark);
+  color: var(--pokemon-blue-ink);
 }
 
 .pokemon-container .pokemon-forms-triangle {
@@ -748,9 +761,9 @@
   min-width: 0;
   padding: 4px 3px;
   background: var(--color-surface);
-  border: 1px solid var(--grey-69);
+  border: 1px solid var(--tone-69);
   border-radius: var(--radius);
-  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
+  box-shadow: inset 1px 1px 0 var(--color-bevel-light), 1px 1px 2px var(--black-a05);
   text-shadow: none;
   font-weight: normal;
   cursor: pointer;
@@ -766,7 +779,7 @@
    grid doesn't shift */
 .pokemon-container .pokemon-form.pokemon-form-current {
   border-color: var(--pokemon-blue);
-  background: var(--blue-50);
+  background: var(--tint-50);
   box-shadow:
     0 0 0 1px var(--pokemon-blue),
     0 0 0 3px color-mix(in srgb, var(--pokemon-blue) 30%, transparent);
@@ -832,12 +845,12 @@
 .pokemon-container .quick-info-label {
   font-weight: bold;
   font-size: var(--text-sm);
-  color: var(--grey-33);
+  color: var(--tone-33);
 }
 
 .pokemon-container .quick-info-val {
   font-size: var(--text-md);
-  color: var(--grey-7);
+  color: var(--tone-7);
   font-weight: 500;
 }
 
@@ -909,7 +922,7 @@
 }
 
 .pokemon-container .panel-header {
-  background: var(--grey-93);
+  background: var(--tone-93);
   border-bottom: 1px solid var(--color-border-light);
   padding: 5px 8px;
   display: flex;
@@ -952,22 +965,22 @@
 .pokemon-container .subgroup-label {
   font-size: var(--text-xs);
   font-weight: bold;
-  color: var(--grey-33);
+  color: var(--tone-33);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   margin-bottom: 1px;
 }
 
 .pokemon-container .subgroup-label.critical-label {
-  color: var(--red-700);
+  color: var(--color-error);
 }
 
 .pokemon-container .subgroup-label.super-resist-label {
-  color: var(--green-700);
+  color: var(--color-success);
 }
 
 .pokemon-container .subgroup-label.immune-label {
-  color: var(--grey-13);
+  color: var(--color-text-strong);
 }
 
 .pokemon-container .no-data-msg {
@@ -1031,7 +1044,7 @@
 /* Crisp Active Selected Ring with Breathing Room */
 .pokemon-container .interactive-badge.active-badge {
   box-shadow:
-    0 0 0 2px var(--grey-100),
+    0 0 0 2px var(--color-surface),
     0 0 0 4px var(--pokemon-blue),
     0 2px 6px var(--black-a30);
   transform: translateY(-1px);
@@ -1056,7 +1069,7 @@
 }
 
 .pokemon-container .multiplier-tag.tag-0x {
-  background: var(--grey-7);
+  background: var(--pokemon-immune-tag);
 }
 
 /* =========================================================
@@ -1082,7 +1095,7 @@
 .pokemon-container .type-matrix-ribbon {
   display: grid;
   grid-template-columns: repeat(18, 1fr);
-  border: 1px solid var(--grey-69);
+  border: 1px solid var(--tone-69);
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--color-surface);
@@ -1094,7 +1107,7 @@
   flex-direction: column;
   background: transparent;
   border: none;
-  border-right: 1px solid var(--grey-87);
+  border-right: 1px solid var(--tone-87);
   border-radius: 0;
   box-shadow: none;
   text-shadow: none;
@@ -1153,7 +1166,7 @@
 
 .pokemon-container .matrix-mult-pill.mult-1x {
   background: var(--color-surface);
-  color: var(--grey-63);
+  color: var(--tone-63);
 }
 
 .pokemon-container .matrix-mult-pill.mult-half {
@@ -1167,7 +1180,7 @@
 }
 
 .pokemon-container .matrix-mult-pill.mult-0x {
-  background: var(--grey-13);
+  background: var(--pokemon-immune);
   color: var(--color-text-on-accent);
 }
 
@@ -1175,7 +1188,7 @@
 .pokemon-container .chart-inspector-box {
   margin-top: 6px;
   background: var(--color-surface);
-  border: 1px solid var(--grey-69);
+  border: 1px solid var(--tone-69);
   border-radius: var(--radius);
   padding: 6px 8px;
   box-shadow: inset 1px 1px 2px var(--black-a05);
@@ -1186,7 +1199,7 @@
   align-items: center;
   gap: 6px;
   font-size: var(--text-md);
-  color: var(--grey-7);
+  color: var(--tone-7);
 }
 
 .pokemon-container .inspector-heading {
@@ -1196,7 +1209,7 @@
 .pokemon-container .inspector-breakdown {
   margin-top: 3px;
   font-size: var(--text-sm);
-  color: var(--grey-33);
+  color: var(--tone-33);
   font-family: var(--font-mono);
 }
 
@@ -1207,12 +1220,12 @@
 .pokemon-container .type-normal { background: var(--pokemon-type-normal); }
 .pokemon-container .type-fire { background: var(--pokemon-type-fire); }
 .pokemon-container .type-water { background: var(--pokemon-type-water); }
-.pokemon-container .type-electric { background: var(--pokemon-type-electric); color: var(--color-text); }
+.pokemon-container .type-electric { background: var(--pokemon-type-electric); color: var(--pokemon-type-ink-soft); }
 .pokemon-container .type-grass { background: var(--pokemon-type-grass); }
-.pokemon-container .type-ice { background: var(--pokemon-type-ice); color: var(--color-text-strong); }
+.pokemon-container .type-ice { background: var(--pokemon-type-ice); color: var(--pokemon-type-ink); }
 .pokemon-container .type-fighting { background: var(--pokemon-type-fighting); }
 .pokemon-container .type-poison { background: var(--pokemon-type-poison); }
-.pokemon-container .type-ground { background: var(--pokemon-type-ground); color: var(--color-text-strong); }
+.pokemon-container .type-ground { background: var(--pokemon-type-ground); color: var(--pokemon-type-ink); }
 .pokemon-container .type-flying { background: var(--pokemon-type-flying); }
 .pokemon-container .type-psychic { background: var(--pokemon-type-psychic); }
 .pokemon-container .type-bug { background: var(--pokemon-type-bug); }
@@ -1220,8 +1233,8 @@
 .pokemon-container .type-ghost { background: var(--pokemon-type-ghost); }
 .pokemon-container .type-dragon { background: var(--pokemon-type-dragon); }
 .pokemon-container .type-dark { background: var(--pokemon-type-dark); }
-.pokemon-container .type-steel { background: var(--pokemon-type-steel); color: var(--color-text-strong); }
-.pokemon-container .type-fairy { background: var(--pokemon-type-fairy); color: var(--color-text-strong); }
+.pokemon-container .type-steel { background: var(--pokemon-type-steel); color: var(--pokemon-type-ink); }
+.pokemon-container .type-fairy { background: var(--pokemon-type-fairy); color: var(--pokemon-type-ink); }
 
 /* Responsive Adjustments */
 @media (max-width: 600px) {

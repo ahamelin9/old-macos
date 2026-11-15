@@ -3,6 +3,8 @@
 .nasa-app {
   /* NASA's own colours */
   --nasa-blue: #0b3d91;
+  /* NASA's blue as text and lines on the page, lighter in dark mode */
+  --nasa-blue-ink: light-dark(#0b3d91, #8fb4f0);
   --nasa-red: #e83f3f;
 
   container-type: inline-size;
@@ -94,7 +96,7 @@
   max-width: 280px;
   overflow: hidden;
   background-color: var(--color-surface-alt);
-  border-right: 1px solid var(--grey-63);
+  border-right: 1px solid var(--tone-63);
 }
 
 .nasa-app .nasa-sidebar-open {
@@ -162,7 +164,7 @@
   justify-content: center;
   border: none;
   border-radius: var(--radius-round);
-  background: var(--grey-63);
+  background: var(--tone-63);
   box-shadow: none;
   color: var(--color-text-on-accent);
   text-shadow: none;
@@ -170,7 +172,7 @@
 }
 
 .nasa-app .nasa-search-clear:hover {
-  background: var(--grey-50);
+  background: var(--tone-50);
 }
 
 .nasa-app .nasa-search-clear:focus-visible {
@@ -269,7 +271,7 @@
 
 .nasa-app .nasa-day-today .nasa-day-date {
   font-weight: bold;
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
 }
 
 .nasa-app .nasa-day-title {
@@ -307,7 +309,7 @@
   padding: 20px;
   font-family: var(--font-body);
   color: var(--color-text);
-  background-color: var(--grey-97);
+  background-color: var(--tone-97);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -319,12 +321,12 @@
   grid-template-columns: 34px 1fr 34px;
   align-items: center;
   gap: 8px;
-  border-bottom: 2px solid var(--nasa-blue);
+  border-bottom: 2px solid var(--nasa-blue-ink);
   padding-bottom: 10px;
 }
 
 .nasa-title {
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
   text-align: center;
 }
 
@@ -337,7 +339,7 @@
 }
 
 .nasa-container .apod-title {
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
   margin-bottom: 5px;
 }
 
@@ -360,7 +362,7 @@
 
 .nasa-container .quality-indicator {
   font-size: var(--text-sm);
-  background-color: var(--grey-93);
+  background-color: var(--tone-93);
   padding: 4px 10px;
   border-radius: var(--radius);
   border: 1px solid var(--color-border-light);
@@ -376,13 +378,13 @@
 
 .nasa-container .download-link {
   font-size: var(--text-sm);
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
   text-decoration: underline;
   cursor: pointer;
 }
 
 .nasa-container .hd-active {
-  border: 2px solid var(--nasa-blue);
+  border: 2px solid var(--nasa-blue-ink);
 }
 
 .nasa-container .apod-image {
@@ -397,7 +399,7 @@
   max-width: 720px;
   height: auto;
   max-height: 420px;
-  background: var(--grey-0);
+  background: var(--color-photo-mat);
   border-radius: var(--radius);
   box-shadow: var(--shadow-raised);
 }
@@ -429,11 +431,11 @@
 .nasa-container .nasa-links {
   margin-top: 25px;
   padding-top: 15px;
-  border-top: 1px solid var(--grey-87);
+  border-top: 1px solid var(--tone-87);
 }
 
 .nasa-container .nasa-links h4 {
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
   margin-bottom: 10px;
 }
 
@@ -447,7 +449,7 @@
 }
 
 .nasa-container .nasa-links a {
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
   text-decoration: none;
   transition: color 0.3s;
 }
@@ -473,7 +475,7 @@
   display: block;
   margin-top: 12px;
   font-size: var(--text-md);
-  color: var(--nasa-blue);
+  color: var(--nasa-blue-ink);
 }
 
 /* A narrow window (the 400px one it opens in, or a phone): the list slides

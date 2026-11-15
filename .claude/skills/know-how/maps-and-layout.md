@@ -61,6 +61,40 @@ Part of the `know-how` skill. The index is in `SKILL.md`.
   two before the change (they should match), one after, then `--diff`. This
   fix changed 0 of 136 elements.
 
+## Text on a pale chip or box is unreadable in dark mode
+
+*2026-11-15*
+
+- **Symptom:** in dark, Pokémon's ice, ground and fairy badges had pale
+  text on their pale type colours, and Field Guide's error box and month
+  tooltip had light text on pink and yellow.
+- **Cause:** moving the apps onto tokens for dark mode swapped every dark
+  text grey for a role, `--color-text-strong`, which turns light in dark.
+  The fill behind those (a type colour, `--red-50`, `--yellow-50`) stays
+  pale in both themes.
+- **Fix:** text on a fill that never changes gets its own palette entry
+  from the fixed palette (`--pokemon-type-ink: var(--grey-13)`); a fill
+  that has a role uses it (`--color-error-bg`, `--color-tooltip`), so it
+  darkens with its text. The rules: the `design` skill, `dark-mode.md`,
+  section 3.
+- **Check:** `contrast-scan.mjs` (`checking.md`). It only sees what is on
+  screen, so hover states and errors need a look by hand.
+
+## A disabled button's text stopped looking greyed
+
+*2026-11-15*
+
+- **Symptom:** after dark mode went in, light screenshots showed System
+  Preferences' disabled Show All with black text, where it had been grey.
+- **Cause:** `base.css` gained `button { color: … }` so that button text
+  turns light in dark. The browser's own greyed text for a disabled button
+  is a default too, and any author rule beats it.
+- **Fix:** `button:not(:disabled) { color: var(--tone-0); }`. A disabled
+  button keeps the browser's grey, which `color-scheme: dark` lightens in
+  dark.
+- **Check:** `app-shots.mjs` in light compared with a run from before the
+  change: System Preferences went back to "same".
+
 ## A bar's right end is cut off in the 400px window
 
 *2026-11-15*
@@ -96,3 +130,35 @@ Part of the `know-how` skill. The index is in `SKILL.md`.
   "Friendship" spill out of its pill).
 - **Check:** `pokemon-forms-check.mjs` checks `scrollWidth <= clientWidth` on
   Dragonite's, Charizard's and Raichu's lines at every size.
+
+## A CSS-drawn icon is bigger than its box
+
+*2026-11-15*
+
+- **Symptom:** System Preferences' Desktop icon, drawn with `::before`
+  and `::after`, had its stand overlapping the screen.
+- **Cause:** `base.css` sets `box-sizing: border-box` on `*`, and `*`
+  doesn't match pseudo-elements. A `::before` with a border is
+  content-box, so its border adds to its height.
+- **Fix:** `box-sizing: border-box` on the pseudo-elements themselves
+  (`Preferences.css`, `.preferences-icon::before`).
+- **Check:** a 2x element shot of the icon (`t.shot(name, selector)`).
+
+## The desktop photo changed by a hair when nothing should have
+
+*2026-11-15*
+
+- **Symptom:** after moving the desktop picture from an inline
+  `background-image` into a `--wallpaper-photo` token, `app-shots.mjs
+  --compare` showed 0.03% of the desktop changed: thin red lines along the
+  photo's sharp edges.
+- **Cause:** the token's
+  `background` shorthand also set `--color-desktop` as the desktop's own
+  background colour. Before, the desktop had none and the page's colour
+  showed through. An opaque background changes how Chrome smooths the
+  photo's edges.
+- **Fix:** leave the colour out of `--wallpaper-photo` and
+  `--wallpaper-custom`; `body` already paints `--color-desktop` behind.
+- **Check:** `app-shots.mjs` with a made-up app name (`NoApp`) shoots just
+  the two desktops; compare with a "before" set: 0 of 2 changed.
+

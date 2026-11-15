@@ -1,0 +1,91 @@
+/* About This Mac, as in Mac OS X 10.0–10.2: everything centred in a
+   column, the specs as label and value in two columns. It fits the 400x300
+   window it opens in; the window scrolls if a larger text size needs it. */
+.about-app {
+  /* The 🍎 on the logo: a display size, off the text scale */
+  --about-apple-size: 36px;
+
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* The logo: the 🍎 on a round Aqua gel, built like NASA News's ☰ from the
+   shared Aqua gradient and gloss, so Graphite turns it grey */
+.about-app .about-logo {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--blue-800);
+  border-radius: var(--radius-round);
+  background: var(--gradient-aqua);
+  box-shadow: var(--shadow-raised);
+}
+
+.about-app .about-logo::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 3px;
+  left: 10px;
+  right: 10px;
+  height: 46%;
+  border-radius: var(--radius-round);
+  background: var(--gradient-gloss);
+}
+
+.about-app .about-logo-apple {
+  font-size: var(--about-apple-size);
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px var(--black-a30));
+}
+
+.about-app .about-name {
+  font-family: var(--font-system);
+  font-size: var(--text-2xl);
+  color: var(--color-text-strong);
+}
+
+.about-app .about-version {
+  color: var(--color-text-muted);
+}
+
+/* "Processor  8 cores": labels right-aligned against their values */
+.about-app .about-specs {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 8px;
+  margin: 8px 0;
+  text-align: left;
+}
+
+.about-app .about-specs dt {
+  font-weight: bold;
+  text-align: right;
+  color: var(--color-text-strong);
+}
+
+.about-app .about-specs dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.about-app .about-note {
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

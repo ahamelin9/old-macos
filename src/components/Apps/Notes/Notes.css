@@ -11,4 +11,5 @@
   font-family: var(--font-body);
   font-size: var(--text-base);
   color: var(--color-text-strong);
+  background: var(--color-surface);
 }

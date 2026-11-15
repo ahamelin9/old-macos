@@ -1,4 +1,11 @@
 .window {
+  /* How long the Scale effect takes, each way */
+  --window-scale-time: 250ms;
+  /* The title bar buttons: the space between them. Each one's hit box
+     reaches halfway across it, and is bigger on a touch screen (below) */
+  --window-button-gap: 7px;
+  --window-button-reach: 5px;
+
   position: absolute;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -7,6 +14,32 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* The Scale effect growing back out of the Dock */
+  transition:
+    transform var(--window-scale-time) ease-out,
+    opacity var(--window-scale-time) ease-out;
+}
+
+/* Minimized: still mounted, so the app keeps its state, but hidden, inert
+   and aria-hidden (Window.tsx). The Scale effect shrinks it into its tile
+   (Window.tsx aims --window-to-dock), above the other windows and under the
+   Dock, and it is hidden once it gets there */
+.window.window-minimized {
+  visibility: hidden;
+  opacity: 0;
+  z-index: 999;
+  transform: var(--window-to-dock, scale(0.1));
+  transition:
+    transform var(--window-scale-time) ease-in,
+    opacity var(--window-scale-time) ease-in,
+    visibility 0s linear var(--window-scale-time);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window,
+  .window.window-minimized {
+    transition: none;
+  }
 }
 
 .window-header {
@@ -28,53 +61,115 @@
 
 .window-controls {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: var(--window-button-gap);
   position: absolute;
   left: 8px;
   z-index: 1000;
 }
 
-.window-close,
-.window-minimize,
-.window-maximize {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--radius-round);
-  border: 1px solid;
+/* Aqua gems, as in Mac OS X: a darker rim, a glow rising from the bottom
+   and a white shine across the top half (::before). The ×, − and + are
+   drawn in --window-glyph, which is see-through until the pointer is over
+   the group; then all three show at once, each a darker shade of its own
+   button. Graphite turns all three grey through their roles (tokens.css) */
+.window-controls > button {
+  --window-glyph: transparent;
+  position: relative;
+  width: 14px;
+  height: 14px;
   padding: 0;
-  font-size: var(--text-xs);
-  color: var(--black-a50);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid var(--window-edge);
+  border-radius: var(--radius-round);
+  background:
+    var(--window-mark),
+    radial-gradient(ellipse 90% 55% at 50% 100%, var(--white-a70), transparent 75%),
+    linear-gradient(to bottom, var(--window-edge), transparent 70%),
+    var(--window-face);
+  box-shadow: 0 1px 1px var(--black-a20);
+  text-shadow: none;
   cursor: pointer;
 }
 
+.window-controls > button::before {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  width: 9px;
+  height: 5px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-round);
+  background: var(--gradient-gloss);
+  pointer-events: none;
+}
+
+/* The hit box: halfway across the gap each side, and the title bar's height */
+.window-controls > button::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--window-button-reach)) calc(-1px - var(--window-button-gap) / 2);
+}
+
+.window-controls > button:active {
+  filter: brightness(0.82);
+}
+
 .window-close {
-  background: var(--red-400);
-  border-color: var(--red-500);
+  --window-face: var(--color-close);
+  --window-edge: var(--color-close-edge);
+  --window-ink: var(--color-close-glyph);
+  --window-mark:
+    linear-gradient(45deg, transparent 42%, var(--window-glyph) 42% 58%, transparent 58%) center / 7px 7px no-repeat,
+    linear-gradient(-45deg, transparent 42%, var(--window-glyph) 42% 58%, transparent 58%) center / 7px 7px no-repeat;
 }
 
 .window-minimize {
-  background: var(--yellow-400);
-  border-color: var(--yellow-500);
+  --window-face: var(--color-minimize);
+  --window-edge: var(--color-minimize-edge);
+  --window-ink: var(--color-minimize-glyph);
+  --window-mark: linear-gradient(var(--window-glyph), var(--window-glyph)) center / 6px 2px no-repeat;
 }
 
 .window-maximize {
-  background: var(--green-400);
-  border-color: var(--green-500);
+  --window-face: var(--color-zoom);
+  --window-edge: var(--color-zoom-edge);
+  --window-ink: var(--color-zoom-glyph);
+  --window-mark:
+    linear-gradient(var(--window-glyph), var(--window-glyph)) center / 6px 2px no-repeat,
+    linear-gradient(var(--window-glyph), var(--window-glyph)) center / 2px 6px no-repeat;
 }
 
-.window-close:hover {
-  background: var(--red-500);
+/* The glyphs: while the pointer is over the group, or a key has focused one */
+.window-controls:hover > button,
+.window-controls:has(:focus-visible) > button {
+  --window-glyph: var(--window-ink);
 }
 
-.window-minimize:hover {
-  background: var(--yellow-500);
+/* A window that isn't in front has plain grey buttons, in colour again
+   while the pointer is over them */
+.window:not(.window-active) .window-controls:not(:hover):not(:has(:focus-visible)) > button {
+  --window-face: var(--color-control-idle);
+  --window-edge: var(--color-control-idle-edge);
 }
 
-.window-maximize:hover {
-  background: var(--green-500);
+/* A touch screen has no hover: the front window shows its glyphs, and each
+   button is a bigger target, spaced out to match */
+@media (hover: none) {
+  .window.window-active .window-controls > button {
+    --window-glyph: var(--window-ink);
+  }
+}
+
+@media (pointer: coarse) {
+  .window {
+    --window-button-gap: 16px;
+    --window-button-reach: 8px;
+  }
+
+  .window-controls {
+    left: 10px;
+  }
 }
 
 .window-title {
@@ -94,9 +189,11 @@
 }
 
 /* Music fills its window edge to edge. NASA News too: its list of past days
-   and its picture each scroll on their own */
+   and its picture each scroll on their own. System Preferences keeps its
+   toolbar still while the pane under it scrolls */
 .window-content:has(.retro-itunes),
-.window-content:has(.nasa-app) {
+.window-content:has(.nasa-app),
+.window-content:has(.preferences-app) {
   padding: 0;
   overflow: hidden;
   display: flex;

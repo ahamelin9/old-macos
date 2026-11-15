@@ -121,62 +121,38 @@ node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 <outDir>
   - Music's volume slider.
 - For a CSS change, use `style-diff.mjs`
   ([maps-and-layout.md](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed)).
+- For one feature's own check (NASA News's sidebar, Pokémon's forms, System
+  Preferences, dark mode, the Apple menu), see
+  [feature-checks.md](feature-checks.md).
 
-## Does NASA News's sidebar still work?
-
-*2026-11-15*
-
-```bash
-node .claude/skills/know-how/nasa-check.mjs http://127.0.0.1:5199 <outDir>
-```
-
-It drives the sidebar of past days against live science.nasa.gov at
-400×300, maximized and on a 390px phone, and saves a screenshot of each
-step. It checks the ☰ in the heading row; that scrolling loads 20 more, one
-page at a time; a picture day, an .mp4 day and a YouTube day; search, its
-count, "No days match" and clearing it; the date box (1995-06-20, and the
-gap day 1995-06-18); Today; and that late replies are dropped. Its header
-lists every check. About 15 requests per size; run it after any change to
-NASA News. When its default days are more than five pages old, pass newer
-ones (`apis` skill, `nasa.md`).
-
-Lessons from writing it:
-
-- An IntersectionObserver reports at once whether its target is in view, so
-  "scrolling loads more" needs a check that it *stops*: the script waits,
-  then checks the end of the list is more than the 200px margin below view.
-- A list sliding shut still covers what's under it for its 0.2 s
-  transition; wait before clicking the ☰ again.
-
-## Do Pokémon's forms still work?
+## Is any text too faint to read?
 
 *2026-11-15*
 
 ```bash
-node .claude/skills/know-how/pokemon-forms-check.mjs http://127.0.0.1:5199 <outDir>
+node .claude/skills/know-how/contrast-scan.mjs http://127.0.0.1:5173 <outDir> [--theme light] [--settings '{"highlight":"graphite"}'] [App…]
 ```
 
-It drives Pokémon against live PokeAPI at 400×300, maximized and on a 390px
-phone, and saves a screenshot of each step. It checks the Megas and
-Gigantamax hanging off their stage (Dragonite, Charizard, Raichu's family),
-that Dragonite has no Forms row, Raichu's open one-line row, Pikachu's folded
-"▸ Other forms (15)" opening and staying open for the session, clicking a
-Mega and a form, ← → by Pokédex number, stale replies, a missing sprite
-(Mega Zygarde), that nothing sticks out of the window, and spot-checks three
-forms against PokeAPI asked directly. Its header lists every check. About 55
-requests; run it after any change to Pokémon.
+Opens every dock app maximized, every System Preferences pane and the
+Restore Defaults sheet, the Apple menu with its submenu and a highlighted
+row, About This Mac, Force Quit and Restart's alert (name those four
+"Apple menu", "About This Mac", "Force Quit" and "Restart alert" to scan
+only them), and prints each piece of text under WCAG's 4.5:1
+(3:1 for large text), with the app, a CSS path, both colours and the
+ratio. Dark is the default. About two minutes and a dozen live requests.
+It is best effort: a gradient is judged by its worst stop, text on a
+picture is left out, and so are the title bar's coloured buttons and text
+that is only emoji (they draw in their own colours). A change
+to a colour token, or a new app, gets a run in dark (and in Graphite dark
+for anything Aqua).
 
-Lessons from writing it:
-
-- A missing sprite turns into the "?" only when its 404 comes back, so wait
-  for the "?" before checking there's no `<img>`. Checking at once passed one
-  run and failed the next.
-- To spot-check a name, wait for the heading to *change*, not for the name
-  you expect: if the name is wrong, a wait for it only times out, while a
-  wait for any change shows the wrong name in the diff.
-- A folded list kept in the page with `hidden` still has cards in the DOM,
-  but with no box. Count only cards with `getClientRects().length > 0` when
-  checking what sticks out.
+Left over on 2026-11-15, the same in light and dark: white text on
+Pokémon's type colours (the games' own), and white text on Aqua buttons
+(Force Quit's and Restart's too), judged against the gradient's pale top
+though the text sits on the deeper middle. The menu's highlighted row
+passes: it has its own deeper gradient (`--gradient-highlight`). Light alone also has white window titles on the title bar's
+pale top, Pokémon's yellow title, NASA's ☰ and Terminal's `$`. Rerun the
+scan for the current list rather than trusting this one.
 
 ## The dev server isn't on the port the preview says
 

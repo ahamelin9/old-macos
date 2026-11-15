@@ -1,9 +1,13 @@
 /* Music: an iTunes-style player. Buttons are the shared platinum ones; this
    file keeps only their shapes and sizes. */
 .retro-itunes {
-  /* Music's own look: the blue-grey iTunes sidebar and the green LCD */
-  --music-sidebar: #e2e8f0;
+  /* Music's own look: the blue-grey iTunes sidebar (a darker twin in dark
+     mode; light-dark() follows the theme) and the green LCD, which stays
+     lit in both, with its own dark ink */
+  --music-sidebar: light-dark(#e2e8f0, #262b33);
   --music-lcd: #d3dcd4;
+  --music-lcd-ink: var(--grey-7);
+  --music-lcd-ink-soft: var(--grey-20);
 
   /* The bottom bar sizes itself from the window (see the end of this file) */
   container-type: inline-size;
@@ -55,7 +59,7 @@
   width: 30%;
   min-width: 150px;
   background-color: var(--music-sidebar);
-  border-right: 1px solid var(--grey-63);
+  border-right: 1px solid var(--tone-63);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -103,7 +107,7 @@
   display: grid;
   grid-template-columns: 40px 2fr 2fr 2fr;
   background: var(--gradient-platinum);
-  border-bottom: 1px solid var(--grey-63);
+  border-bottom: 1px solid var(--tone-63);
   font-size: var(--text-sm);
   font-weight: bold;
   color: var(--color-text);
@@ -111,7 +115,7 @@
 
 .retro-itunes .track-header > div {
   padding: 4px 8px;
-  border-right: 1px solid var(--grey-77);
+  border-right: 1px solid var(--tone-77);
 }
 
 .retro-itunes .track-list-scroll {
@@ -124,14 +128,14 @@
   display: grid;
   grid-template-columns: 40px 2fr 2fr 2fr;
   align-items: center;
-  border-bottom: 1px solid var(--grey-93);
+  border-bottom: 1px solid var(--tone-93);
   font-size: var(--text-sm);
   color: var(--color-text-strong);
   cursor: pointer;
 }
 
 .retro-itunes .track-row:nth-child(even) {
-  background-color: var(--blue-50);
+  background-color: var(--tint-50);
 }
 
 .retro-itunes .track-row.active {
@@ -156,7 +160,7 @@
 /* Bottom Control Bar */
 .retro-itunes .itunes-bottom-bar {
   height: 60px;
-  background: linear-gradient(to bottom, var(--grey-87), var(--grey-77));
+  background: linear-gradient(to bottom, var(--face-87), var(--face-77));
   border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -192,7 +196,7 @@
   flex: 1;
   max-width: 300px;
   background-color: var(--music-lcd);
-  border: 1px solid var(--grey-50);
+  border: 1px solid var(--tone-50);
   border-radius: var(--radius);
   height: 40px;
   box-shadow: var(--shadow-inset);
@@ -207,7 +211,7 @@
 .retro-itunes .lcd-text {
   font-size: var(--text-xs);
   font-weight: bold;
-  color: var(--grey-7);
+  color: var(--music-lcd-ink);
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -225,15 +229,15 @@
 
 .retro-itunes .lcd-time {
   font-size: var(--text-2xs);
-  color: var(--color-text);
+  color: var(--music-lcd-ink-soft);
 }
 
 .retro-itunes .progress-bar {
   flex: 1;
   -webkit-appearance: none;
   height: 6px;
-  background: linear-gradient(to bottom, var(--grey-63), var(--grey-77));
-  border: 1px solid var(--grey-50);
+  background: linear-gradient(to bottom, var(--face-63), var(--face-77));
+  border: 1px solid var(--tone-50);
   border-radius: var(--radius-sm);
 }
 
@@ -242,7 +246,7 @@
   width: 10px;
   height: 10px;
   background: var(--color-surface);
-  border: 1px solid var(--grey-40);
+  border: 1px solid var(--tone-40);
   border-radius: var(--radius-round);
   cursor: pointer;
 }

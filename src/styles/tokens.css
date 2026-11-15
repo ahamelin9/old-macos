@@ -4,8 +4,12 @@
  * design check (npm run lint) fails on raw values anywhere else. How to use
  * and add them: the `design` skill.
  *
- * Two tiers. The palette (--grey-*, --blue-*, …) is the raw values. Roles
- * (--color-*) name a job, and are what apps should reach for first.
+ * Three tiers. The palette (--grey-*, --blue-*, …) is the raw values, and
+ * looks the same in light and dark. Tones and faces (--tone-*, --face-*) are
+ * the greys that follow the theme. Roles (--color-*) name a job, follow the
+ * theme too, and are what apps should reach for first. Dark mode (the
+ * Settings block at the end) changes tones, faces, roles, shadows and a few
+ * gradients, never the palette.
  *
  * Every stylesheet in src/styles/ sits in a cascade layer, and apps'
  * stylesheets sit in none, so an app's rule always wins over the shared
@@ -56,13 +60,16 @@
     --red-400: #ff5f56;
     --red-500: #e0443e;
     --red-700: #c0392b;
+    --red-900: #8c1a11;
     --red-50: #fff0f0;
     --yellow-400: #ffbd2d;
     --yellow-500: #dfa023;
+    --yellow-800: #985712;
     --yellow-50: #ffffe1;
     --green-400: #27c93f;
     --green-500: #1bac2b;
     --green-700: #15803d;
+    --green-800: #0a650d;
 
     /* ---- Palette: see-through white and black, for shadows and glass */
     --white-a15: rgba(255, 255, 255, 0.15);
@@ -72,6 +79,7 @@
     --white-a60: rgba(255, 255, 255, 0.6);
     --white-a70: rgba(255, 255, 255, 0.7);
     --white-a80: rgba(255, 255, 255, 0.8);
+    --white-a92: rgba(255, 255, 255, 0.92);
     --black-a05: rgba(0, 0, 0, 0.05);
     --black-a10: rgba(0, 0, 0, 0.1);
     --black-a20: rgba(0, 0, 0, 0.2);
@@ -80,25 +88,95 @@
     --black-a50: rgba(0, 0, 0, 0.5);
     --black-a70: rgba(0, 0, 0, 0.7);
 
+    /* ---- Tones: greys that follow the theme, for text, page-like surfaces
+       and borders. In light each is its --grey-* twin. In dark (the Settings
+       block) each is the grey the same distance from the page the other
+       way, so text stays readable, a well stays a well, a divider stays a
+       divider. Use a role when one fits; a tone when none does; a --grey-*
+       only for what must look the same in both themes (an app's palette). */
+    --tone-100: var(--grey-100);             /* the page itself */
+    --tone-97: var(--grey-97);
+    --tone-94: var(--grey-94);
+    --tone-93: var(--grey-93);
+    --tone-90: var(--grey-90);
+    --tone-87: var(--grey-87);
+    --tone-84: var(--grey-84);
+    --tone-80: var(--grey-80);
+    --tone-77: var(--grey-77);
+    --tone-69: var(--grey-69);
+    --tone-63: var(--grey-63);
+    --tone-60: var(--grey-60);
+    --tone-50: var(--grey-50);
+    --tone-40: var(--grey-40);
+    --tone-33: var(--grey-33);
+    --tone-20: var(--grey-20);
+    --tone-13: var(--grey-13);
+    --tone-7: var(--grey-7);
+    --tone-0: var(--grey-0);                 /* the strongest text */
+
+    /* ---- Faces: the greys of a raised control's face and its gradient,
+       lit from above. Higher is lighter in both themes (a tone turns
+       around in dark, which would light a button from below), so build
+       any platinum gradient from these. In light each is its --grey-* twin. */
+    --face-100: var(--grey-100);
+    --face-97: var(--grey-97);
+    --face-94: var(--grey-94);
+    --face-90: var(--grey-90);
+    --face-87: var(--grey-87);
+    --face-84: var(--grey-84);
+    --face-80: var(--grey-80);
+    --face-77: var(--grey-77);
+    --face-69: var(--grey-69);
+    --face-63: var(--grey-63);
+
+    /* ---- Tints: the pale Aqua blues used as fills (a hovered row, a chip,
+       the current card) and the deep ones used as text on them. Like the
+       tones they follow the theme, and like the ramp they turn grey with
+       Graphite. In light each is its --blue-* twin. */
+    --tint-50: var(--blue-50);
+    --tint-100: var(--blue-100);
+    --tint-200: var(--blue-200);
+    --tint-300: var(--blue-300);
+    --tint-600: var(--blue-600);             /* blue text: a count, a hovered link */
+    --tint-800: var(--blue-800);
+    --tint-900: var(--blue-900);
+
     /* ---- Roles: reach for these first */
-    --color-text: var(--grey-20);            /* body text */
-    --color-text-strong: var(--grey-13);     /* headings, list text */
-    --color-text-muted: var(--grey-40);      /* dates, captions, hints */
-    --color-text-on-accent: var(--grey-100); /* on a blue or dark fill */
-    --color-surface: var(--grey-100);        /* window content */
-    --color-surface-alt: var(--grey-94);     /* sidebars, wells */
-    --color-chrome: var(--grey-93);          /* menu bar, toolbars, bottom bars */
-    --color-border: var(--grey-60);          /* buttons, fields, windows */
-    --color-border-light: var(--grey-80);    /* dividers, panels */
+    --color-text: var(--tone-20);            /* body text */
+    --color-text-strong: var(--tone-13);     /* headings, list text */
+    --color-text-muted: var(--tone-40);      /* dates, captions, hints */
+    --color-text-on-accent: var(--grey-100); /* on a blue or dark fill; white in both themes */
+    --color-surface: var(--tone-100);        /* window content */
+    --color-surface-alt: var(--tone-94);     /* sidebars, wells */
+    --color-chrome: var(--tone-93);          /* menu bar, toolbars, bottom bars */
+    --color-border: var(--tone-60);          /* buttons, fields, windows */
+    --color-border-light: var(--tone-80);    /* dividers, panels */
+    --color-bevel-light: var(--grey-100);    /* the lit edge of a bevel: a raised thing's top and left, a sunken one's bottom and right */
+    --color-bevel-shadow: var(--grey-50);    /* the shaded edge of a bevel */
     --color-accent: var(--blue-600);         /* the site's blue */
     --color-accent-light: var(--blue-500);
+    --color-accent-text: var(--tint-900);    /* blue headings and names on the page */
     --color-selection: var(--blue-150);      /* a selected list row */
     --color-link: var(--blue-link);
     --color-error: var(--red-700);           /* error text */
     --color-error-bg: var(--red-50);
     --color-success: var(--green-700);
     --color-tooltip: var(--yellow-50);
+    --color-menu: var(--white-a92);          /* pull-down menus: the page's colour, a little see-through, as in Mac OS X */
     --color-desktop: var(--blue-500);        /* behind the wallpaper */
+    --color-photo-mat: var(--grey-0);        /* behind photos, video and maps while they load; black in both themes */
+    --color-close: var(--red-400);           /* the window buttons, each with a darker edge (also its hover) */
+    --color-close-edge: var(--red-500);
+    --color-minimize: var(--yellow-400);
+    --color-minimize-edge: var(--yellow-500);
+    --color-zoom: var(--green-400);
+    --color-zoom-edge: var(--green-500);
+    --color-close-glyph: var(--red-900);     /* the ×, − and + on them: a darker shade of each button's own colour */
+    --color-minimize-glyph: var(--yellow-800);
+    --color-zoom-glyph: var(--green-800);
+    --color-control-idle: var(--face-84);    /* a background window's buttons: plain grey until the pointer is over them */
+    --color-control-idle-edge: var(--face-63);
+    --color-badge: var(--red-700);           /* a count badge (the phone Dock's folded tile), with white text */
 
     /* ---- Fonts */
     /* Lucida Grande on a Mac, Lucida Sans Unicode (its twin) on Windows. Not
@@ -107,17 +185,19 @@
     --font-body: 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', sans-serif;    /* app content */
     --font-mono: 'Monaco', 'Courier New', monospace;
 
-    /* ---- Text sizes */
-    --text-2xs: 9px;
-    --text-xs: 10px;
-    --text-sm: 11px;
-    --text-md: 12px;
-    --text-base: 13px;
-    --text-lg: 14px;
-    --text-xl: 16px;
-    --text-2xl: 20px;
-    --text-3xl: 24px;
-    --text-4xl: 32px;
+    /* ---- Text sizes. Each is its Medium size times --text-scale, which
+       System Preferences' Text size sets (the Settings block at the end) */
+    --text-scale: 1;
+    --text-2xs: calc(9px * var(--text-scale));
+    --text-xs: calc(10px * var(--text-scale));
+    --text-sm: calc(11px * var(--text-scale));
+    --text-md: calc(12px * var(--text-scale));
+    --text-base: calc(13px * var(--text-scale));
+    --text-lg: calc(14px * var(--text-scale));
+    --text-xl: calc(16px * var(--text-scale));
+    --text-2xl: calc(20px * var(--text-scale));
+    --text-3xl: calc(24px * var(--text-scale));
+    --text-4xl: calc(32px * var(--text-scale));
 
     /* ---- Corners */
     --radius-xs: 2px;
@@ -129,11 +209,14 @@
     --radius-round: 50%;
 
     /* ---- Gradients */
-    --gradient-platinum: linear-gradient(to bottom, var(--grey-97), var(--grey-90));
-    --gradient-platinum-hover: linear-gradient(to bottom, var(--grey-90), var(--grey-84));
-    --gradient-platinum-pressed: linear-gradient(to bottom, var(--grey-84), var(--grey-77));
+    --gradient-platinum: linear-gradient(to bottom, var(--face-97), var(--face-90));
+    --gradient-platinum-hover: linear-gradient(to bottom, var(--face-90), var(--face-84));
+    --gradient-platinum-pressed: linear-gradient(to bottom, var(--face-84), var(--face-77));
     --gradient-titlebar: linear-gradient(to bottom, var(--blue-500), var(--blue-600));
     --gradient-aqua: linear-gradient(to bottom, var(--blue-450), var(--blue-600));
+    /* The highlighted row in a menu (and its title in the menu bar): deep
+       enough that its white text reads, and grey with Graphite */
+    --gradient-highlight: linear-gradient(to bottom, var(--blue-600), var(--blue-700));
     /* The shine across the top half of an Aqua gel button, laid over --gradient-aqua */
     --gradient-gloss: linear-gradient(to bottom, var(--white-a80), var(--white-a15));
 
@@ -149,5 +232,267 @@
     --shadow-inset: inset 0 1px 3px var(--black-a30);
     --shadow-text: 0 1px 0 var(--white-a50);        /* embossed text on platinum */
     --shadow-text-dark: 0 1px 1px var(--black-a30); /* white text on a title bar */
+
+    /* ---- Wallpapers: each is a whole `background` value, used by the desktop
+       and by System Preferences' swatches. The ids and names are WALLPAPERS
+       in src/contexts/settings.ts. All original (never Apple's pictures), in
+       the spirit of 1999-2002: Aqua blues, graphite, a pinstripe, soft
+       gradients. Raw values on purpose: they stay the same whatever the
+       highlight colour or theme. */
+    /* The photo and the visitor's own picture leave the page's
+       --color-desktop showing round them while they load */
+    --wallpaper-photo: url('/mac-os-background.jpg') center / cover no-repeat;
+    /* The visitor's own picture: Desktop.tsx puts url(<the picture>) in front */
+    --wallpaper-custom: center / cover no-repeat;
+    --wallpaper-aqua: radial-gradient(ellipse 90% 80% at 50% 30%, #c4e4ff 0%, #62a6ec 38%, #2563b8 72%, #163f80 100%);
+    --wallpaper-ripple:
+      radial-gradient(130% 80% at 10% 105%, transparent 50%, rgba(255, 255, 255, 0.24) 52%, transparent 60%),
+      radial-gradient(120% 90% at 95% -10%, transparent 48%, rgba(255, 255, 255, 0.2) 50%, transparent 58%),
+      radial-gradient(90% 60% at 60% 120%, transparent 55%, rgba(255, 255, 255, 0.16) 57%, transparent 64%),
+      linear-gradient(160deg, #3f86d6 0%, #1f5cad 55%, #0f3a7a 100%);
+    --wallpaper-sky:
+      radial-gradient(28% 9% at 22% 62%, rgba(255, 255, 255, 0.85), transparent 70%),
+      radial-gradient(22% 7% at 31% 57%, rgba(255, 255, 255, 0.7), transparent 70%),
+      radial-gradient(30% 10% at 74% 38%, rgba(255, 255, 255, 0.75), transparent 70%),
+      linear-gradient(to bottom, #4f8fdc 0%, #8fbdf0 55%, #e4f1ff 100%);
+    --wallpaper-lagoon: radial-gradient(ellipse 80% 70% at 35% 25%, #aef2ec 0%, #3cc3c9 35%, #138fa8 70%, #0a5a78 100%);
+    --wallpaper-tangerine: radial-gradient(ellipse 85% 75% at 40% 30%, #ffe2ad 0%, #ffad4d 40%, #f07a1f 75%, #c4520f 100%);
+    --wallpaper-graphite: radial-gradient(ellipse 90% 80% at 50% 35%, #9da4ae 0%, #6c737d 45%, #3f444b 85%, #2c3035 100%);
+    --wallpaper-pinstripe:
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.06)),
+      repeating-linear-gradient(to bottom, #f3f3f3 0 2px, #e2e2e2 2px 4px);
+
+    /* ---- The Dock (Dock/styles.css): its glass shelf, the tile behind each
+       icon, and its size and magnification, set below */
+    --dock-glass: var(--white-a40);
+    --dock-glass-glow: var(--white-a40);     /* the frosted glow inside its edge */
+    --dock-tile: linear-gradient(
+      135deg,
+      rgba(240, 240, 240, 0.9) 0%,
+      rgba(210, 210, 210, 0.9) 50%,
+      rgba(190, 190, 190, 0.9) 51%,
+      rgba(230, 230, 230, 0.9) 100%
+    );
+    --dock-label-shadow: 0 1px 0 var(--white-a70);
+    --dock-icon-size: 48px;
+    --dock-item-width: 64px;
+    --dock-magnify: 1.3;      /* how much an icon grows under the pointer */
+    --dock-magnify-lift: -6px;
+    --dock-magnify-room: 8px; /* how far it pushes its neighbours aside */
+  }
+
+  /* ---- Settings. System Preferences puts each choice on <html> as a data-*
+     attribute (applySettings in src/contexts/settings.ts, and the early
+     script in index.html before the first paint). These rules turn each one
+     into token values, so no app reads a setting itself. The defaults
+     (System, Medium, Blue, a Medium Dock that magnifies) are the values
+     above; System on a dark computer is the dark block at the end. */
+  :root[data-text-size="small"] { --text-scale: 0.9; }
+  :root[data-text-size="large"] { --text-scale: 1.15; }
+  :root[data-text-size="larger"] { --text-scale: 1.3; }
+
+  :root[data-dock-size="small"] { --dock-icon-size: 36px; --dock-item-width: 56px; }
+  :root[data-dock-size="large"] { --dock-icon-size: 64px; --dock-item-width: 80px; }
+  /* Under 800px the Dock shows five apps; Large stays Medium there, so they fit */
+  @media (max-width: 799px) {
+    :root[data-dock-size="large"] { --dock-icon-size: 48px; --dock-item-width: 64px; }
+  }
+  :root[data-dock-magnify="false"] { --dock-magnify: 1; --dock-magnify-lift: 0px; --dock-magnify-room: 0px; }
+
+  /* Graphite, as in Mac OS X. Every Aqua surface (title bars, Aqua buttons,
+     selection, progress bars, tabs) is built from the --blue-* ramp, so
+     turning the ramp grey turns them all, in every app, with no app changes.
+     Each grey keeps its blue's lightness, with a hint of blue. Links keep
+     --blue-link, as they did in Mac OS X, and the window buttons turn grey. */
+  :root[data-highlight="graphite"] {
+    --blue-50: #f5f6f8;
+    --blue-100: #e2e5ea;
+    --blue-150: #d5dae1;
+    --blue-200: #c6ccd5;
+    --blue-300: #afb6c1;
+    --blue-350: #a3abb7;
+    --blue-400: #949dab;
+    --blue-450: #99a2af;
+    --blue-500: #828c9a;
+    --blue-600: #646e7c;
+    --blue-700: #56606d;
+    --blue-800: #444c58;
+    --blue-900: #333a44;
+    --color-close: var(--blue-400);
+    --color-close-edge: var(--blue-600);
+    --color-minimize: var(--blue-400);
+    --color-minimize-edge: var(--blue-600);
+    --color-zoom: var(--blue-400);
+    --color-zoom-edge: var(--blue-600);
+    --color-close-glyph: var(--blue-800);
+    --color-minimize-glyph: var(--blue-800);
+    --color-zoom-glyph: var(--blue-800);
+  }
+
+  /* Dark ("Graphite at night"), chosen in System Preferences' Appearance
+     pane. Dark changes tones, faces, roles, shadows and a few gradients;
+     the palette, the wallpapers, photos and the Aqua ramp stay as they are.
+     Two rules, because CSS can't say "Dark, or System on a dark computer"
+     in one selector:
+       - data-theme="dark": Dark, whatever the computer says;
+       - System on a dark computer: :root:not([data-theme="light"]), so a
+         first visit, with nothing saved and no data-theme yet, is dark on
+         the first paint, and it follows the computer live.
+     THE TWO BLOCKS MUST MATCH, line for line: change both together.
+     src/styles/tokens.test.ts fails when they don't. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    /* Tones: the page is the darkest; further from it is lighter */
+    --tone-100: #1d1f23;
+    --tone-97: #222428;
+    --tone-94: #26282d;
+    --tone-93: #282b2f;
+    --tone-90: #2c2f34;
+    --tone-87: #313439;
+    --tone-84: #35383e;
+    --tone-80: #3a3d43;
+    --tone-77: #3f4248;
+    --tone-69: #494c53;
+    --tone-63: #53575e;
+    --tone-60: #5a5e66;
+    --tone-50: #7d828b;
+    --tone-40: #a0a5ad;
+    --tone-33: #bcc0c7;
+    --tone-20: #d4d7dc;
+    --tone-13: #e3e5e9;
+    --tone-7: #edeff2;
+    --tone-0: #f7f8fa;
+    /* Faces: still lit from above, and lighter than the chrome they sit on */
+    --face-100: #5b5f67;
+    --face-97: #54585f;
+    --face-94: #4f5359;
+    --face-90: #494d53;
+    --face-87: #45484e;
+    --face-84: #404349;
+    --face-80: #3b3e44;
+    --face-77: #373a40;
+    --face-69: #303338;
+    --face-63: #2c2e33;
+    /* Tints: dark blues mixed into the page for fills, light ones for text */
+    --tint-50: color-mix(in srgb, var(--blue-600) 16%, var(--tone-100));
+    --tint-100: color-mix(in srgb, var(--blue-600) 40%, var(--tone-100));
+    --tint-200: color-mix(in srgb, var(--blue-600) 55%, var(--tone-100));
+    --tint-300: color-mix(in srgb, var(--blue-500) 70%, var(--tone-100));
+    --tint-600: var(--blue-400);
+    --tint-800: var(--blue-300);
+    --tint-900: var(--blue-200);
+    /* Roles that aren't simply their tone. The Aqua ones come from the
+       --blue-* ramp, so Graphite still turns them grey */
+    --color-bevel-light: var(--white-a15);
+    --color-bevel-shadow: var(--black-a50);
+    --color-selection: var(--blue-800);
+    --color-link: #8ab4f8;
+    --color-error: #ff8a80;
+    --color-error-bg: #3d2325;
+    --color-success: #6bd68b;
+    --color-tooltip: #3b3926;
+    --color-menu: rgba(44, 47, 52, 0.92);    /* the dark --tone-90, a little see-through */
+    --color-control-idle: var(--face-100);   /* lighter than the faces, so a background window's buttons still read as gems on the deep title bar */
+    /* Deeper title bars, and shadows that still show on a dark page */
+    --gradient-titlebar: linear-gradient(to bottom, var(--blue-600), var(--blue-800));
+    --shadow-button:
+      0 2px 3px var(--black-a40),
+      inset 0 1px 0 var(--white-a15),
+      inset 0 -1px 0 var(--black-a20);
+    --shadow-raised: 0 1px 3px var(--black-a40);
+    --shadow-card: 0 2px 10px var(--black-a30);
+    --shadow-window: 3px 3px 10px var(--black-a50);
+    --shadow-inset: inset 0 1px 3px var(--black-a50);
+    --shadow-text: 0 -1px 0 var(--black-a40);
+    /* A smoked-glass Dock with graphite tiles */
+    --dock-glass: var(--black-a40);
+    --dock-glass-glow: var(--white-a15);
+    --dock-tile: linear-gradient(
+      135deg,
+      rgba(112, 116, 124, 0.9) 0%,
+      rgba(84, 88, 96, 0.9) 50%,
+      rgba(70, 74, 81, 0.9) 51%,
+      rgba(98, 102, 110, 0.9) 100%
+    );
+    --dock-label-shadow: 0 1px 1px var(--black-a70);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      /* Tones: the page is the darkest; further from it is lighter */
+      --tone-100: #1d1f23;
+      --tone-97: #222428;
+      --tone-94: #26282d;
+      --tone-93: #282b2f;
+      --tone-90: #2c2f34;
+      --tone-87: #313439;
+      --tone-84: #35383e;
+      --tone-80: #3a3d43;
+      --tone-77: #3f4248;
+      --tone-69: #494c53;
+      --tone-63: #53575e;
+      --tone-60: #5a5e66;
+      --tone-50: #7d828b;
+      --tone-40: #a0a5ad;
+      --tone-33: #bcc0c7;
+      --tone-20: #d4d7dc;
+      --tone-13: #e3e5e9;
+      --tone-7: #edeff2;
+      --tone-0: #f7f8fa;
+      /* Faces: still lit from above, and lighter than the chrome they sit on */
+      --face-100: #5b5f67;
+      --face-97: #54585f;
+      --face-94: #4f5359;
+      --face-90: #494d53;
+      --face-87: #45484e;
+      --face-84: #404349;
+      --face-80: #3b3e44;
+      --face-77: #373a40;
+      --face-69: #303338;
+      --face-63: #2c2e33;
+      /* Tints: dark blues mixed into the page for fills, light ones for text */
+      --tint-50: color-mix(in srgb, var(--blue-600) 16%, var(--tone-100));
+      --tint-100: color-mix(in srgb, var(--blue-600) 40%, var(--tone-100));
+      --tint-200: color-mix(in srgb, var(--blue-600) 55%, var(--tone-100));
+      --tint-300: color-mix(in srgb, var(--blue-500) 70%, var(--tone-100));
+      --tint-600: var(--blue-400);
+      --tint-800: var(--blue-300);
+      --tint-900: var(--blue-200);
+      /* Roles that aren't simply their tone. The Aqua ones come from the
+         --blue-* ramp, so Graphite still turns them grey */
+      --color-bevel-light: var(--white-a15);
+      --color-bevel-shadow: var(--black-a50);
+      --color-selection: var(--blue-800);
+      --color-link: #8ab4f8;
+      --color-error: #ff8a80;
+      --color-error-bg: #3d2325;
+      --color-success: #6bd68b;
+      --color-tooltip: #3b3926;
+      --color-menu: rgba(44, 47, 52, 0.92);    /* the dark --tone-90, a little see-through */
+      --color-control-idle: var(--face-100);   /* lighter than the faces, so a background window's buttons still read as gems on the deep title bar */
+      /* Deeper title bars, and shadows that still show on a dark page */
+      --gradient-titlebar: linear-gradient(to bottom, var(--blue-600), var(--blue-800));
+      --shadow-button:
+        0 2px 3px var(--black-a40),
+        inset 0 1px 0 var(--white-a15),
+        inset 0 -1px 0 var(--black-a20);
+      --shadow-raised: 0 1px 3px var(--black-a40);
+      --shadow-card: 0 2px 10px var(--black-a30);
+      --shadow-window: 3px 3px 10px var(--black-a50);
+      --shadow-inset: inset 0 1px 3px var(--black-a50);
+      --shadow-text: 0 -1px 0 var(--black-a40);
+      /* A smoked-glass Dock with graphite tiles */
+      --dock-glass: var(--black-a40);
+      --dock-glass-glow: var(--white-a15);
+      --dock-tile: linear-gradient(
+        135deg,
+        rgba(112, 116, 124, 0.9) 0%,
+        rgba(84, 88, 96, 0.9) 50%,
+        rgba(70, 74, 81, 0.9) 51%,
+        rgba(98, 102, 110, 0.9) 100%
+      );
+      --dock-label-shadow: 0 1px 1px var(--black-a70);
+    }
   }
 }

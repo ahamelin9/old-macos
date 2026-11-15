@@ -9,6 +9,13 @@
 //    src/styles/base.css styles bare elements.
 //  - No !important (the cascade layers make it unnecessary).
 //  - No raw colours in .ts/.tsx files either (inline styles drift).
+//  - Text, fills and borders follow dark mode. The palette (--grey-*,
+//    --blue-*) looks the same in light and dark, so outside an app's own
+//    palette a --grey-* is flagged (use a role, a --tone-* or, in a
+//    gradient, a --face-*), and so are the pale blues (--blue-50 to 300:
+//    use a --tint-*) and deep blue text (use --color-accent-text or a
+//    --tint-*). A grey meant to stay put in dark goes in the app's palette
+//    under its own name: --term-dark-bg: var(--grey-13).
 //
 // A line that really needs an exception says why, in a comment containing
 // "design-exception:". How to fix each kind of problem: the `design` skill.
@@ -42,10 +49,12 @@ export const PREFIXES = {
   'src/components/Desktop/styles.css': ['desktop', 'mac-menu-bar'],
   'src/components/Dock/styles.css': ['dock'],
   'src/components/Window/styles.css': ['window'],
+  'src/components/Apps/AboutThisMac/AboutThisMac.css': ['about'],
   'src/components/Apps/Calculator/Calculator.css': ['calculator'],
   'src/components/Apps/Camera/Camera.css': ['camera'],
   'src/components/Apps/FieldGuide/FieldGuide.css': ['fieldguide', 'fg'],
   'src/components/Apps/Finder/Finder.css': ['finder'],
+  'src/components/Apps/ForceQuit/ForceQuit.css': ['forcequit'],
   'src/components/Apps/Music/Music.css': ['music', 'retro-itunes'],
   'src/components/Apps/NasaNews/NasaNews.css': ['nasa'],
   'src/components/Apps/Notes/Notes.css': ['notes'],
@@ -59,6 +68,10 @@ export const PREFIXES = {
 const NAMED_COLOURS = 'white|black|red|green|blue|yellow|orange|purple|pink|gray|grey|silver|gold|brown|navy|teal|maroon|olive|lime|aqua|fuchsia|cyan|magenta|lightgray|lightgrey|darkgray|darkgrey|whitesmoke|gainsboro|crimson|tomato|coral|salmon|khaki|beige|ivory|indigo|violet';
 const RAW_COLOUR = new RegExp(`#[0-9a-fA-F]{3,8}\\b|\\b(?:rgba?|hsla?)\\(|(?<![\\w-])(?:${NAMED_COLOURS})(?![\\w-])`, 'i');
 const EXCEPTION = /design-exception:/;
+// Palette values that don't follow dark mode (see the header)
+const FIXED_GREY = /var\(--grey-\d+\)/;
+const PALE_BLUE = /var\(--blue-(50|100|150|200|300)\)/;
+const DEEP_BLUE = /var\(--blue-([4-9]\d\d)\)/;
 
 // Drop var(…), url(…) and strings, which may hold names that look like values
 const bareValue = (value) => {
@@ -160,6 +173,9 @@ export const checkCss = (rel, text) => {
         // An app's own palette may hold raw values; anything else must not
         if (prefixes && matchesPrefix(d.prop.slice(2), prefixes)) continue;
       }
+      if (FIXED_GREY.test(value)) add(d.line, `${d.prop}: ${value}`, 'a --grey-* stays the same in dark mode: use a role (var(--color-text), var(--color-surface)…), a tone (var(--tone-N)) for text, fills and borders, or a face (var(--face-N)) in a platinum gradient. A grey that should stay put in dark goes in the app\'s palette under its own name');
+      else if (PALE_BLUE.test(value)) add(d.line, `${d.prop}: ${value}`, 'a pale --blue-* stays pale in dark mode: use a tint (var(--tint-N)), or name it in the app\'s palette if it sits on Aqua');
+      else if (d.prop === 'color' && DEEP_BLUE.test(value)) add(d.line, `${d.prop}: ${value}`, 'deep blue text vanishes in dark mode: use var(--color-accent-text) or a tint (var(--tint-600), var(--tint-800))');
       const bare = bareValue(value);
       if (RAW_COLOUR.test(bare)) add(d.line, `${d.prop}: ${value}`, 'use a colour token, e.g. var(--color-text) (tokens.css), or the app\'s own --<prefix>-… palette');
       if (d.prop === 'font-family' && /[a-z]/i.test(bare.replace(/\binherit\b/g, ''))) add(d.line, `${d.prop}: ${value}`, 'use var(--font-system), var(--font-body) or var(--font-mono)');

@@ -1,12 +1,11 @@
+/* The desktop picture comes from System Preferences: Desktop.tsx sets it
+   to one of tokens.css's --wallpaper-* backgrounds */
 .desktop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   padding-top: 25px;
   overflow: hidden;
 }
@@ -27,23 +26,76 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 10px;
-  color: var(--grey-7);
+  color: var(--tone-7);
   font-size: var(--text-base);
   font-family: var(--font-body);
-  /* make the apple grey too unsure if I like the hue though */
-  filter: grayscale(100%);
   z-index: 1000;
   box-shadow: 0 1px 5px var(--black-a30);
 }
 
 .mac-menu-bar .apple-menu {
+  align-self: stretch;
   display: flex;
   align-items: center;
 }
 
+/* The Apple menu (AppleMenu.tsx): the 🍎 is a button, as tall as the bar,
+   that takes the highlight while its menu is open. The menu is the kit's
+   mac-menu, hanging from the bar's bottom edge. */
+.mac-menu-bar .mac-menu-bar-menus,
+.mac-menu-bar .mac-menu-bar-slot {
+  align-self: stretch;
+  display: flex;
+}
+
+.mac-menu-bar .mac-menu-bar-slot {
+  position: relative;
+}
+
+.mac-menu-bar .mac-menu-bar-apple {
+  display: flex;
+  align-items: center;
+  /* The 🍎 stays where it always was, 15px from Finder */
+  margin: 0 7px 0 -8px;
+  padding: 0 8px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  cursor: default;
+}
+
+.mac-menu-bar .mac-menu-bar-apple:hover,
+.mac-menu-bar .mac-menu-bar-apple:active {
+  background: none;
+  box-shadow: none;
+}
+
+.mac-menu-bar .mac-menu-bar-apple[aria-expanded="true"] {
+  background: var(--gradient-highlight);
+}
+
+.mac-menu-bar .mac-menu-bar-apple:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: -2px;
+}
+
+/* The apple is grey, as it has always been here; white on the highlight */
 .mac-menu-bar .apple-logo {
   font-size: var(--text-xl);
-  margin-right: 15px;
+  filter: grayscale(100%);
+}
+
+.mac-menu-bar .mac-menu-bar-apple[aria-expanded="true"] .apple-logo {
+  filter: grayscale(100%) brightness(2.2);
+}
+
+/* Its left edge lines up with the highlight's, as in Mac OS X */
+.mac-menu-bar .mac-menu-bar-apple-menu {
+  position: absolute;
+  top: 100%;
+  left: -8px;
 }
 
 .mac-menu-bar .menu-item {
@@ -61,6 +113,9 @@
   color: var(--mac-menu-bar-spotify);
   font-weight: bold;
   cursor: pointer;
+  /* Grey, as it always showed: the whole bar used to be greyed, and now
+     only the apple and this are, so the Apple menu's Aqua stays blue */
+  filter: grayscale(100%);
 }
 
 @media (max-width: 600px) {
@@ -84,4 +139,109 @@
   height: calc(100vh - 25px);
   position: relative;
   overflow: hidden;
+}
+
+/* ---- Restart…'s alert: a small dialog over the dimmed desktop, as Mac OS X
+   asked before restarting */
+.desktop-alert-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 18vh 12px 12px;
+  background: var(--black-a20);
+}
+
+.desktop-alert {
+  display: flex;
+  gap: 14px;
+  width: min(420px, 100%);
+  padding: 16px 16px 14px;
+  background: var(--color-chrome);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--color-text);
+  animation: desktop-alert-in 0.15s ease-out;
+}
+
+@keyframes desktop-alert-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.desktop-alert-icon {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+
+.desktop-alert-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.desktop-alert-title {
+  margin-bottom: 6px;
+  font-size: var(--text-base);
+  font-weight: bold;
+  color: var(--color-text-strong);
+}
+
+.desktop-alert-text {
+  margin-bottom: 14px;
+  font-size: var(--text-sm);
+}
+
+.desktop-alert-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.desktop-alert-buttons button {
+  min-width: 76px;
+}
+
+/* ---- Sleep, and the fade before a restart: black over everything. Its
+   fades' lengths come from SleepScreen.tsx (animation-duration) */
+.desktop-sleep {
+  /* A screen that is off is black in either theme */
+  --desktop-sleep-screen: var(--grey-0);
+
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--desktop-sleep-screen);
+  cursor: none;
+  outline: none;
+  animation: desktop-sleep-in 1s ease-in both;
+}
+
+.desktop-sleep.desktop-sleep-waking {
+  animation-name: desktop-sleep-out;
+  animation-timing-function: ease-out;
+}
+
+@keyframes desktop-sleep-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes desktop-sleep-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-alert,
+  .desktop-sleep,
+  .desktop-sleep.desktop-sleep-waking {
+    animation: none;
+  }
 }
