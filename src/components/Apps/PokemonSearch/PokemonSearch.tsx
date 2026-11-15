@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import fuzzysort from "fuzzysort";
 import "./PokemonSearch.css";
+import { fetchPokemon, idFromUrl, loadPokemonNames, spriteFor } from "./pokeapi";
 
 const ALL_TYPES = [
   "normal", "fire", "water", "electric", "grass", "ice",
@@ -223,50 +224,30 @@ const filterEvolutionDetails = (detailsList: EvolutionDetail[]): EvolutionDetail
   return unique.slice(0, 1);
 };
 
-const fetchPokemon = async (pokemonName: string): Promise<PokemonData> => {
-  let response: Response;
-  try {
-    response = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(pokemonName)}`);
-  } catch {
-    throw new Error("Couldn't reach the PokeAPI. If on mobile try turning off wifi, or the PokeAPI might be down.");
-  }
-  if (response.status === 404) throw new Error(`No Pokémon called "${pokemonName}". Check the spelling?`);
-  if (!response.ok) throw new Error("The PokeAPI might be down. Try again in a bit.");
-  return response.json();
-};
-
 /** The whole evolution family, with each Pokémon's sprite; null if it can't be loaded */
 const fetchEvolutionTree = async (url: string): Promise<EvolutionNode | null> => {
   try {
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = (await res.json()) as { chain: ChainLink };
 
-    const buildTree = async (node: ChainLink): Promise<EvolutionNode> => {
-      let pokeData: { id: number; name: string; sprites?: { front_default?: string | null } };
-      try {
-        const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
-        pokeData = await pokeRes.json();
-      } catch {
-        pokeData = { id: 0, name: node.species.name, sprites: { front_default: "" } };
-      }
-
-      const evolvesTo = await Promise.all(
-        node.evolves_to.map(async evo => {
-          const target = await buildTree(evo);
-          const details = filterEvolutionDetails(evo.evolution_details);
-          return { target, details };
-        })
-      );
-
+    // A species' id is its default Pokémon's id, so the sprite comes straight
+    // from the sprites repo. Fetching pokemon/{species name} for each stage
+    // cost a call apiece and failed for species filed under a form name.
+    const buildTree = (node: ChainLink): EvolutionNode => {
+      const id = idFromUrl(node.species.url ?? "");
       return {
-        id: pokeData.id,
-        name: pokeData.name,
-        sprite: pokeData.sprites?.front_default || "",
-        evolvesTo
+        id,
+        name: node.species.name,
+        sprite: id ? spriteFor(id) : "",
+        evolvesTo: node.evolves_to.map(evo => ({
+          target: buildTree(evo),
+          details: filterEvolutionDetails(evo.evolution_details)
+        }))
       };
     };
 
-    return await buildTree(data.chain);
+    return buildTree(data.chain);
   } catch (err) {
     console.error("Failed to fetch evolution tree", err);
     return null;
@@ -291,16 +272,9 @@ const PokemonSearch: React.FC = () => {
   const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
   useEffect(() => {
-    const loadAllPokemon = async () => {
-      try {
-        const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=10000");
-        const data = await res.json();
-        setAllPokemonNames((data as { results: NamedResource[] }).results.map(p => p.name));
-      } catch (err) {
-        console.error("Failed to load Pokémon names", err);
-      }
-    };
-    loadAllPokemon();
+    loadPokemonNames()
+      .then(setAllPokemonNames)
+      .catch(err => console.error("Failed to load Pokémon names", err));
   }, []);
 
   useEffect(() => {
@@ -316,7 +290,7 @@ const PokemonSearch: React.FC = () => {
       setTypeData([]);
       setEvolutionTree(null);
       try {
-        const pokemon = await fetchPokemon(searchTerm.toLowerCase());
+        const pokemon = await fetchPokemon<PokemonData>(searchTerm.toLowerCase());
         if (cancelled) return;
         setPokemonData(pokemon);
 

@@ -1,6 +1,6 @@
 ---
 name: know-how
-description: Solved problems and how-tos for the macOS 1999 site, so nothing is troubleshot twice. Read it before troubleshooting anything here (API errors, maps, layout, the dev server, lint, Spotify), and before proving a change in a real browser (headless Chrome, faking Near Me's location, checking every app still opens). Add an entry after solving anything that took troubleshooting.
+description: Solved problems and how-tos for the macOS 1999 site, so nothing is troubleshot twice. Read it before troubleshooting anything here (maps, layout, the dev server, lint, the smaller apps; API problems point into the apis skill), and before proving a change in a real browser (headless Chrome, faking Near Me's location, checking every app still opens). Add an entry after solving anything that took troubleshooting.
 ---
 
 # Know-how
@@ -22,15 +22,17 @@ short however much the list grows.
 | Nothing works on the port the preview reported | [The dev server isn't on the port the preview says](checking.md#the-dev-server-isnt-on-the-port-the-preview-says) |
 | `npm run lint` reports a problem | [`npm run lint` fails](checking.md#npm-run-lint-fails) |
 
-**APIs and backends**: [apis.md](apis.md)
+**APIs and backends**: their own skill now, **`apis`**, one file per service
+(setup, limits, known issues, a live probe). The symptoms we've solved:
 
-| Symptom or task | Entry |
+| Symptom or task | Where |
 |---|---|
-| "Failed to fetch", "Could not load this specimen", or a page of Unknown badges | [iNaturalist is rate-limiting](apis.md#failed-to-fetch-could-not-load-this-specimen-or-a-page-of-unknown-badges) |
-| A UI piece never appears because its field is always empty | [A field the code reads is always empty](apis.md#a-field-the-code-reads-is-always-empty) |
-| A test script gets 403 or 429 | [A script gets 403 or 429 from iNaturalist or Wikipedia](apis.md#a-script-gets-403-or-429-from-inaturalist-or-wikipedia) |
-| Music logs "Guest fetch error" in dev | [Music logs "Guest fetch error" locally](apis.md#music-logs-guest-fetch-error-locally) |
-| NASA News shows "status: 500" or loads forever | [NASA News says status 500](apis.md#nasa-news-says-http-error-status-500-or-loads-forever) |
+| "Failed to fetch", "Could not load this specimen", or a page of Unknown badges | `apis` skill, `inaturalist.md` (rate limits) |
+| A UI piece never appears because its field is always empty | `apis` skill, `inaturalist.md` (a field always empty) |
+| A test script gets 403 or 429 | `apis` skill, `inaturalist.md` and `wikipedia.md` |
+| Music logs "Guest fetch error" in dev | `apis` skill, `spotify.md` |
+| NASA News shows an error, loads forever, or shows a NASA logo titled "NASA Science" | `apis` skill, `nasa.md` |
+| Safari says "No results found" for a real search | `apis` skill, `brave-search.md` |
 
 **Maps and layout**: [maps-and-layout.md](maps-and-layout.md)
 
@@ -49,6 +51,7 @@ short however much the list grows.
 | The webcam stays on after Camera closes, or a stream won't stop | [The webcam stays on](apps.md#the-webcam-stays-on-after-camera-closes) |
 | Pokémon blames the wifi for a misspelled name | [Pokémon says "turn off wifi"](apps.md#pokémon-says-turn-off-wifi-for-a-misspelled-name) |
 | Changing a Music setting disconnects the Premium player | [Music's volume and the player](apps.md#changing-musics-volume-would-disconnect-the-premium-player) |
+| A guest preview won't start ("play() request was interrupted"), or the end of a clip skips several tracks | [Music's guest previews](apps.md#a-guest-preview-wont-start-or-the-end-of-a-clip-skips-several-tracks) |
 
 **Answered elsewhere** (these have their one home in another file):
 

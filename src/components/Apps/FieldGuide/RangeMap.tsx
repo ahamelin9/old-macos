@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FIELD_GUIDE_PALETTE, tileColor } from './palette';
+import { addOsmBaseLayer } from './osm';
 
 export interface ObservationBounds {
   swlat: number;
@@ -55,10 +56,7 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
       worldCopyJump: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; OpenStreetMap',
-    }).addTo(map);
+    addOsmBaseLayer(map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     mapInstanceRef.current = map;
@@ -100,6 +98,7 @@ const RangeMap: React.FC<RangeMapProps> = ({ taxonId, taxonName, bounds }) => {
       opacity: 0.55,
       zIndex: 3,
       className: 'fieldguide-range-tiles',
+      attribution: 'Ranges &amp; sightings: iNaturalist',
     });
     // A taxon with no range map returns empty/404 tiles; listen once to find out.
     rangeLayer.on('tileload', () => setHasRangeData(true));

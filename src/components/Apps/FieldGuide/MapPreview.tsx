@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { addOsmBaseLayer } from './osm';
 
 interface MapPreviewProps {
   lat: number;
@@ -33,10 +34,7 @@ const MapPreview: React.FC<MapPreviewProps> = ({
         attributionControl: false,
       });
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap',
-      }).addTo(map);
+      addOsmBaseLayer(map);
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 

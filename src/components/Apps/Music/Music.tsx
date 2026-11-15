@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import SpotifyWebApi from 'spotify-web-api-js';
 import { useSpotify } from '../../../contexts/useSpotify';
 import './Music.css';
+import { findPreview } from './itunes';
 
 const spotifyApi = new SpotifyWebApi();
 
@@ -65,6 +66,8 @@ interface SpotifyPlayerState {
 }
 
 const DEFAULT_VOLUME = 0.7;
+/** Pages of 100 tracks to load at most, so a huge playlist stops at 1,000 */
+const MAX_TRACK_PAGES = 10;
 
 const Music = () => {
   const { accessToken, isPremium, authError, login } = useSpotify();
@@ -84,6 +87,14 @@ const Music = () => {
   const [sdkError, setSdkError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Guest mode: the preview clip playing now, the tracks Apple has none for,
+  // and a count of play presses so a slow lookup can't start an older track
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Bumped for each preview to start, so the effect below plays it even when
+  // the same track is pressed twice
+  const [previewPlays, setPreviewPlays] = useState(0);
+  const [noPreviewIds, setNoPreviewIds] = useState<Set<string>>(() => new Set());
+  const playRequestRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const formatTime = (seconds: number) => {
@@ -121,14 +132,49 @@ const Music = () => {
         console.error('Failed to send play command:', e);
       }
     } else {
-      setIsPlaying(!!track.preview_url);
-      setTimeout(() => {
-        if (audioRef.current && track.preview_url) {
-          audioRef.current.play().catch(e => console.error("Playback failed:", e));
+      // Guests hear a 30-second preview. Spotify no longer sends one, so it
+      // comes from Apple's iTunes Search (the `apis` skill, itunes.md).
+      const request = ++playRequestRef.current;
+      audioRef.current?.pause();
+      setIsPlaying(false);
+      setPreviewUrl(null);
+      let url = track.preview_url;
+      if (!url) {
+        try {
+          url = await findPreview(track.artist, track.name);
+        } catch (e) {
+          console.error('Preview lookup failed:', e);
+          return;
         }
-      }, 0);
+      }
+      if (request !== playRequestRef.current) return;
+      if (!url) {
+        setNoPreviewIds(prev => new Set(prev).add(track.id));
+        return;
+      }
+      setPreviewUrl(url);
+      setIsPlaying(true);
+      setPreviewPlays(n => n + 1);
     }
   };
+
+  // Start a guest preview once React has given the <audio> element its new
+  // src. Calling play() any sooner got cut off by the new src loading.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (isPremium || !audio || !previewUrl || previewPlays === 0) return;
+    audio.currentTime = 0;
+    audio.play().catch((e: unknown) => {
+      // AbortError: another track was pressed and is loading; that's fine
+      if (e instanceof DOMException && e.name === 'AbortError') return;
+      // Some browsers only allow play() straight from a click; then the clip
+      // waits, loaded, for the play button
+      console.error('Playback failed:', e);
+      setIsPlaying(false);
+    });
+    // previewUrl is read, not watched: previewPlays changes with every start
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewPlays, isPremium]);
 
   const skipTrack = React.useCallback((direction: 'next' | 'prev') => {
     if (tracks.length === 0) return;
@@ -142,6 +188,8 @@ const Music = () => {
 
   // Fetch tracks
   useEffect(() => {
+    // Switching playlists makes this one's answer stale: drop it when it lands
+    let cancelled = false;
     const fetchTracks = async () => {
       setLoadError(null);
       let token = accessToken;
@@ -162,10 +210,19 @@ const Music = () => {
         spotifyApi.setAccessToken(token);
         try {
           const cleanId = ensureCleanId(activePlaylistId);
-          const data = await spotifyApi.getPlaylistTracks(cleanId);
-          
-          if (data && data.items && Array.isArray(data.items)) {
-            const formattedTracks = data.items
+          // Spotify sends 100 tracks a page, so keep asking until it says
+          // there are no more (capped, to stay gentle with a huge playlist)
+          const items: SpotifyApi.PlaylistTrackObject[] = [];
+          for (let page = 0; page < MAX_TRACK_PAGES; page++) {
+            const data = await spotifyApi.getPlaylistTracks(cleanId, { limit: 100, offset: page * 100 });
+            if (cancelled) return;
+            if (!data || !Array.isArray(data.items)) break;
+            items.push(...data.items);
+            if (!data.next) break;
+          }
+
+          if (items.length > 0) {
+            const formattedTracks = items
               .filter((item: SpotifyApi.PlaylistTrackObject) => item && item.track && item.track.type === 'track')
               .map((item: SpotifyApi.PlaylistTrackObject) => {
                 const t = item.track as SpotifyApi.TrackObjectFull;
@@ -184,6 +241,7 @@ const Music = () => {
             setTracks(formattedTracks);
           }
         } catch (error: unknown) {
+          if (cancelled) return;
           console.error('Playlist fetch error:', error);
           setLoadError('Failed to load playlist.');
         }
@@ -191,6 +249,9 @@ const Music = () => {
     };
 
     void fetchTracks();
+    return () => {
+      cancelled = true;
+    };
   }, [accessToken, activePlaylistId]);
 
   // SDK Setup
@@ -286,7 +347,7 @@ const Music = () => {
     if (isPremium && player) {
       void player.togglePlay();
     } else if (audioRef.current) {
-      if (!currentTrack?.preview_url) return;
+      if (!previewUrl) return;
       if (isPlaying) audioRef.current.pause();
       else {
         void audioRef.current.play();
@@ -306,11 +367,15 @@ const Music = () => {
         setCurrentTime(formatTime(audio.currentTime));
       }
     };
+    // Removed by the same reference: a fresh arrow function in the cleanup
+    // removed nothing, so every track added another 'ended' listener and
+    // the end of a clip skipped once per track played so far
+    const playNext = () => { setIsPlaying(false); skipTrack('next'); };
     audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('ended', () => { setIsPlaying(false); skipTrack('next'); });
+    audio.addEventListener('ended', playNext);
     return () => {
       audio.removeEventListener('timeupdate', updateProgress);
-      audio.removeEventListener('ended', () => setIsPlaying(false));
+      audio.removeEventListener('ended', playNext);
     };
   }, [currentTrack, isPremium, tracks, skipTrack]);
 
@@ -331,7 +396,7 @@ const Music = () => {
           {authError ? (
             <span className="music-error-text"><strong>Login Error:</strong> {authError}</span>
           ) : (
-            <span>Connect to Spotify Premium for full songs or enjoy 30-second previews.</span>
+            <span>Connect to Spotify Premium for full songs, or enjoy 30-second previews from Apple Music.</span>
           )}
         </div>
       )}
@@ -386,7 +451,7 @@ const Music = () => {
                     {track.image && <img src={track.image} alt="album" className="track-thumb" />}
                   </div>
                   <div>{track.artist}</div>
-                  <div>{track.name} {!track.preview_url && !isPremium && '🚫'}</div>
+                  <div>{track.name} {!isPremium && noPreviewIds.has(track.id) && <span title="No preview available">🚫</span>}</div>
                   <div>{track.album}</div>
                 </div>
               ))
@@ -459,7 +524,7 @@ const Music = () => {
       </div>
 
       {!isPremium && currentTrack && (
-        <audio ref={audioRef} src={currentTrack.preview_url || undefined} preload="auto" />
+        <audio ref={audioRef} src={previewUrl ?? undefined} preload="auto" />
       )}
     </div>
   );

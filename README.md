@@ -41,7 +41,6 @@ names only; values never go in the repo.
 
 | Variable | Where | Secret? |
 |---|---|---|
-| `VITE_NASA_API_KEY` | `.env` and the Pages build | No: `VITE_*` values end up in the public JavaScript |
 | `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | `backend/.env` and the Pages Functions env | Yes |
 
 ## Checks

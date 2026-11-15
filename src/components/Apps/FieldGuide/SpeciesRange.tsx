@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import RangeMap, { ObservationBounds } from './RangeMap';
 import { useGridColumns } from './useGridColumns';
 import { ConservationStatusRecord, globalIucnStatus } from './conservation';
+import { fetchWithRetry } from './establishmentStatus';
 
 export interface TaxonSuggestion {
   id: number;
@@ -235,8 +236,8 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
 
       try {
         const [detailRes, boundsRes] = await Promise.all([
-          fetch(`https://api.inaturalist.org/v1/taxa/${taxon.id}`),
-          fetch(
+          fetchWithRetry(`https://api.inaturalist.org/v1/taxa/${taxon.id}`),
+          fetchWithRetry(
             `https://api.inaturalist.org/v1/observations?taxon_id=${taxon.id}&per_page=0&verifiable=true&return_bounds=true`
           )
         ]);
@@ -282,8 +283,8 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
           const empty = { means: null, observations: 0 };
           try {
             const [meansRes, obsRes] = await Promise.all([
-              fetch(`https://api.inaturalist.org/v1/taxa/${taxon.id}?place_id=${continent.id}`),
-              fetch(
+              fetchWithRetry(`https://api.inaturalist.org/v1/taxa/${taxon.id}?place_id=${continent.id}`),
+              fetchWithRetry(
                 `https://api.inaturalist.org/v1/observations?taxon_id=${taxon.id}` +
                   `&place_id=${continent.id}&per_page=0&verifiable=true`
               )
@@ -314,7 +315,7 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
       setSimilarSpecies([]);
 
       try {
-        const res = await fetch(
+        const res = await fetchWithRetry(
           `https://api.inaturalist.org/v1/identifications/similar_species?taxon_id=${taxon.id}`
         );
         if (res.ok) {
@@ -365,7 +366,7 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
 
       try {
         if (ancestorIds.size > 0) {
-          const res = await fetch(
+          const res = await fetchWithRetry(
             `https://api.inaturalist.org/v1/places/${[...ancestorIds]
               .slice(0, ANCESTOR_LOOKUP_LIMIT)
               .join(',')}`
@@ -382,7 +383,7 @@ const SpeciesRange: React.FC<SpeciesRangeProps> = ({
               candidates.map(
                 async (place: { id: number; name: string; display_name: string }) => {
                   try {
-                    const r = await fetch(
+                    const r = await fetchWithRetry(
                       `https://api.inaturalist.org/v1/taxa/${taxon.id}?place_id=${place.id}`
                     );
                     if (!r.ok) return null;

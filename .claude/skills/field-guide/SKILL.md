@@ -132,9 +132,9 @@ Field meanings that bit us:
   null, and it is often missing or a NatureServe rank. Use
   `conservation_statuses[]` and take the IUCN Red List entry with no place
   (`conservation.ts`).
-- **Rate limits:** bursts get HTTP 429, so every iNaturalist call goes
-  through `fetchWithRetry`. The symptoms and test pacing are in know-how
-  (`apis.md`).
+- **Rate limits:** bursts get HTTP 429, so iNaturalist calls go through
+  `fetchWithRetry`. The limits, symptoms and test pacing are in the `apis`
+  skill (`inaturalist.md`).
 
 Wikipedia: `en.wikipedia.org/api/rest_v1/page/summary/<title>`. Its `type`
 can be `disambiguation` ("Robin" is one).

@@ -397,6 +397,19 @@
   background: var(--grey-80);
 }
 
+/* The maps' credit line (OpenStreetMap's tile policy asks for it): small and quiet */
+.fieldguide-app .leaflet-control-attribution {
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  background: var(--white-a70);
+  padding: 0 4px;
+}
+
+.fieldguide-app .leaflet-control-attribution a {
+  color: var(--color-link);
+}
+
 /* The observation zone circle and the pin's popup, drawn by Leaflet in MapPreview */
 .fieldguide-app .fg-map-zone {
   stroke: var(--color-accent);

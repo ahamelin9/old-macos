@@ -1,9 +1,11 @@
 // Do the smaller apps behave? Camera turns the webcam off when its window
 // closes, shows the picture again after Retake and downloads on Save; Notes
 // keeps its text after the window closes; Safari
-// shows search snippets as text, never as outside HTML; Pokémon says when a
-// name doesn't exist and offers Try again; Music's volume slider works.
-// Safari's search is answered with a canned reply, so it costs no Brave quota.
+// shows search snippets as text, never as outside HTML, and tells Brave
+// refusing apart from no results; Pokémon says when a name doesn't exist and
+// offers Try again, and finds a species filed under a form name (Deoxys);
+// Music's volume slider works.
+// Safari's search is answered with canned replies, so it costs no Brave quota.
 //
 //   node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 [outDir]
 import { launch, sleep, FAKE_CAMERA } from './cdp.mjs';
@@ -54,7 +56,11 @@ try {
     const realFetch = window.fetch;
     window.fetch = (url, opts) => {
       if (!String(url).includes('brave-search-worker')) return realFetch(url, opts);
-      const body = String(url).includes('nothing') ? {} : { web: { results: [
+      // Brave's refusals arrive with HTTP 200, like this (the apis skill, brave-search.md)
+      const refusal = (current) => ({ type: 'ErrorResponse', error: { status: 429, detail: 'Request rate limit exceeded for plan',
+        meta: { rate_limit: 1, quota_limit: 2000, quota_current: current } } });
+      const body = String(url).includes('nothing') ? {} : String(url).includes('toofast') ? refusal(5)
+        : String(url).includes('usedup') ? refusal(2000) : { web: { results: [
         { title: 'Tricky', url: 'javascript:window.__clicked=1', description: 'Hello <strong>world</strong> <img src=x onerror="window.__xss=1">' },
         { title: 'Plain', url: 'https://example.com/', description: 'plain &amp; simple' }
       ] } };
@@ -81,14 +87,21 @@ try {
   t.check('entities read as text', safari.text1 === 'plain & simple', safari.text1);
   await search('nothing');
   t.check('no results says so', await t.ev(`[...document.querySelectorAll('.safari-container .mac-message')].some(e => e.textContent === 'No results found.')`));
+  const safariMessage = `[...document.querySelectorAll('.safari-container .mac-message')].map(e => e.textContent).join(' ')`;
+  await search('toofast');
+  await sleep(1200);   // it waits a second and tries once more before giving up
+  t.check('a rate-limit refusal is not "no results"', /too fast/.test(await t.ev(safariMessage)), await t.ev(safariMessage));
+  await search('usedup');
+  t.check("a used-up month says so", /used up/.test(await t.ev(safariMessage)), await t.ev(safariMessage));
 
-  // ---- Pokémon (two real PokeAPI requests for the missing name, one for Pikachu)
+  // ---- Pokémon (real PokeAPI requests: two for each try at the missing name,
+  // as a Pokémon and then as a species; three for Deoxys; one for Pikachu)
   await t.openApp('Pokemon');
   await t.waitFor(`document.querySelector('.pokemon-name')`, 'first Pokémon', 20000);
   await t.ev(`(() => {
     window.__missingAsks = 0;
     const f = window.fetch;
-    window.fetch = (url, opts) => { if (String(url).includes('notapokemonxyz')) window.__missingAsks++; return f(url, opts); };
+    window.fetch = (url, opts) => { if (String(url).includes('/pokemon/notapokemonxyz')) window.__missingAsks++; return f(url, opts); };
   })()`);
   await t.typeInto('.search-form input', 'notapokemonxyz');
   await t.ev(`document.querySelector('.search-form').requestSubmit()`);
@@ -98,6 +111,10 @@ try {
   await t.ev(`document.querySelector('.error-state .retry-button').click()`);
   await t.waitFor(`window.__missingAsks === 2 && document.querySelector('.error-state')`, 'error after Try again', 15000);
   t.check('Try again asks again', true);
+  await t.typeInto('.search-form input', 'deoxys');
+  await t.ev(`document.querySelector('.search-form').requestSubmit()`);
+  await t.waitFor(`/Deoxys/i.test(document.querySelector('.pokemon-name')?.textContent ?? '')`, 'Deoxys', 20000);
+  t.check('a species filed under a form name loads', true, await t.ev(`document.querySelector('.pokemon-name').textContent`));
   await t.typeInto('.search-form input', 'pikachu');
   await t.ev(`document.querySelector('.search-form').requestSubmit()`);
   await t.waitFor(`document.querySelector('.pokemon-name')?.textContent.includes('Pikachu')`, 'Pikachu', 20000);

@@ -23,16 +23,20 @@ const args = process.argv.slice(2);
 const slug = (name) => name.replace(/\W+/g, '-').toLowerCase();
 
 // The same "random" numbers on every run, and a fixed NASA picture of the
-// day (its API often answers 500, and the picture changes daily)
+// day (it changes daily). The reply is shaped like science.nasa.gov's APOD
+// posts (the apis skill, nasa.md).
 const SEEDED_RANDOM = `(() => {
   let s = 20261115; Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
   const realFetch = window.fetch;
-  window.fetch = (url, opts) => String(url).includes('api.nasa.gov/planetary/apod')
-    ? Promise.resolve(new Response(JSON.stringify({
-        title: 'A Test Sky', date: '2026-11-15', media_type: 'image', copyright: 'Test Photographer',
-        url: '/mac-os-background.jpg', hdurl: '/mac-os-background.jpg',
-        explanation: 'A fixed picture for screenshot checks, so the layout can be compared from one run to the next. '.repeat(4)
-      }), { headers: { 'Content-Type': 'application/json' } }))
+  window.fetch = (url, opts) => String(url).includes('science.nasa.gov/wp-json/wp/v2/image-article')
+    ? Promise.resolve(new Response(JSON.stringify([{
+        date: '2026-11-15T00:05:00', link: 'https://science.nasa.gov/apod/',
+        title: { rendered: 'APOD: 2026 November 15 &#8211; A Test Sky' },
+        content: { rendered: '<p><strong>Explanation:</strong> ' +
+          'A fixed picture for screenshot checks, so the layout can be compared from one run to the next. '.repeat(4) +
+          '</p><p>Date: November 15, 2026</p><p>Credit &amp; Copyright: Test Photographer</p><p>Authors &amp; editors: Test</p>' },
+        _embedded: { 'wp:featuredmedia': [{ source_url: '/mac-os-background.jpg' }] }
+      }]), { headers: { 'Content-Type': 'application/json' } }))
     : realFetch(url, opts);
 })();`;
 const STEADY = `const st = document.createElement('style');

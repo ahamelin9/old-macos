@@ -50,3 +50,27 @@ apps in a browser, see `app-check.mjs` (`checking.md`).
   that change out of that effect's deps.
 - **Check:** `app-check.mjs` checks the slider. Playing with Premium needs
   Alex's login, so it can't be checked headless.
+
+## A guest preview won't start, or the end of a clip skips several tracks
+
+*2026-11-15*
+
+- **Symptom 1:** pressing a track loads its preview but nothing plays, and
+  the console says `AbortError: The play() request was interrupted by a new
+  load request`.
+- **Cause:** `play()` ran in a `setTimeout` right after `setPreviewUrl`,
+  before React had given the `<audio>` element its new `src`. The new
+  `src` then loaded and cut the play off.
+- **Fix:** `playTrack` bumps `previewPlays`, and an effect calls `play()`
+  after the render. That effect ignores an `AbortError`, which only means
+  another track was pressed.
+- **Symptom 2** (would have shown once previews played): the end of one
+  clip skipped ahead several tracks.
+- **Cause:** the progress effect added an `ended` listener on every track
+  change, and its cleanup removed a new arrow function, so nothing was ever
+  removed. Remove a listener by the same function reference you added.
+- **Check:** in headless Chrome, mock `/api/client_credentials` with a
+  guest token fetched from the live site's endpoint, then press a track and
+  read the `<audio>` element's `currentTime` and `paused`. Pass Chrome
+  `--autoplay-policy=no-user-gesture-required`, since a scripted
+  `click()` isn't a user gesture.

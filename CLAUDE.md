@@ -12,7 +12,8 @@ file first.
 
 | For | Read |
 |---|---|
-| How the site fits together: desktop, windows, dock, every app, the outside services each one calls, env vars, deploy | the `system-map` skill |
+| How the site fits together: desktop, windows, dock, every app, the Spotify login, deploy and the live address | the `system-map` skill |
+| Any outside API (NASA, PokeAPI, iNaturalist, Wikipedia, OpenStreetMap, Brave, Spotify, iTunes): setup, keys and env vars, limits, known issues, live probes, the API audit | the `apis` skill (an index, one file per service) |
 | Adding a new app to the dock | the `system-map` skill, **Adding an app** |
 | Anything in the Field Guide: places, species, tabs, native/endemic/introduced, maps, Back, the inspector | the `field-guide` skill |
 | Any CSS or visual change: the shared tokens, base and kit, the design check, before-and-after screenshots | the `design` skill |

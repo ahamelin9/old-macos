@@ -1,12 +1,6 @@
 import React, { useState } from 'react';
 import './Safari.css';
-
-/** One web result from the Brave Search worker (only the fields shown here) */
-interface SearchResult {
-  title: string;
-  url: string;
-  description?: string;
-}
+import { searchBrave, type SearchResult } from './brave';
 
 /** A link only if it really is a web page (never javascript: or data:) */
 const webUrl = (url: string) => {
@@ -52,11 +46,7 @@ const Safari: React.FC = () => {
     setLoading(true);
 
     try {
-      const res = await fetch(`https://brave-search-worker.ahamelin9.workers.dev?q=${encodeURIComponent(query)}`);
-      if (!res.ok) throw new Error('Failed to fetch results');
-      const data = (await res.json()) as { web?: { results?: SearchResult[] } };
-      // Brave leaves out `web` entirely when nothing matches
-      setResults(data.web?.results ?? []);
+      setResults(await searchBrave(query));
       setSearched(true);
     } catch (err) {
       setError(err instanceof Error && err.message ? err.message : 'Failed to fetch results. Try again later.');

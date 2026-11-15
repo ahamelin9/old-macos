@@ -21,10 +21,11 @@ for an existing entry and update it instead.
 |---|---|---|
 | How Alex wants to work on this site: a preference, a correction, a "do it this way" | **`CLAUDE.md`**, **How a change goes** (one or two lines) | Alex makes the commits; Claude gets them ready |
 | Something personal that doesn't belong in a public repo, or about Alex beyond this site | **Memory** (see below) | |
-| A link to something outside the repo | The skill that uses it (`system-map` for services) | The Brave Search worker's URL |
-| A problem that took troubleshooting: symptom, cause, fix, check | **`know-how`**: an entry in the topic file that fits, plus a row in its index | iNaturalist's 429 shows up as "Failed to fetch" |
+| A link to something outside the repo | The skill that uses it (`apis` for services) | The Brave Search worker's URL |
+| A problem that took troubleshooting: symptom, cause, fix, check | **`know-how`**: an entry in the topic file that fits, plus a row in its index. If it's about an outside API, the entry goes in that service's file in the **`apis` skill**, with a row in know-how's index | iNaturalist's 429 shows up as "Failed to fetch" |
 | A reusable test or check script | **`.claude/skills/know-how/`**, next to `cdp.mjs`, never the scratchpad (it's deleted after the session) | `smoke-check.mjs` |
-| How the site fits together: a new app, a moved file, a new service, a new env var | **`system-map` skill**: the apps table, the env-var table, the Spotify table | A new dock app gets a row |
+| How the site fits together: a new app, a moved file | **`system-map` skill**: the apps table, the Spotify table | A new dock app gets a row |
+| An outside API: a new service, a key or env var, a limit, a usage rule, a known issue | **`apis` skill**: that service's file (a new file and an index row for a new service), and its audit table | Brave allows 1 search a second |
 | Field Guide data facts, decisions and their reasons, spot-check answers | **`field-guide` skill** (sections 3 to 6) | "All Species sends no group filter" |
 | A shared colour, size or pattern, or a decision about how the site looks | **`tokens.css`** for the value, **`design` skill** for the rule or decision | "Snap to the nearest token" |
 | An idea raised but not built, or a question still open | The **"ideas not done yet"** list in that app's skill (`field-guide` section 8), or system-map's **Known rough edges** for the whole site | Bird sounds |

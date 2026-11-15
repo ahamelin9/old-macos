@@ -17,6 +17,7 @@ import {
   resolveChecklistPlaces,
   speciesFilterParams
 } from './establishmentStatus';
+import { fetchPlaceSuggestions } from './photon';
 import './FieldGuide.css';
 
 interface Taxon {
@@ -316,6 +317,9 @@ const FieldGuide: React.FC = () => {
   const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Counts type-ahead lookups, so a slow reply to an older one is dropped
+  // instead of replacing newer suggestions (or reopening the list after a search)
+  const suggestionRequestRef = useRef(0);
 
   // "Near Me": the device's own location. Each request gets an id so a fix
   // that arrives after the user has picked somewhere else is ignored.
@@ -455,6 +459,7 @@ const FieldGuide: React.FC = () => {
   const searchLocation = async (query: string) => {
     if (!query.trim()) return;
     cancelLocateUser();
+    suggestionRequestRef.current++;
     setIsSearchingLocation(true);
     setErrorMessage(null);
     setShowSuggestions(false);
@@ -496,11 +501,12 @@ const FieldGuide: React.FC = () => {
   // Search species by name using the iNaturalist taxa autocomplete
   const searchTaxa = async (query: string) => {
     if (!query.trim()) return;
+    suggestionRequestRef.current++;
     setIsSearchingTaxa(true);
     setErrorMessage(null);
 
     try {
-      const res = await fetch(
+      const res = await fetchWithRetry(
         `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(query)}&per_page=8&is_active=true`
       );
       if (!res.ok) {
@@ -530,10 +536,11 @@ const FieldGuide: React.FC = () => {
     }
   };
 
-  // Debounced autocomplete — hits Nominatim or iNaturalist depending on mode
+  // Debounced autocomplete: Photon for places, iNaturalist for species
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchInput(val);
+    const request = ++suggestionRequestRef.current;
 
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -549,26 +556,20 @@ const FieldGuide: React.FC = () => {
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         if (searchMode === 'species') {
-          const res = await fetch(
+          const res = await fetchWithRetry(
             `https://api.inaturalist.org/v1/taxa/autocomplete?q=${encodeURIComponent(val)}&per_page=8&is_active=true`
           );
           if (res.ok) {
             const data = await res.json();
+            if (request !== suggestionRequestRef.current) return;
             setTaxonSuggestions(data.results || []);
             setShowSuggestions(true);
           }
         } else {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=4`,
-            {
-              headers: { 'Accept-Language': 'en' }
-            }
-          );
-          if (res.ok) {
-            const data: LocationSuggestion[] = await res.json();
-            setLocationSuggestions(data);
-            setShowSuggestions(true);
-          }
+          const data = await fetchPlaceSuggestions(val);
+          if (request !== suggestionRequestRef.current) return;
+          setLocationSuggestions(data);
+          setShowSuggestions(true);
         }
       } catch {
         // ignore background suggestion errors
@@ -586,6 +587,7 @@ const FieldGuide: React.FC = () => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+    suggestionRequestRef.current++;
     cancelLocateUser();
     setBackStack([]);
     setSearchMode(mode);
@@ -601,6 +603,7 @@ const FieldGuide: React.FC = () => {
   // header, and the toolbar with Back, in view rather than the reader left
   // mid-page where the similar-species row or gallery was.
   const selectTaxon = (taxon: TaxonSuggestion) => {
+    suggestionRequestRef.current++;
     scrollContentTo(0);
     setSelectedTaxon(taxon);
     setSearchInput(taxon.preferred_common_name || taxon.name);
@@ -651,6 +654,7 @@ const FieldGuide: React.FC = () => {
   };
 
   const selectSuggestion = (sug: LocationSuggestion) => {
+    suggestionRequestRef.current++;
     const newLoc: LocationInfo = {
       name: sug.name || sug.display_name.split(',')[0],
       displayName: sug.display_name,
@@ -913,7 +917,7 @@ const FieldGuide: React.FC = () => {
         groups.map(async (group) => {
           const page = Math.floor(Math.random() * MAX_RANDOM_PAGE) + 1;
           try {
-            const res = await fetch(
+            const res = await fetchWithRetry(
               `https://api.inaturalist.org/v1/taxa?is_active=true&rank=species&taxon_id=${group.id}` +
                 `&order_by=observations_count&order=desc&per_page=${PER_GROUP}&page=${page}`
             );

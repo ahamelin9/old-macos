@@ -1,6 +1,6 @@
 ---
 name: system-map
-description: How the macOS 1999 site is put together. Covers the desktop shell (menu bar, windows, dock), the window manager (useWindows), every app in the dock and the outside services each one calls, the Spotify login (local FastAPI and Cloudflare Pages Functions), env vars and keys, and deploy. Read it before changing the desktop, windows or dock, before adding a new app, before touching Spotify, NASA or Safari wiring, and when asked "how does X work?" or "where is X?".
+description: How the macOS 1999 site is put together. Covers the desktop shell (menu bar, windows, dock), the window manager (useWindows), every app in the dock and which outside service each one calls, the Spotify login (local FastAPI and Cloudflare Pages Functions), and deploy (the live address). Read it before changing the desktop, windows or dock, before adding a new app, before touching Spotify, NASA or Safari wiring, and when asked "how does X work?" or "where is X?".
 ---
 
 # How the site is put together
@@ -84,7 +84,7 @@ All of them live in `src/components/Apps/<Folder>/`, as `<Name>.tsx` and
 |---|---|---|---|---|
 | Finder | `Finder` | About Alex: About Me, Projects, Skills and Interests, with LinkedIn and GitHub links | none | ✓ |
 | Safari | `Safari` | Web search with results listed. Snippets show as text with the matched words bold, never as outside HTML; only http(s) results are links | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | ✓ |
-| Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day | `api.nasa.gov/planetary/apod` with `VITE_NASA_API_KEY` (falls back to `DEMO_KEY`) | ✓ |
+| Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day | science.nasa.gov's WordPress API (no key; `apis` skill, nasa.md) | ✓ |
 | Pokemon | `PokemonSearch` | Pokédex: fuzzy search (`fuzzysort`), stats in US units, a clickable evolution chain, shiny toggle, type chart | PokeAPI only (the two mirror APIs it used to try were dead); sprites from the PokeAPI GitHub | ✓ |
 | Field Guide | `FieldGuide` | What lives near a place, and where a species lives. The biggest app by far | iNaturalist, Nominatim (OpenStreetMap), Wikipedia, Wikidata. **See the `field-guide` skill.** | ✓ |
 | Music | `Music` | Spotify player with Alex's playlists (`PLAYLISTS`). Playback needs Spotify Premium. A volume slider shows when the window is wider than 620px | Spotify Web API and Web Playback SDK, through `SpotifyContext` | |
@@ -99,17 +99,9 @@ All of them live in `src/components/Apps/<Folder>/`, as `<Name>.tsx` and
 
 ## 4. Outside services, keys and env vars
 
-| Variable | Set in | Used by | Secret? |
-|---|---|---|---|
-| `VITE_NASA_API_KEY` | `.env` (local) and the Cloudflare Pages build env | `NasaNews.tsx` | No. Every `VITE_*` value is baked into the public bundle. |
-| `VITE_ENABLE_CORS_PROXY` | `.env` | Nothing reads it today | |
-| `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | `backend/.env` (local; template in `backend/.env.example`) and the Cloudflare Pages env vars for Functions (also read as `VITE_SPOTIFY_…`) | `backend/main.py`, `functions/api/*.js` | **Yes.** Server side only. |
-
-No key is needed for iNaturalist, Nominatim, Wikipedia, Wikidata or PokeAPI.
-All of them rate-limit bursts.
-
-Never print the values in `.env` or `backend/.env`. To see which variables
-exist, run `sed 's/=.*/=<redacted>/' .env`.
+Every outside API (what each app calls, keys and env vars, limits, known
+issues, how to probe it) is in the **`apis` skill**, one file per service.
+The apps table above says which app uses which.
 
 ## 5. Spotify login: two backends that must match
 
@@ -145,6 +137,9 @@ Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
 
 - Cloudflare Pages project `old-macos` (`wrangler.toml`), serving `./dist`.
   The `functions/` folder deploys with it as Pages Functions.
+- The live site is **`https://old-macos-2vr.pages.dev`** (Cloudflare added
+  the `-2vr`; `old-macos.pages.dev` does not serve this site). Each deploy also gets
+  its own preview address, listed on the commit's Cloudflare Pages check.
 - Pages appears to deploy on every push to `main`. The commit `c7960c8`
   ("retrigger Cloudflare Pages deploy") was an empty push made just to start
   a deploy.

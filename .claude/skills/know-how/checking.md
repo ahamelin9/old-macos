@@ -67,8 +67,8 @@ Lessons from writing these:
   naming the country), then check.
 - `waitFor` wraps its expression in `!!(…)`. Returning a DOM node over the
   DevTools protocol fails with "Object reference chain is too long".
-- **Pace iNaturalist:** about 20 s between range views in a script (see
-  `apis.md`).
+- **Pace iNaturalist:** about 20 s between range views in a script (the `apis`
+  skill, `inaturalist.md`).
 - **Test both window sizes**, the default small window and maximized.
   Layout bugs hide in the small one.
 - To prove that Back returned to the **same** view and didn't rebuild it,
@@ -114,8 +114,10 @@ node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 <outDir>
 - `app-check.mjs` checks:
   - Camera, with a fake webcam: picture, Save, Retake, and off on close;
   - Notes keeps its text;
-  - Safari's snippets, from a canned reply, so it costs no Brave quota;
-  - Pokémon's missing name and Try again (three PokeAPI requests);
+  - Safari's snippets, and its messages when Brave refuses, from canned
+    replies, so it costs no Brave quota;
+  - Pokémon's missing name and Try again, and Deoxys, a species filed under
+    a form name (eight PokeAPI requests);
   - Music's volume slider.
 - For a CSS change, use `style-diff.mjs`
   ([maps-and-layout.md](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed)).

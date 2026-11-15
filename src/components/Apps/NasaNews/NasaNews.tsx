@@ -1,16 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './NasaNews.css';
-
-interface ApodData {
-  date?: string;
-  explanation?: string;
-  hdurl?: string;
-  media_type?: string;
-  service_version?: string;
-  title?: string;
-  url?: string;
-  copyright?: string;
-}
+import { fetchApod, type ApodData } from './apod';
 
 const NasaNews: React.FC = () => {
   const [apodData, setApodData] = useState<ApodData | null>(null);
@@ -18,36 +8,20 @@ const NasaNews: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchApodData = async () => {
-      // Use DEMO_KEY as a fallback if the environment variable is missing
-      const rawKey = import.meta.env.VITE_NASA_API_KEY || 'DEMO_KEY';
-      try {
-        // Build URL carefully, ensuring api_key is handled correctly
-        const baseUrl = 'https://api.nasa.gov/planetary/apod';
-        
-        // Aggressively clean the key - remove anything after and including '&' or '='
-        const nasaApiKey = rawKey.split('&')[0].split('=')[0].trim();
-        
-        const queryParams = new URLSearchParams();
-        queryParams.append('api_key', nasaApiKey);
-        queryParams.append('thumbs', 'true');
-
-        const response = await fetch(`${baseUrl}?${queryParams.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data: ApodData = await response.json();
-        setApodData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
+    let cancelled = false;
+    fetchApod()
+      .then(data => {
+        if (!cancelled) setApodData(data);
+      })
+      .catch(err => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Something went wrong.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
-
-    fetchApodData();
   }, []);
 
   if (loading) {
@@ -55,14 +29,13 @@ const NasaNews: React.FC = () => {
   }
 
   if (error) {
-    return <div className="nasa-container error">Error: {error}</div>;
+    return <div className="nasa-container error">{error}</div>;
   }
 
   if (!apodData) {
     return <div className="nasa-container">No data available</div>;
   }
 
-  const imageUrl = apodData.hdurl || apodData.url;
   const isDirectVideo = Boolean(
     apodData.url &&
     (
@@ -86,13 +59,14 @@ const NasaNews: React.FC = () => {
         {apodData.media_type === 'image' ? (
           <div className="apod-image-container">
             <img 
-              src={imageUrl} 
-              alt={apodData.title} 
+              src={apodData.url}
+              alt={apodData.alt || apodData.title}
               className="apod-image"
               onError={(e) => {
+                // The web-size copy is missing now and then; try the full size
                 const target = e.target as HTMLImageElement;
-                if (apodData.url && target.src !== apodData.url) {
-                  target.src = apodData.url;
+                if (apodData.hdurl && target.src !== apodData.hdurl) {
+                  target.src = apodData.hdurl;
                 }
               }}
             />
@@ -129,18 +103,19 @@ const NasaNews: React.FC = () => {
         
         <p className="apod-explanation">{apodData.explanation}</p>
         
-        {apodData.copyright && (
-          <p className="apod-copyright">Copyright: {apodData.copyright}</p>
-        )}
+        {apodData.credit && <p className="apod-copyright">{apodData.credit}</p>}
       </div>
       
       <div className="nasa-links">
         <h4>More NASA Content:</h4>
         <ul>
+          {apodData.link && (
+            <li><a href={apodData.link} target="_blank" rel="noopener noreferrer">This picture on NASA Science</a></li>
+          )}
           <li><a href="https://www.nasa.gov" target="_blank" rel="noopener noreferrer">NASA Official Website</a></li>
-          <li><a href="https://apod.nasa.gov/apod/archivepix.html" target="_blank" rel="noopener noreferrer">APOD Archive</a></li>
-          <li><a href="https://www.nasa.gov/multimedia/imagegallery/iotd.html" target="_blank" rel="noopener noreferrer">NASA Image of the Day</a></li>
-          <li><a href="https://mars.nasa.gov/" target="_blank" rel="noopener noreferrer">Mars Exploration Program</a></li>
+          <li><a href="https://science.nasa.gov/apod/archive/" target="_blank" rel="noopener noreferrer">APOD Archive</a></li>
+          <li><a href="https://www.nasa.gov/image-of-the-day/" target="_blank" rel="noopener noreferrer">NASA Image of the Day</a></li>
+          <li><a href="https://science.nasa.gov/mars/" target="_blank" rel="noopener noreferrer">Mars Exploration Program</a></li>
         </ul>
       </div>
     </div>
