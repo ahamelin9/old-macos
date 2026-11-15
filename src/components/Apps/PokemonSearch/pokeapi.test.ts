@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchPokemon, idFromUrl, loadPokemonNames, POKEAPI } from './pokeapi';
+import { clearCache, fetchCached, fetchPokemon, fetchSpecies, idFromUrl, loadPokemonNames, POKEAPI } from './pokeapi';
 
 const json = (body: unknown, status = 200) => Promise.resolve(new Response(JSON.stringify(body), { status }));
 
@@ -41,6 +41,31 @@ describe('fetchPokemon', () => {
   it('blames the API, not the spelling, on a 500', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => json({}, 500));
     await expect(fetchPokemon('pikachu')).rejects.toThrow(/might be down/);
+  });
+});
+
+describe('fetchCached and fetchSpecies', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    clearCache();
+  });
+
+  it('asks once a session for the same species, whichever link names it', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(() => json({ name: 'dragonite' }));
+    await fetchSpecies(`${POKEAPI}/pokemon-species/149/`);
+    await fetchSpecies(`${POKEAPI}/pokemon-species/149`);
+    await Promise.all([fetchSpecies(`${POKEAPI}/pokemon-species/148/`), fetchSpecies(`${POKEAPI}/pokemon-species/148/`)]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledWith(`${POKEAPI}/pokemon-species/149/`);
+  });
+
+  it("checks the answer, and doesn't keep a failure, so Try again asks again", async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockImplementationOnce(() => json({}, 503))
+      .mockImplementationOnce(() => json({ name: 'dragon' }));
+    await expect(fetchCached(`${POKEAPI}/type/16/`)).rejects.toThrow(/might be down/);
+    await expect(fetchCached(`${POKEAPI}/type/16/`)).resolves.toEqual({ name: 'dragon' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
 

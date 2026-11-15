@@ -170,6 +170,9 @@ node .claude/skills/know-how/app-shots.mjs --compare <before-dir> <after-dir> <d
   change between runs as iNaturalist answers (it draws random numbers as
   results arrive); everything else should be identical unless you changed
   it.
+- Once (2026-11-15) a run drew NASA News without its round ☰, though no
+  NASA file had changed; two later runs matched each other. When an app you
+  didn't touch changes, shoot it again before blaming your change.
 - The shots don't open pop-ups such as Field Guide's Specimen Inspector.
   For one of those, check out the last commit with `git worktree add`,
   serve it on another port, and shoot both.

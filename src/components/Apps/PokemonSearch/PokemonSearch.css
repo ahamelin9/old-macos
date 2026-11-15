@@ -45,6 +45,12 @@
   /* Labels in the dense type chart, smaller than any site text size */
   --pokemon-text-micro: 8px;
 
+  /* A stage card's height in the evolution line, so the arrows between
+     stages line up with the cards when a stage has forms hanging below it */
+  --pokemon-stage-height: 64px;
+
+  /* The forms and the evolution line size themselves from the window */
+  container: pokemon / inline-size;
   max-width: 840px;
   min-width: 320px;
   margin: 0 auto;
@@ -302,7 +308,8 @@
    Evolution Chain & Tree Styles (Top-Aligned Portraits)
    ========================================================= */
 
-/* The grey wells: evolution chain, matchups, type chart */
+/* The grey wells: forms, evolution chain, matchups, type chart */
+.pokemon-container .pokemon-forms,
 .pokemon-container .evolution-chain,
 .pokemon-container .matchup-panel,
 .pokemon-container .type-chart-card {
@@ -312,11 +319,13 @@
   box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
 }
 
+.pokemon-container .pokemon-forms,
 .pokemon-container .evolution-chain {
   margin: 8px 0;
   padding: 8px 10px;
 }
 
+.pokemon-container .pokemon-forms-header,
 .pokemon-container .evolution-chain-header {
   display: flex;
   justify-content: space-between;
@@ -337,23 +346,29 @@
   letter-spacing: 0.4px;
 }
 
+.pokemon-container .pokemon-forms-hint,
 .pokemon-container .evolution-hint {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
 }
 
+/* The family sits in the middle, but starts at the left edge when it is
+   wider than the window, so all of it can be scrolled to */
 .pokemon-container .evolution-tree-viewport {
   display: flex;
-  justify-content: center;
-  align-items: center;
   overflow-x: auto;
   padding: 4px 2px;
 }
 
-/* Linear Sequence */
+.pokemon-container .evolution-tree-viewport > * {
+  margin-inline: auto;
+}
+
+/* Linear Sequence. Stages line up along their tops, so forms hanging below
+   one stage don't push the others down */
 .pokemon-container .evo-linear-chain {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
 }
 
@@ -361,7 +376,7 @@
 .pokemon-container .evo-parent-node,
 .pokemon-container .evo-child-container {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 
@@ -369,9 +384,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
   min-width: 50px;
   max-width: 100px;
+  min-height: var(--pokemon-stage-height);
   text-align: center;
   flex-shrink: 0;
 }
@@ -447,7 +464,7 @@
 
 .pokemon-container .evo-subsequent-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
   justify-content: center;
 }
@@ -505,7 +522,7 @@
   box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
   text-shadow: none;
   min-width: 56px;
-  min-height: 64px;
+  min-height: var(--pokemon-stage-height);
   flex-shrink: 0;
 }
 
@@ -544,6 +561,252 @@
   margin-top: 1px;
   text-transform: uppercase;
   letter-spacing: 0.2px;
+}
+
+/* A sprite that doesn't exist (a few forms have none): a dotted "?" the size
+   the picture would have been */
+.pokemon-container .pokemon-sprite-missing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1px dotted var(--grey-69);
+  border-radius: var(--radius);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  font-weight: bold;
+}
+
+.pokemon-container .pokemon-image.pokemon-sprite-missing {
+  border: none;
+  font-size: var(--text-4xl);
+}
+
+.pokemon-container .evolution-stage .pokemon-sprite-missing {
+  width: 38px;
+  height: 38px;
+}
+
+/* =========================================================
+   Megas and Gigantamax in the evolution line. They are
+   transformations, not evolutions, so they hang off their stage
+   on a dashed line, in a dashed tray, and never get an arrow.
+   ========================================================= */
+
+.pokemon-container .pokemon-evo-stage-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* The root of a branching family (Eevee): its evolutions are below it, so
+   its transformations go to the side */
+.pokemon-container .pokemon-evo-stage-group-beside {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.pokemon-container .pokemon-evo-tray-link {
+  display: block;
+  height: 14px;
+  border-left: 2px dashed var(--grey-60);
+  flex-shrink: 0;
+}
+
+.pokemon-container .pokemon-evo-stage-group-beside .pokemon-evo-tray-link {
+  width: 12px;
+  height: 0;
+  margin-top: calc(var(--pokemon-stage-height) / 2);
+  border-left: none;
+  border-top: 2px dashed var(--grey-60);
+}
+
+.pokemon-container .pokemon-evo-tray {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 4px;
+  border: 1px dashed var(--grey-60);
+  border-radius: var(--radius-md);
+  min-width: 0;
+}
+
+.pokemon-container .pokemon-evo-tray-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pokemon-container .pokemon-evo-tray-label {
+  font-size: var(--text-2xs);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.pokemon-container .pokemon-evo-tray-mega .pokemon-evo-tray-label {
+  color: var(--pokemon-blue-dark);
+}
+
+/* Gigantamax's red clouds */
+.pokemon-container .pokemon-evo-tray-gmax .pokemon-evo-tray-label {
+  color: var(--red-700);
+}
+
+/* Side by side when there's room, one above the other when there isn't */
+.pokemon-container .pokemon-evo-tray-forms {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pokemon-container .evolution-stage.pokemon-evo-form-stage:not(.current-evolution-stage) {
+  border-style: dashed;
+}
+
+.pokemon-container .pokemon-evo-form-stage .stage-name {
+  max-width: 78px;
+  text-align: center;
+  line-height: 1.15;
+}
+
+/* =========================================================
+   Other forms: the species' forms the evolution line doesn't
+   show. Up to three sit open in one row; more fold away.
+   ========================================================= */
+
+/* The heading, and the disclosure button when the forms fold away. Its look
+   is NASA News's "▼ Past Days": bold small text after a triangle */
+.pokemon-container .pokemon-forms-title,
+.pokemon-container .pokemon-forms-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: bold;
+  color: var(--color-text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* A plain line of text, not a platinum button, but easy to hit */
+.pokemon-container .pokemon-forms-toggle {
+  min-height: 24px;
+  padding: 0 4px 0 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  text-shadow: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.pokemon-container .pokemon-forms-toggle:hover {
+  color: var(--pokemon-blue-dark);
+}
+
+.pokemon-container .pokemon-forms-triangle {
+  width: 10px;
+  color: var(--color-text-muted);
+}
+
+/* Folded: just the button, with no rule under it */
+.pokemon-container .pokemon-forms-closed .pokemon-forms-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.pokemon-container .pokemon-forms-closed {
+  padding-block: 4px;
+}
+
+.pokemon-container .pokemon-forms-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 6px;
+}
+
+/* The grid rule above would otherwise beat the hidden attribute */
+.pokemon-container .pokemon-forms-list[hidden] {
+  display: none;
+}
+
+.pokemon-container .pokemon-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 3px;
+  background: var(--color-surface);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
+  box-shadow: inset 1px 1px 0 var(--grey-100), 1px 1px 2px var(--black-a05);
+  text-shadow: none;
+  font-weight: normal;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pokemon-container .pokemon-form:hover {
+  border-color: var(--pokemon-blue);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--pokemon-blue) 25%, transparent);
+}
+
+/* The one shown: the same blue as the current stage, drawn as a ring so the
+   grid doesn't shift */
+.pokemon-container .pokemon-form.pokemon-form-current {
+  border-color: var(--pokemon-blue);
+  background: var(--blue-50);
+  box-shadow:
+    0 0 0 1px var(--pokemon-blue),
+    0 0 0 3px color-mix(in srgb, var(--pokemon-blue) 30%, transparent);
+  cursor: default;
+}
+
+.pokemon-container .pokemon-form img,
+.pokemon-container .pokemon-form .pokemon-sprite-missing {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.pokemon-container .pokemon-form-name {
+  font-size: var(--text-xs);
+  font-weight: bold;
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* A narrow window: smaller cards, so a big family (Pikachu's caps) takes
+   fewer rows */
+@container pokemon (max-width: 480px) {
+  .pokemon-container .pokemon-forms-list {
+    grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+    gap: 4px;
+  }
+
+  .pokemon-container .pokemon-form img,
+  .pokemon-container .pokemon-form .pokemon-sprite-missing {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pokemon-container .pokemon-form-name {
+    font-size: var(--text-2xs);
+  }
 }
 
 /* Quick Info Bar */
@@ -983,18 +1246,60 @@
   .pokemon-container .type-matrix-ribbon {
     grid-template-columns: repeat(6, 1fr);
   }
+}
 
-  .pokemon-container .evo-linear-connector {
-    min-width: 40px;
+/* A narrow window (the 400x300 one, a phone): smaller stage cards and
+   arrows, so a three-stage line (Charmander's) fits with its Megas and
+   Gigantamax below it, without scrolling sideways */
+@container pokemon (max-width: 480px) {
+  .pokemon-container .evolution-chain {
+    --pokemon-stage-height: 54px;
+    padding-inline: 6px;
+  }
+
+  .pokemon-container .evo-linear-chain,
+  .pokemon-container .evo-subsequent-row {
+    gap: 2px;
+  }
+
+  /* An arrow may give up room, but only down to its longest word */
+  .pokemon-container .evo-linear-connector,
+  .pokemon-container .evo-linear-connector.mini-connector {
+    min-width: auto;
+    flex-shrink: 1;
+  }
+
+  /* An item's picture sits above its name when the arrow is squeezed */
+  .pokemon-container .evo-trigger-pill {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 2px 4px;
+  }
+
+  .pokemon-container .pokemon-evo-tray {
+    padding-inline: 3px;
+  }
+
+  .pokemon-container .pokemon-evo-tray-label {
+    letter-spacing: 0;
   }
 
   .pokemon-container .evolution-stage {
-    min-width: 50px;
-    min-height: 58px;
+    min-width: 48px;
+    padding: 3px;
   }
 
-  .pokemon-container .evolution-stage img {
+  .pokemon-container .evolution-stage img,
+  .pokemon-container .evolution-stage .pokemon-sprite-missing {
     width: 32px;
     height: 32px;
+  }
+
+  .pokemon-container .stage-name {
+    font-size: var(--text-2xs);
+  }
+
+  .pokemon-container .pokemon-evo-form-stage .stage-name {
+    max-width: 62px;
   }
 }

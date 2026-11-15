@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useId } from "react";
 import fuzzysort from "fuzzysort";
 import "./PokemonSearch.css";
-import { fetchPokemon, idFromUrl, loadPokemonNames, spriteFor } from "./pokeapi";
+import { fetchCached, fetchPokemon, fetchSpecies, idFromUrl, loadPokemonNames, spriteFor, type Species } from "./pokeapi";
+import { describeForm, formsRow, readVarieties, speciesLabel, splitForms, titleCase, type PokemonForm } from "./forms";
+
+// Whether "Other forms" was left open, kept for the session
+const FORMS_OPEN_KEY = "pokemon-other-forms-open";
+const readFormsOpen = () => {
+  try {
+    return sessionStorage.getItem(FORMS_OPEN_KEY) === "1";
+  } catch {
+    return false; // no storage (private mode): closed, as at first
+  }
+};
 
 const ALL_TYPES = [
   "normal", "fire", "water", "electric", "grass", "ice",
@@ -31,7 +42,7 @@ interface PokemonData {
   };
 }
 
-interface PokemonSpecies {
+interface PokemonSpecies extends Species {
   flavor_text_entries: {
     flavor_text: string;
     language: {
@@ -65,9 +76,15 @@ interface EvolutionDetailParsed {
 }
 
 interface EvolutionNode {
+  /** The species id, which is also its default Pokémon's id */
   id: number;
+  /** PokeAPI's species name, which a search answers to */
   name: string;
+  /** What to show: the species' English name once it has loaded */
+  label: string;
   sprite: string;
+  /** Its Megas and Gigantamax: transformations, drawn as a branch off this stage */
+  transformations: PokemonForm[];
   evolvesTo: {
     target: EvolutionNode;
     details: EvolutionDetailParsed[];
@@ -224,35 +241,87 @@ const filterEvolutionDetails = (detailsList: EvolutionDetail[]): EvolutionDetail
   return unique.slice(0, 1);
 };
 
-/** The whole evolution family, with each Pokémon's sprite; null if it can't be loaded */
+/**
+ * The whole evolution family, with each Pokémon's sprite, name, and Megas and
+ * Gigantamax; null if the chain can't be loaded
+ */
 const fetchEvolutionTree = async (url: string): Promise<EvolutionNode | null> => {
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as { chain: ChainLink };
+    const data = await fetchCached<{ chain: ChainLink }>(url);
+    const stages: { node: EvolutionNode; speciesUrl: string }[] = [];
 
     // A species' id is its default Pokémon's id, so the sprite comes straight
     // from the sprites repo. Fetching pokemon/{species name} for each stage
     // cost a call apiece and failed for species filed under a form name.
-    const buildTree = (node: ChainLink): EvolutionNode => {
-      const id = idFromUrl(node.species.url ?? "");
-      return {
+    const buildTree = (link: ChainLink): EvolutionNode => {
+      const id = idFromUrl(link.species.url ?? "");
+      const node: EvolutionNode = {
         id,
-        name: node.species.name,
+        name: link.species.name,
+        label: titleCase(link.species.name),
         sprite: id ? spriteFor(id) : "",
-        evolvesTo: node.evolves_to.map(evo => ({
+        transformations: [],
+        evolvesTo: link.evolves_to.map(evo => ({
           target: buildTree(evo),
           details: filterEvolutionDetails(evo.evolution_details)
         }))
       };
+      if (link.species.url) stages.push({ node, speciesUrl: link.species.url });
+      return node;
     };
+    const root = buildTree(data.chain);
 
-    return buildTree(data.chain);
+    // Each stage's Megas and Gigantamax are among its species' varieties: one
+    // request a stage (Eevee's family is nine), kept for the session, and the
+    // species shown is already there. A stage whose species won't load just
+    // shows no transformations.
+    await Promise.all(
+      stages.map(async ({ node, speciesUrl }) => {
+        try {
+          const species = await fetchSpecies(speciesUrl);
+          node.label = speciesLabel(species);
+          node.transformations = splitForms(readVarieties(species)).transformations;
+        } catch (err) {
+          console.warn(`No Megas or Gigantamax for ${node.name}: its species didn't load`, err);
+        }
+      })
+    );
+    return root;
   } catch (err) {
     console.error("Failed to fetch evolution tree", err);
     return null;
   }
 };
+
+/** A sprite, or a "?" when there's none: a few forms have no picture yet (Mega Zygarde) */
+const Sprite: React.FC<{ src?: string | null; alt: string; className?: string; lazy?: boolean }> = ({ src, alt, className = "", lazy = false }) => {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (!src || failed === src) {
+    return (
+      <span
+        className={`pokemon-sprite-missing ${className}`}
+        {...(alt ? { role: "img", "aria-label": `No picture of ${alt}` } : { "aria-hidden": true })}
+      >
+        ?
+      </span>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className || undefined}
+      loading={lazy ? "lazy" : undefined}
+      onError={() => setFailed(src)}
+    />
+  );
+};
+
+/** The transformations the evolution line shows, in this order */
+const TRANSFORMATIONS = [
+  { kind: "mega", title: "Mega Evolution" },
+  { kind: "gmax", title: "Gigantamax" }
+] as const;
 
 const PokemonSearch: React.FC = () => {
   const [pokemonData, setPokemonData] = useState<PokemonData | null>(null);
@@ -268,6 +337,19 @@ const PokemonSearch: React.FC = () => {
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showShiny, setShowShiny] = useState<boolean>(false);
   const [selectedChartType, setSelectedChartType] = useState<string | null>(null);
+  // Open or closed as the user left it, from one Pokémon to the next
+  const [formsOpen, setFormsOpen] = useState<boolean>(readFormsOpen);
+  const formsListId = useId();
+
+  const toggleForms = () => {
+    const open = !formsOpen;
+    setFormsOpen(open);
+    try {
+      sessionStorage.setItem(FORMS_OPEN_KEY, open ? "1" : "0");
+    } catch {
+      // blocked storage: it stays as left until the window closes
+    }
+  };
 
   const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -294,16 +376,13 @@ const PokemonSearch: React.FC = () => {
         if (cancelled) return;
         setPokemonData(pokemon);
 
-        const speciesRes = await fetch(pokemon.species.url);
-        const species = (await speciesRes.json()) as PokemonSpecies;
+        // Kept for the session: the evolution line reads the same species,
+        // and stepping through a species' forms asks for it only once
+        const species = await fetchSpecies<PokemonSpecies>(pokemon.species.url);
         if (cancelled) return;
         setSpeciesData(species);
 
-        const types = await Promise.all(
-          pokemon.types.map(t =>
-            fetch(t.type.url).then(res => res.json() as Promise<TypeData>)
-          )
-        );
+        const types = await Promise.all(pokemon.types.map(t => fetchCached<TypeData>(t.type.url)));
         if (cancelled) return;
         setTypeData(types);
 
@@ -431,9 +510,13 @@ const PokemonSearch: React.FC = () => {
     }
   };
 
+  // The Pokédex number: the species id. A form's own id (10281 for Mega
+  // Dragonite) is PokeAPI's, so the heading and ← → go by the species
+  const speciesId = pokemonData ? idFromUrl(pokemonData.species.url) || pokemonData.id : 0;
+
   const handlePrevious = () => {
-    if (pokemonData && pokemonData.id > 1) {
-      fetchPokemonNameById(pokemonData.id - 1).then(name => {
+    if (pokemonData && speciesId > 1) {
+      fetchPokemonNameById(speciesId - 1).then(name => {
         if (name) {
           setSearchTerm(name);
           setInputTerm(name);
@@ -444,7 +527,7 @@ const PokemonSearch: React.FC = () => {
 
   const handleNext = () => {
     if (pokemonData) {
-      fetchPokemonNameById(pokemonData.id + 1).then(name => {
+      fetchPokemonNameById(speciesId + 1).then(name => {
         if (name) {
           setSearchTerm(name);
           setInputTerm(name);
@@ -465,25 +548,80 @@ const PokemonSearch: React.FC = () => {
     return lbs.toFixed(1);
   };
 
+  const showPokemon = (name: string) => {
+    setSearchTerm(name);
+    setInputTerm(name);
+    setFilteredSuggestions([]);
+  };
+
+  // What the heading calls it: "Mega Dragonite", not "Dragonite-mega"
+  const shownLabel = pokemonData
+    ? describeForm(pokemonData.name, pokemonData.species.name, speciesData ? speciesLabel(speciesData) : undefined).label
+    : "";
+
+  // The shown species' forms that the evolution line doesn't show: its
+  // regional forms, Pikachu's caps, Deoxys's formes. Many fold away.
+  const otherForms = formsRow(speciesData ? readVarieties(speciesData) : []);
+  const formsShown = !otherForms.folds || formsOpen;
+
+  // When a Mega or Gigantamax is shown, it is the current one in the line,
+  // not its species' stage. Any other form (Alolan Raichu) marks its species.
+  const showsTransformation = (node: EvolutionNode): boolean =>
+    node.transformations.some(f => f.name === pokemonData?.name) || node.evolvesTo.some(e => showsTransformation(e.target));
+  const transformationShown = evolutionTree ? showsTransformation(evolutionTree) : false;
+
+  // One card in the evolution line: a stage, or a Mega or Gigantamax off one
+  const renderStageButton = (name: string, label: string, sprite: string, isCurrent: boolean, extraClass = "") => (
+    <button
+      key={name}
+      type="button"
+      className={`evolution-stage ${extraClass} ${isCurrent ? "current-evolution-stage" : ""}`}
+      onClick={() => showPokemon(name)}
+      title={`Go to ${label}`}
+    >
+      <Sprite src={sprite} alt={label} />
+      <span className="stage-name">{label}</span>
+      {isCurrent && <span className="current-stage-tag">Current</span>}
+    </button>
+  );
+
   // Render individual evolution node button
   const renderEvolutionNodeButton = (node: EvolutionNode) => {
-    const isCurrent = pokemonData && (pokemonData.id === node.id || pokemonData.name.toLowerCase() === node.name.toLowerCase());
+    const isCurrent = !!pokemonData && !transformationShown && (speciesId === node.id || pokemonData.name === node.name);
+    return renderStageButton(node.name, node.label, node.sprite, isCurrent);
+  };
 
+  // A stage's Megas and Gigantamax, in a dashed tray on a dashed line: they
+  // are transformations, not evolutions
+  const renderTransformations = (forms: PokemonForm[]) => (
+    <>
+      <span className="pokemon-evo-tray-link" aria-hidden="true" />
+      <div className="pokemon-evo-tray">
+        {TRANSFORMATIONS.map(({ kind, title }) => {
+          const group = forms.filter(f => f.kind === kind);
+          if (group.length === 0) return null;
+          return (
+            <div key={kind} className={`pokemon-evo-tray-group pokemon-evo-tray-${kind}`}>
+              <span className="pokemon-evo-tray-label">{title}</span>
+              <div className="pokemon-evo-tray-forms">
+                {group.map(f => renderStageButton(f.name, f.label, f.sprite, f.name === pokemonData?.name, "pokemon-evo-form-stage"))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+
+  // A stage with its transformations hanging below it (or beside it, for the
+  // root of a branching family, whose evolutions are below)
+  const renderStage = (node: EvolutionNode, beside = false) => {
+    if (node.transformations.length === 0) return renderEvolutionNodeButton(node);
     return (
-      <button
-        key={node.id}
-        type="button"
-        className={`evolution-stage ${isCurrent ? "current-evolution-stage" : ""}`}
-        onClick={() => {
-          setSearchTerm(node.name);
-          setInputTerm(node.name);
-        }}
-        title={`Go to ${capitalize(node.name)}`}
-      >
-        <img src={node.sprite} alt={node.name} />
-        <span className="stage-name">{capitalize(node.name)}</span>
-        {isCurrent && <span className="current-stage-tag">Current</span>}
-      </button>
+      <div className={`pokemon-evo-stage-group ${beside ? "pokemon-evo-stage-group-beside" : ""}`}>
+        {renderEvolutionNodeButton(node)}
+        {renderTransformations(node.transformations)}
+      </div>
     );
   };
 
@@ -492,7 +630,7 @@ const PokemonSearch: React.FC = () => {
     if (!node.evolvesTo || node.evolvesTo.length === 0) {
       return (
         <div key={node.id} className="evo-single-node">
-          {renderEvolutionNodeButton(node)}
+          {renderStage(node)}
         </div>
       );
     }
@@ -502,7 +640,7 @@ const PokemonSearch: React.FC = () => {
       return (
         <div key={node.id} className="evo-branching-wrapper">
           <div className="evo-root-holder">
-            {renderEvolutionNodeButton(node)}
+            {renderStage(node, true)}
           </div>
           <div className="evo-branches-grid">
             {node.evolvesTo.map((edge, idx) => (
@@ -527,6 +665,12 @@ const PokemonSearch: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                {/* Its Megas and Gigantamax, under how it evolves (e.g. Mega Gallade) */}
+                {edge.target.transformations.length > 0 && (
+                  <div className="pokemon-evo-stage-group">
+                    {renderTransformations(edge.target.transformations)}
+                  </div>
+                )}
                 {/* Support subsequent evolutions from this branch (e.g. Dipplin -> Hydrapple) */}
                 {edge.target.evolvesTo && edge.target.evolvesTo.length > 0 && (
                   <div className="evo-subsequent-chain">
@@ -567,7 +711,7 @@ const PokemonSearch: React.FC = () => {
     return (
       <div key={node.id} className="evo-linear-chain">
         <div className="evo-parent-node">
-          {renderEvolutionNodeButton(node)}
+          {renderStage(node)}
         </div>
 
         <div className="evo-linear-connector">
@@ -639,19 +783,19 @@ const PokemonSearch: React.FC = () => {
       )}
       {pokemonData && (
         <div className="pokemon-details">
-          <h3 className="pokemon-name">#{pokemonData.id} - {capitalize(pokemonData.name)}</h3>
+          <h3 className="pokemon-name">#{speciesId} - {shownLabel}</h3>
           <div className="pokemon-image-container">
             <button
               className="nav-button"
               onClick={handlePrevious}
-              disabled={pokemonData.id === 1}
+              disabled={speciesId <= 1}
               aria-label="Previous Pokémon"
               title="Previous Pokémon"
             >
               ←
             </button>
             <div className="pokemon-image-wrapper">
-              <img src={getImageUrl()} alt={pokemonData.name} className="pokemon-image" />
+              <Sprite src={getImageUrl()} alt={shownLabel} className="pokemon-image" />
             </div>
             <button
               className="nav-button"
@@ -667,6 +811,51 @@ const PokemonSearch: React.FC = () => {
               {showShiny ? "★ Shiny" : "☆ Shiny"}
             </button>
           </div>
+
+          {/* Other forms: the species' forms the evolution line doesn't show,
+              the one shown highlighted. Up to three show open in one row;
+              more fold away behind a disclosure triangle. */}
+          {otherForms.forms.length > 0 && (
+            <div className={`pokemon-forms ${formsShown ? "" : "pokemon-forms-closed"}`}>
+              <div className="pokemon-forms-header">
+                {otherForms.folds ? (
+                  <button
+                    type="button"
+                    className="pokemon-forms-toggle"
+                    aria-expanded={formsOpen}
+                    aria-controls={formsListId}
+                    onClick={toggleForms}
+                  >
+                    <span className="pokemon-forms-triangle" aria-hidden="true">{formsOpen ? "▾" : "▸"}</span>
+                    Other forms ({otherForms.forms.length})
+                  </button>
+                ) : (
+                  <h4 className="pokemon-forms-title">Other forms ({otherForms.forms.length})</h4>
+                )}
+                {formsShown && <span className="pokemon-forms-hint">Click one to show it</span>}
+              </div>
+              {/* Folded, it stays in the page (so the button can point to it) but
+                  hidden, and its sprites wait until it opens */}
+              <div id={formsListId} className="pokemon-forms-list" hidden={!formsShown}>
+                {otherForms.forms.map(form => {
+                  const isCurrent = form.name === pokemonData.name;
+                  return (
+                    <button
+                      key={form.name}
+                      type="button"
+                      className={`pokemon-form ${isCurrent ? "pokemon-form-current" : ""}`}
+                      aria-pressed={isCurrent}
+                      onClick={() => showPokemon(form.name)}
+                      title={isCurrent ? `${form.label} is shown` : `Show ${form.label}`}
+                    >
+                      <Sprite src={form.sprite} alt="" lazy />
+                      <span className="pokemon-form-name">{form.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Evolution Chain Section */}
           {evolutionTree && (
@@ -909,7 +1098,7 @@ const PokemonSearch: React.FC = () => {
                       <div className="inspector-title-row">
                         <span className={`type-badge type-${inspectedType.type}`}>{inspectedType.type}</span>
                         <span className="inspector-heading">
-                          attacks deal <strong>{formatMultiplier(inspectedType.multiplier)}</strong> damage to {capitalize(pokemonData.name)}
+                          attacks deal <strong>{formatMultiplier(inspectedType.multiplier)}</strong> damage to {shownLabel}
                         </span>
                       </div>
                       <div className="inspector-breakdown">

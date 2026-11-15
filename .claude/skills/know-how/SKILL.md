@@ -20,6 +20,7 @@ short however much the list grows.
 | Check every app still opens after a shared change | [Does every app still open?](checking.md#does-every-app-still-open) |
 | Check the windows, Camera, Notes, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
 | Check NASA News's sidebar: past days, scrolling, search, dates | [Does NASA News's sidebar still work?](checking.md#does-nasa-newss-sidebar-still-work) |
+| Check Pokémon's forms: Megas and Gigantamax in the line, Other forms, live spot-checks | [Do Pokémon's forms still work?](checking.md#do-pokémons-forms-still-work) |
 | Nothing works on the port the preview reported | [The dev server isn't on the port the preview says](checking.md#the-dev-server-isnt-on-the-port-the-preview-says) |
 | `npm run lint` reports a problem | [`npm run lint` fails](checking.md#npm-run-lint-fails) |
 
@@ -44,6 +45,7 @@ short however much the list grows.
 | Buttons in a row jump by a pixel when one appears | [A row of buttons shifts by a pixel](maps-and-layout.md#a-row-of-buttons-shifts-by-a-pixel-when-one-appears) |
 | One app's CSS restyles other apps, or a CSS change needs proving | [Every button changed when one app's CSS changed](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed) |
 | Something sits past the edge of the 400px window | [A bar's right end is cut off](maps-and-layout.md#a-bars-right-end-is-cut-off-in-the-400px-window) |
+| A row wider than its box is cut off on the left, and won't scroll there | [The left end of a centred row](maps-and-layout.md#the-left-end-of-a-centred-row-cant-be-scrolled-to) |
 
 **The smaller apps**: [apps.md](apps.md)
 
@@ -71,6 +73,7 @@ short however much the list grows.
 | `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`) |
 | `app-check.mjs` | Camera, Notes, Safari, Pokémon and Music volume (`checking.md`) |
 | `nasa-check.mjs` | NASA News's sidebar against live NASA at three sizes (`checking.md`) |
+| `pokemon-forms-check.mjs` | Pokémon's Megas, Gigantamax and Other forms against live PokeAPI at three sizes, with spot-checks (`checking.md`) |
 | `style-diff.mjs` | Snapshots every button's computed style, to diff before and after a CSS change (`maps-and-layout.md`) |
 | `app-shots.mjs` | Before-and-after screenshots of every app on a laptop and a phone, with a pixel diff (`design` skill, section 4) |
 

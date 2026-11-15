@@ -76,3 +76,23 @@ Part of the `know-how` skill. The index is in `SKILL.md`.
   `min-width: 0` on the slider lets it shrink.
 - **Check:** at 400×300 and maximized, `scrollWidth > clientWidth` on the bar
   is false. Look at both screenshots too.
+
+## The left end of a centred row can't be scrolled to
+
+*2026-11-15*
+
+- **Symptom:** in Pokémon's 400×300 window, Charmander's evolution line was
+  cut off on both sides, and scrolling sideways reached only the right end.
+  Charmander himself could never be seen.
+- **Cause:** `justify-content: center` on a scrolling flex box
+  (`.evolution-tree-viewport`). When the row is wider than the box, centring
+  pushes its left part past the start edge, and nothing can scroll there.
+- **Fix:** drop the centring and give the child `margin-inline: auto`. Auto
+  margins centre it when there's room and fall to 0 when there isn't, so an
+  overflow goes only to the right. Then make the row fit: a container query
+  (`@container pokemon (max-width: 480px)`) shrinks the stage cards, and the
+  arrows get `flex-shrink: 1` with `min-width: auto`, so they give up room
+  only down to their longest word (a fixed `min-width: 36px` let
+  "Friendship" spill out of its pill).
+- **Check:** `pokemon-forms-check.mjs` checks `scrollWidth <= clientWidth` on
+  Dragonite's, Charizard's and Raichu's lines at every size.

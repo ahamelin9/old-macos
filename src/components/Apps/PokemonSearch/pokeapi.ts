@@ -1,7 +1,8 @@
 /**
  * Calls to the PokeAPI (the `apis` skill, pokeapi.md). Its fair use policy
- * asks clients to cache, so the names list is kept for the session and
- * evolution sprites come from the sprites repo by id, not one call per stage.
+ * asks clients to cache, so the names list is kept for the session, species,
+ * evolution chains and types are fetched once a session, and sprites come
+ * from the sprites repo by id, not one call per stage or form.
  */
 export const POKEAPI = 'https://pokeapi.co/api/v2';
 
@@ -23,9 +24,50 @@ const get = async (url: string) => {
   }
 };
 
-interface Species {
-  varieties?: { is_default: boolean; pokemon: { name: string; url: string } }[];
+/** One of a species' Pokémon: its default, a regional form, a Mega… */
+export interface Variety {
+  is_default: boolean;
+  pokemon: { name: string; url: string };
 }
+
+/** A `pokemon-species/` answer, as far as the forms read it */
+export interface Species {
+  id?: number;
+  name: string;
+  names?: { name: string; language: { name: string } }[];
+  varieties?: Variety[];
+}
+
+// Answers that don't change, kept for the session. A failed one is dropped,
+// so Try again really asks again.
+const cache = new Map<string, Promise<unknown>>();
+
+/** JSON from a PokeAPI link, fetched once a session. Throws an Error fit to show. */
+export const fetchCached = <T,>(url: string): Promise<T> => {
+  let answer = cache.get(url) as Promise<T> | undefined;
+  if (!answer) {
+    answer = get(url).then(res => {
+      if (!res.ok) throw new Error(DOWN);
+      return res.json() as Promise<T>;
+    });
+    cache.set(url, answer);
+    answer.catch(() => cache.delete(url));
+  }
+  return answer;
+};
+
+/**
+ * A species by its link (or a link's id), fetched once a session. The
+ * Pokémon's own `species.url` and the evolution chain's links share a key,
+ * so the species shown is never fetched twice.
+ */
+export const fetchSpecies = <T extends Species = Species>(link: string): Promise<T> => {
+  const id = idFromUrl(link);
+  return fetchCached<T>(id ? `${POKEAPI}/pokemon-species/${id}/` : link);
+};
+
+/** Forget everything fetched this session (for tests) */
+export const clearCache = () => cache.clear();
 
 /**
  * A Pokémon by name or id. 37 species, like Deoxys and Toxtricity, have no

@@ -148,6 +148,36 @@ Lessons from writing it:
 - A list sliding shut still covers what's under it for its 0.2 s
   transition; wait before clicking the ☰ again.
 
+## Do Pokémon's forms still work?
+
+*2026-11-15*
+
+```bash
+node .claude/skills/know-how/pokemon-forms-check.mjs http://127.0.0.1:5199 <outDir>
+```
+
+It drives Pokémon against live PokeAPI at 400×300, maximized and on a 390px
+phone, and saves a screenshot of each step. It checks the Megas and
+Gigantamax hanging off their stage (Dragonite, Charizard, Raichu's family),
+that Dragonite has no Forms row, Raichu's open one-line row, Pikachu's folded
+"▸ Other forms (15)" opening and staying open for the session, clicking a
+Mega and a form, ← → by Pokédex number, stale replies, a missing sprite
+(Mega Zygarde), that nothing sticks out of the window, and spot-checks three
+forms against PokeAPI asked directly. Its header lists every check. About 55
+requests; run it after any change to Pokémon.
+
+Lessons from writing it:
+
+- A missing sprite turns into the "?" only when its 404 comes back, so wait
+  for the "?" before checking there's no `<img>`. Checking at once passed one
+  run and failed the next.
+- To spot-check a name, wait for the heading to *change*, not for the name
+  you expect: if the name is wrong, a wait for it only times out, while a
+  wait for any change shows the wrong name in the diff.
+- A folded list kept in the page with `hidden` still has cards in the DOM,
+  but with no box. Count only cards with `getClientRects().length > 0` when
+  checking what sticks out.
+
 ## The dev server isn't on the port the preview says
 
 *2026-11-09*
