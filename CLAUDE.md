@@ -28,8 +28,8 @@ Each skill opens with its own contents list. To search all of them at once:
 | Dev server | `npm run dev` | Serves http://127.0.0.1:5173. It binds to `127.0.0.1`, not `localhost`, because Spotify redirects there. Alex often has it running already; check with `lsof -nP -iTCP:5173 -sTCP:LISTEN` first. |
 | Spotify backend (local) | `npm run backend` or `npm run start:all` | FastAPI on port 8000. Only Music needs it. |
 | Unit tests | `npm test` | Vitest. Test files sit next to the code (`*.test.ts`). |
-| Type check | `npx tsc -b` | It rewrites `tsconfig.tsbuildinfo`, which git tracks, so run `git checkout -- tsconfig.tsbuildinfo` afterwards. |
-| Lint | `npx eslint <files you touched>` | `npm run lint` on the whole repo already fails on older apps (know-how). |
+| Type check | `npx tsc -b` | Its cache, `tsconfig.tsbuildinfo`, is gitignored. |
+| Lint | `npm run lint` | The whole repo lints clean; keep it that way. |
 | Build | `npm run build` | Runs `tsc -b`, then `vite build` into `dist/`. A type error stops the deploy. |
 
 ## How a change goes

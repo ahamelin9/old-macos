@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
+from urllib.parse import urlencode, quote
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 import os
@@ -22,6 +24,7 @@ app.add_middleware(
 CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 REDIRECT_URI = "http://127.0.0.1:8000/callback"
+FRONTEND_URL = "http://127.0.0.1:5173"
 
 @app.get("/login")
 def login():
@@ -33,16 +36,12 @@ def login():
 
 @app.get("/callback")
 def callback(request: Request, code: str = None):
-    # Log all params to see what Spotify is sending
-    print(f"DEBUG: Callback params: {request.query_params}")
-    
     error = request.query_params.get("error")
     if error:
-        print(f"DEBUG: Spotify returned error: {error}")
-        return RedirectResponse(f"http://127.0.0.1:5173/?error={error}")
+        return RedirectResponse(f"{FRONTEND_URL}/?error={quote(error)}")
 
     if not code:
-        return RedirectResponse("http://127.0.0.1:5173")
+        return RedirectResponse(FRONTEND_URL)
         
     auth_header = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
     response = requests.post(
@@ -62,12 +61,18 @@ def callback(request: Request, code: str = None):
         raise HTTPException(status_code=response.status_code, detail="Failed to get token")
     
     tokens = response.json()
-    # Redirect back to the frontend on the loopback address
-    frontend_url = "http://127.0.0.1:5173/?access_token=" + tokens.get("access_token") + "&refresh_token=" + tokens.get("refresh_token")
-    return RedirectResponse(frontend_url)
+    # Back to the frontend with the tokens in the fragment (#), which the
+    # browser never sends to a server; the page reads it and clears it
+    fragment = urlencode({"access_token": tokens.get("access_token"), "refresh_token": tokens.get("refresh_token")})
+    return RedirectResponse(f"{FRONTEND_URL}/#{fragment}")
 
-@app.get("/refresh")
-def refresh(refresh_token: str):
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+# POST, so the refresh token never sits in a URL (matches functions/api/refresh.js)
+@app.post("/refresh")
+def refresh(body: RefreshRequest):
+    refresh_token = body.refresh_token
     auth_header = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
     response = requests.post(
         "https://accounts.spotify.com/api/token",

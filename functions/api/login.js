@@ -6,11 +6,9 @@ export async function onRequest(context) {
   const client_id = env.SPOTIFY_CLIENT_ID || env.VITE_SPOTIFY_CLIENT_ID;
   
   if (!client_id) {
+    // Don't list the environment's variable names: this answer is public
     return new Response(
-      JSON.stringify({ 
-        error: "Missing SPOTIFY_CLIENT_ID in Cloudflare Environment Variables.",
-        available_keys: Object.keys(env) 
-      }), 
+      JSON.stringify({ error: "Missing SPOTIFY_CLIENT_ID in Cloudflare Environment Variables." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }

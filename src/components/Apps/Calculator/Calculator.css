@@ -25,24 +25,6 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.window-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.window-controls span {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.2),
-    0 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.close { background: #ff4c4c; border: 1px solid #cc3d3d; }
-.minimize { background: #ffd740; border: 1px solid #ccac33; }
-.maximize { background: #4cd964; border: 1px solid #3dcc55; }
-
 .calculator-title {
   flex: 1;
   text-align: center;
@@ -53,7 +35,7 @@
   letter-spacing: 0.3px;
 }
 
-.display {
+.calculator-display {
   padding: 15px 10px;
   text-align: right;
   font-size: 36px;
@@ -70,7 +52,7 @@
   overflow: hidden;
 }
 
-.buttons {
+.calculator-buttons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
@@ -78,47 +60,26 @@
   background: transparent;
 }
 
-button {
-  border: none;
-  padding: 14px 0;
-  font-size: 18px;
-  font-weight: bold;
-  background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
-  border-radius: 8px;
-  box-shadow: 
-    0 2px 3px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  border: 1px solid #a0a0a0;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-button:active {
-  background: linear-gradient(to bottom, #d0d0d0, #c0c0c0);
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-
-.function {
+.calculator-function {
   background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   border: 1px solid #a0a0a0;
 }
 
-.function:active {
+.calculator-function:active {
   background: linear-gradient(to bottom, #d0d0d0, #c0c0c0);
 }
 
-.operation {
+.calculator-operation {
   background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   border: 1px solid #a0a0a0;
 }
 
-.operation:active {
+.calculator-operation:active {
   background: linear-gradient(to bottom, #d0d0d0, #c0c0c0);
 }
 
-.zero {
+.calculator-zero {
   grid-column: span 2;
 }

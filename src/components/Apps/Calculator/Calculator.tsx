@@ -131,32 +131,32 @@ const Calculator: React.FC = () => {
           <div className="calculator-title">Calculator</div>
         </div>
         
-        <div className="display">{display}</div>
+        <div className="calculator-display">{display}</div>
         
-        <div className="buttons">
-          <button className="function" onClick={clearAll}>AC</button>
-          <button className="function" onClick={toggleSign}>±</button>
-          <button className="function" onClick={inputPercent}>%</button>
-          <button className="operation" onClick={() => performOperation('÷')}>÷</button>
+        <div className="calculator-buttons">
+          <button className="calculator-function" onClick={clearAll}>AC</button>
+          <button className="calculator-function" onClick={toggleSign}>±</button>
+          <button className="calculator-function" onClick={inputPercent}>%</button>
+          <button className="calculator-operation" onClick={() => performOperation('÷')}>÷</button>
           
           <button onClick={() => inputDigit('7')}>7</button>
           <button onClick={() => inputDigit('8')}>8</button>
           <button onClick={() => inputDigit('9')}>9</button>
-          <button className="operation" onClick={() => performOperation('×')}>×</button>
+          <button className="calculator-operation" onClick={() => performOperation('×')}>×</button>
           
           <button onClick={() => inputDigit('4')}>4</button>
           <button onClick={() => inputDigit('5')}>5</button>
           <button onClick={() => inputDigit('6')}>6</button>
-          <button className="operation" onClick={() => performOperation('-')}>-</button>
+          <button className="calculator-operation" onClick={() => performOperation('-')}>-</button>
           
           <button onClick={() => inputDigit('1')}>1</button>
           <button onClick={() => inputDigit('2')}>2</button>
           <button onClick={() => inputDigit('3')}>3</button>
-          <button className="operation" onClick={() => performOperation('+')}>+</button>
+          <button className="calculator-operation" onClick={() => performOperation('+')}>+</button>
           
-          <button className="zero" onClick={() => inputDigit('0')}>0</button>
+          <button className="calculator-zero" onClick={() => inputDigit('0')}>0</button>
           <button onClick={inputDecimal}>.</button>
-          <button className="operation" onClick={equals}>=</button>
+          <button className="calculator-operation" onClick={equals}>=</button>
         </div>
       </div>
     </div>

@@ -897,6 +897,9 @@ const FieldGuide: React.FC = () => {
 
     observer.observe(target);
     return () => observer.disconnect();
+  // loadMoreSpecies is a new function every render, so listing it would rebuild
+  // the observer every render; everything it reads is listed here instead.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, isLoadingSpecies, isLoadingMore, page, currentLocation, radiusKm, activeTab, seasonMonth, canAutoLoadNow, statusFilter, filteredSpecies.length, searchMode]);
 
   // Pull one more batch of random species for the discovery gallery

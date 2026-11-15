@@ -1,54 +1,66 @@
-# React + TypeScript + Vite
+# macOS 1999
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Alex's personal site, made to look like a late-90s Mac desktop: a menu bar,
+windows you can drag, resize, minimize and maximize, and a dock of small apps.
 
-Currently, two official plugins are available:
+| App | What it does |
+|---|---|
+| Finder | About me, projects and skills |
+| Safari | Web search (Brave Search, through a Cloudflare Worker) |
+| Nasa News | NASA's Astronomy Picture of the Day |
+| Pokemon | A Pokédex with evolution chains and a type chart (PokeAPI) |
+| Field Guide | What lives near a place, and where a species lives (iNaturalist, Wikipedia) |
+| Music | Spotify playlists: 30-second previews, or full songs with Spotify Premium |
+| Notes | A note that's kept in your browser |
+| Camera | Webcam snapshots you can download |
+| Calculator, Terminal | Toys |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Built with React 19, TypeScript and Vite. Hosted on Cloudflare Pages, with
+Pages Functions (`functions/api/`) for the Spotify login.
 
-## Expanding the ESLint configuration
+## Running it
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The site is at http://127.0.0.1:5173 (Spotify won't redirect to `localhost`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Music's Spotify login runs on a small FastAPI backend locally:
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+pip install -r backend/requirements.txt
+npm run start:all
 ```
+
+## Settings
+
+Copy `backend/.env.example` to `backend/.env` for the Spotify keys. Variable
+names only; values never go in the repo.
+
+| Variable | Where | Secret? |
+|---|---|---|
+| `VITE_NASA_API_KEY` | `.env` and the Pages build | No: `VITE_*` values end up in the public JavaScript |
+| `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` | `backend/.env` and the Pages Functions env | Yes |
+
+## Checks
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+`npm run build` type-checks first, so a type error stops the deploy.
+
+## Deploying
+
+Pushing to `main` deploys to the Cloudflare Pages project `old-macos`, which
+serves `dist/` and the `functions/` folder.
+
+## Working on it with Claude
+
+`CLAUDE.md` is the starting point: how to run and check things, and a table
+of contents for the skills in `.claude/skills/` (how the site fits together,
+the Field Guide, solved problems, and the end-of-session wrap-up).

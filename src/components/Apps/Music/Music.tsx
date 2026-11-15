@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import SpotifyWebApi from 'spotify-web-api-js';
-import { useSpotify } from '../../../contexts/SpotifyContext';
+import { useSpotify } from '../../../contexts/useSpotify';
 import './Music.css';
 
 const spotifyApi = new SpotifyWebApi();
@@ -64,6 +64,8 @@ interface SpotifyPlayerState {
   };
 }
 
+const DEFAULT_VOLUME = 0.7;
+
 const Music = () => {
   const { accessToken, isPremium, authError, login } = useSpotify();
   
@@ -74,7 +76,7 @@ const Music = () => {
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(0.7);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [currentTime, setCurrentTime] = useState("0:00");
   const [player, setPlayer] = useState<SpotifyPlayer | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -207,7 +209,9 @@ const Music = () => {
       const newPlayer = new window.Spotify.Player({
         name: 'Classic Mac OS Player',
         getOAuthToken: (cb: (token: string) => void) => { cb(accessToken); },
-        volume: volume
+        // Not `volume`: this effect would then rebuild the player on every
+        // volume change. The effect below sets it once the player exists.
+        volume: DEFAULT_VOLUME
       }) as unknown as SpotifyPlayer;
 
       setPlayer(newPlayer);
@@ -258,7 +262,7 @@ const Music = () => {
     };
 
     return () => { if (player) player.disconnect(); };
-  }, [isPremium, accessToken, volume, player]);
+  }, [isPremium, accessToken, player]);
 
   // Polling for progress
   useEffect(() => {
@@ -310,13 +314,14 @@ const Music = () => {
     };
   }, [currentTrack, isPremium, tracks, skipTrack]);
 
+  // currentTrack too: the preview <audio> element first appears with the first track
   useEffect(() => {
     if (isPremium && player) {
       void player.setVolume(volume);
     } else if (audioRef.current) {
       audioRef.current.volume = volume;
     }
-  }, [volume, isPremium, player]);
+  }, [volume, isPremium, player, currentTrack]);
 
   return (
     <div className="retro-itunes">
@@ -436,9 +441,18 @@ const Music = () => {
         </div>
 
         <div className="action-area">
+          <label className="music-volume" title="Volume">
+            <span aria-hidden="true">🔈</span>
+            <input
+              type="range" min="0" max="100" value={Math.round(volume * 100)}
+              onChange={(e) => setVolume(Number(e.target.value) / 100)}
+              className="progress-bar music-volume-slider"
+              aria-label="Volume"
+            />
+          </label>
           {!isPremium && (
             <button onClick={login} className="connect-spotify-btn">
-              Connect to Spotify
+              Connect<span className="music-connect-extra"> to Spotify</span>
             </button>
           )}
         </div>

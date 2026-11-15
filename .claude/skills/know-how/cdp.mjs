@@ -21,13 +21,17 @@ import { tmpdir } from 'node:os';
 
 export const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+/** Chrome flags for a fake webcam (a test pattern) that needs no permission prompt */
+export const FAKE_CAMERA = ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'];
+
 const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 /**
  * Opens appUrl in a fresh headless Chrome. Screenshots go to outDir (made if
  * missing; a temp folder if omitted). Returns helpers; always call close().
+ * chromeArgs adds Chrome flags, e.g. FAKE_CAMERA for a test webcam.
  */
-export async function launch(appUrl, outDir, { width = 1280, height = 1000 } = {}) {
+export async function launch(appUrl, outDir, { width = 1280, height = 1000, chromeArgs = [] } = {}) {
   outDir = outDir || mkdtempSync(join(tmpdir(), 'cdp-out-'));
   mkdirSync(outDir, { recursive: true });
   const PORT = 9300 + Math.floor(Math.random() * 500);
@@ -35,7 +39,7 @@ export async function launch(appUrl, outDir, { width = 1280, height = 1000 } = {
   const profile = mkdtempSync(join(tmpdir(), 'cdp-profile-'));
   const chrome = spawn(CHROME, [
     '--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`,
-    '--no-first-run', '--no-default-browser-check', `--window-size=${width},${height}`, 'about:blank'
+    '--no-first-run', '--no-default-browser-check', `--window-size=${width},${height}`, ...chromeArgs, 'about:blank'
   ], { stdio: 'ignore' });
 
   let ws, nextId = 1;
@@ -71,6 +75,9 @@ export async function launch(appUrl, outDir, { width = 1280, height = 1000 } = {
   const s = (m, p) => send(m, p, sessionId);
   await s('Page.enable');
   await s('Runtime.enable');
+  // Headless Chrome won't make its window narrower than about 500px, so set
+  // the viewport directly; under 500 wide it also acts as a touch phone.
+  await s('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 500 });
   await s('Page.navigate', { url: appUrl });
   await sleep(2500);
 
@@ -105,6 +112,13 @@ export async function launch(appUrl, outDir, { width = 1280, height = 1000 } = {
     results.push(!!ok);
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail !== '' ? `  (${detail})` : ''}`);
   };
+  /** Type into a React-controlled input or textarea: set its value the way React notices, then fire input */
+  const typeInto = (selector, text) => ev(`(() => {
+    const input = document.querySelector(${JSON.stringify(selector)});
+    if (!input) return 'missing';
+    Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), 'value').set.call(input, ${JSON.stringify(text)});
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  })()`);
   const clickButton = (text) => ev(`[...document.querySelectorAll('button')].find(b => b.textContent.includes(${JSON.stringify(text)}))?.click() ?? 'missing'`);
   /** Click a dock icon by its label ("Field Guide", "Pokemon"...) and wait for a new window. */
   const openApp = async (dockLabel) => {
@@ -116,6 +130,20 @@ export async function launch(appUrl, outDir, { width = 1280, height = 1000 } = {
     await sleep(300);
   };
   const openFieldGuide = () => openApp('Field Guide');
+  /** A real mouse drag (fires pointer events, so pointer capture works): press, move in steps, release. */
+  const drag = async (x1, y1, x2, y2, steps = 8) => {
+    const m = (type, x, y) => s('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
+    await m('mousePressed', x1, y1);
+    for (let i = 1; i <= steps; i++) await m('mouseMoved', x1 + ((x2 - x1) * i) / steps, y1 + ((y2 - y1) * i) / steps);
+    await m('mouseReleased', x2, y2);
+    await sleep(150);
+  };
+  /** A real click at a point (pointerdown, mousedown, click), unlike element.click(). */
+  const clickAt = async (x, y) => {
+    await s('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', buttons: 1, clickCount: 1 });
+    await s('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', buttons: 0, clickCount: 1 });
+    await sleep(150);
+  };
   /** Grant geolocation and fake a position (Near Me). Call before the page asks. */
   const setGeolocation = async (latitude, longitude, accuracy = 50) => {
     const origin = new URL(appUrl).origin;
@@ -141,5 +169,5 @@ export async function launch(appUrl, outDir, { width = 1280, height = 1000 } = {
     setTimeout(() => { try { rmSync(profile, { recursive: true, force: true }); } catch { /* Chrome still holding it */ } }, 500);
   };
 
-  return { s, ev, waitFor, shot, check, clickButton, openApp, openFieldGuide, setGeolocation, denyGeolocation, finish, close, pageErrors, results, outDir };
+  return { s, ev, waitFor, shot, check, typeInto, clickButton, openApp, openFieldGuide, drag, clickAt, setGeolocation, denyGeolocation, finish, close, pageErrors, results, outDir };
 }

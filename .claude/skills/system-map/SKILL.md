@@ -25,8 +25,8 @@ section in the same piece of work.
 
 ```
 index.html  →  src/main.tsx  →  App.tsx
-                                  SpotifyProvider        (src/contexts/SpotifyContext.tsx)
-                                    WindowProvider       (src/contexts/WindowContext.tsx)
+                                  SpotifyProvider        (src/contexts/SpotifyContext.tsx; hook in useSpotify.ts)
+                                    WindowProvider       (src/contexts/WindowContext.tsx; hook in useWindows.ts)
                                       Desktop            (src/components/Desktop/)
                                         menu bar + clock
                                         Window × n       (src/components/Window/)
@@ -44,8 +44,7 @@ index.html  →  src/main.tsx  →  App.tsx
   - The buttons are close, minimize and maximize/restore.
   - Maximize fills the space between the 26px menu bar and the dock, which
     it measures from `.dock`. It re-measures when the browser resizes.
-  - The window keeps its own position and size in state. The context only
-    sets where it starts.
+  - A press anywhere inside a window brings it to the front.
   - Content sits in `.window-content`, which is the element that scrolls.
 - **Dock** (`Dock.tsx`): the `apps` array. Each entry has a name, an icon
   from `public/`, and `openWindow(title, <App />)`.
@@ -55,20 +54,26 @@ index.html  →  src/main.tsx  →  App.tsx
 
 ## 2. The window manager
 
-`useWindows()` (from `WindowContext.tsx`) returns `windows`, plus
-`openWindow`, `closeWindow`, `focusWindow`, `minimizeWindow`,
-`maximizeWindow` and `restoreWindow`.
+`useWindows()` (`src/contexts/useWindows.ts`, with the types and
+`MENU_BAR_HEIGHT`) returns `windows` and these. The provider in
+`WindowContext.tsx` holds the state; hooks and types sit in their own file so
+the provider file exports only a component (react-refresh).
 
-- `openWindow(title, content)`:
-  - creates a 400×300 window at a random spot near the top left;
-  - uses `Date.now()` as the id, and the next z-index;
-  - drops windows that were closed earlier from the list.
+| Call | Does |
+|---|---|
+| `openWindow(title, content)` | Adds a window in front: 400×300 at a random spot near the top left, shrunk and clamped to fit a phone. Ids come from a counter |
+| `closeWindow(id)` | Removes it from the list |
+| `focusWindow(id)` | Brings it to the front (no change, and no re-render, if it's already there) |
+| `setWindowFrame(id, position, size)` | Saves where it is. Window calls it when a drag or resize ends |
+| `minimizeWindow(id)` / `restoreWindow(id)` | Hide it to the dock / bring it back in front, where it was |
+| `maximizeWindow(id, position, size)` / `unmaximizeWindow(id)` | Fill the desktop, remembering the old frame / go back to it |
+
+- The context is the one home for each window's frame. During a drag,
+  Window keeps the moving frame in local state and saves it on pointer-up.
 - There is no single-instance check: clicking an app twice opens two windows.
 - `content` is a React element made when the window opens. Closing the window
   unmounts it, so an app's state is lost on close unless the app saves it.
-- `focusWindow` raises the z-index. Window calls it on drag and on resize.
-- `src/types/windowTypes.ts` is an old copy of these types that nothing
-  imports. The real types are in `WindowContext.tsx`.
+- `know-how/window-check.mjs` proves all of this in a real browser.
 
 ## 3. The apps
 
@@ -78,13 +83,13 @@ All of them live in `src/components/Apps/<Folder>/`, as `<Name>.tsx` and
 | Dock name | Folder | What it is | Calls out to | Phone |
 |---|---|---|---|---|
 | Finder | `Finder` | About Alex: About Me, Projects, Skills and Interests, with LinkedIn and GitHub links | none | ✓ |
-| Safari | `Safari` | Web search with results listed | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | ✓ |
+| Safari | `Safari` | Web search with results listed. Snippets show as text with the matched words bold, never as outside HTML; only http(s) results are links | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | ✓ |
 | Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day | `api.nasa.gov/planetary/apod` with `VITE_NASA_API_KEY` (falls back to `DEMO_KEY`) | ✓ |
-| Pokemon | `PokemonSearch` | Pokédex: fuzzy search (`fuzzysort`), stats in US units, a clickable evolution chain, shiny toggle, type chart | PokeAPI, then two mirror APIs if it fails; sprites from the PokeAPI GitHub | ✓ |
+| Pokemon | `PokemonSearch` | Pokédex: fuzzy search (`fuzzysort`), stats in US units, a clickable evolution chain, shiny toggle, type chart | PokeAPI only (the two mirror APIs it used to try were dead); sprites from the PokeAPI GitHub | ✓ |
 | Field Guide | `FieldGuide` | What lives near a place, and where a species lives. The biggest app by far | iNaturalist, Nominatim (OpenStreetMap), Wikipedia, Wikidata. **See the `field-guide` skill.** | ✓ |
-| Music | `Music` | Spotify player with Alex's playlists (`PLAYLISTS`). Playback needs Spotify Premium | Spotify Web API and Web Playback SDK, through `SpotifyContext` | |
-| Notes | `Notes` | A textarea; nothing is saved | none | |
-| Camera | `Camera` | Webcam preview and snapshot | `getUserMedia` | |
+| Music | `Music` | Spotify player with Alex's playlists (`PLAYLISTS`). Playback needs Spotify Premium. A volume slider shows when the window is wider than 620px | Spotify Web API and Web Playback SDK, through `SpotifyContext` | |
+| Notes | `Notes` | A textarea, kept in `localStorage` (`notes_text`) | none | |
+| Camera | `Camera` | Webcam preview and snapshot; Save downloads a JPEG. The webcam turns off when the window closes | `getUserMedia` | |
 | Calculator | `Calculator` | Calculator | none | |
 | Terminal | `Terminal` | Fake shell: `help clear echo date ls cd cat pwd whoami theme history`; `theme dark/light` sets `--term-bg`/`--term-text` | none | |
 | System Preferences | `Preferences` | Placeholder: three category labels | none | |
@@ -114,7 +119,7 @@ The same four routes exist twice. Change one, and change the other to match.
 |---|---|---|
 | `/api/login` | `GET /login`. Vite proxies `/api/*` to `127.0.0.1:8000` and strips `/api` (`vite.config.ts`) | `login.js` |
 | `/api/callback` | `GET /callback`. Redirect URI `http://127.0.0.1:8000/callback` | `callback.js`. Redirect URI `<origin>/api/callback` |
-| `/api/refresh` | `GET /refresh?refresh_token=…` | `refresh.js` |
+| `/api/refresh` | `POST /refresh` with JSON `{ "refresh_token": … }` | `refresh.js` (`onRequestPost`, POST only) |
 | `/api/client_credentials` | `GET /client_credentials` | `client_credentials.js` |
 
 The flow:
@@ -122,10 +127,15 @@ The flow:
 1. Music calls `login()`, which goes to `/api/login`.
 2. Spotify asks you to agree, then sends you to the callback.
 3. The backend swaps the code for tokens and sends you back to the site
-   with `?access_token=…&refresh_token=…`.
-4. `SpotifyContext` reads the tokens, saves them in `localStorage`
-   (`spotify_access_token`, `spotify_refresh_token`), clears the URL and
-   checks `/v1/me` for Premium.
+   with `#access_token=…&refresh_token=…`. The fragment never reaches a
+   server log or a `Referer`. Errors come back as `?error=…`.
+4. `SpotifyContext` reads the tokens (the fragment first, then the query, for
+   an older deploy), saves them in `localStorage` (`spotify_access_token`,
+   `spotify_refresh_token`), clears the URL and checks `/v1/me` for Premium.
+5. An access token lasts an hour. A 401 from `/v1/me` refreshes it once
+   through `POST /api/refresh` (keeping a rotated refresh token if Spotify
+   sends one). If that fails, or a fresh token is refused within a minute,
+   it logs out and says the login expired.
 
 Both redirect URIs have to be listed in the Spotify developer dashboard.
 Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
@@ -165,14 +175,16 @@ Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
 These are facts to know while working, not tasks. Raise one with Alex only
 when it gets in the way.
 
-- `README.md` is still the Vite template.
-- Lint fails on older apps before any change (know-how, `checking.md`). One
-  of the errors is a real bug: `Window.tsx` calls a `useEffect` after the
-  `if (minimized) return null` early return, which breaks the rules of hooks.
-- Window position and size live in two places: `Window.tsx` state and the
-  context. Maximize sets both.
-- All CSS is global. `Calculator.css` defines `.window-controls`, which is
-  also the window's own class, so a change to one can restyle the other.
-- System Preferences and Trash are placeholders. Notes saves nothing.
-- Spotify tokens travel in the URL query, on the callback redirect and on
-  `/api/refresh`.
+- All CSS is global. Prefix every class with the app, and never style a bare
+  element (`button {…}`) in an app's stylesheet: it restyles the whole site
+  (know-how, `maps-and-layout.md`). The site-wide button look lives in
+  `src/styles.css`. Some older classes aren't prefixed yet, such as
+  `.loading`, `.error-state` and `.search-form` in Pokemon and
+  `.control-button` and `.progress-bar` in Music.
+- System Preferences and Trash are placeholders.
+- Music's Premium player gets its token once, when it's built: the SDK's
+  `getOAuthToken` hands back the token from that moment. After about an hour
+  of playing, the SDK may report an auth error. Fixing it needs a Premium
+  login to test.
+- `npm run backend` needs FastAPI installed: `pip install -r
+  backend/requirements.txt`.

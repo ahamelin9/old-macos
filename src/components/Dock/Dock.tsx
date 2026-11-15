@@ -1,5 +1,5 @@
 // Context
-import { useWindows } from '../../contexts/WindowContext';
+import { useWindows } from '../../contexts/useWindows';
 // Apps
 import Finder from '../Apps/Finder/Finder';
 import NasaNews from '../Apps/NasaNews/NasaNews';

@@ -73,7 +73,40 @@ interface EvolutionNode {
   }[];
 }
 
-const parseEvolutionDetail = (d: any): EvolutionDetailParsed => {
+/** A PokeAPI link to another resource */
+interface NamedResource {
+  name: string;
+  url?: string;
+}
+
+/** One way a Pokémon evolves, from PokeAPI's evolution chain (only the fields read here) */
+interface EvolutionDetail {
+  item?: NamedResource | null;
+  held_item?: NamedResource | null;
+  trigger?: NamedResource | null;
+  min_level?: number | null;
+  time_of_day?: string;
+  gender?: number | null;
+  needs_overworld_rain?: boolean;
+  turn_upside_down?: boolean;
+  relative_physical_stats?: number | null;
+  min_happiness?: number | null;
+  known_move?: NamedResource | null;
+  min_affection?: number | null;
+  known_move_type?: NamedResource | null;
+  min_beauty?: number | null;
+  location?: NamedResource | null;
+  trade_species?: NamedResource | null;
+}
+
+/** A link in PokeAPI's evolution chain */
+interface ChainLink {
+  species: NamedResource;
+  evolution_details: EvolutionDetail[];
+  evolves_to: ChainLink[];
+}
+
+const parseEvolutionDetail = (d: EvolutionDetail): EvolutionDetailParsed => {
   let conditionText = "";
   let itemSprite: string | null = null;
   let itemName: string | null = null;
@@ -164,7 +197,7 @@ const parseEvolutionDetail = (d: any): EvolutionDetailParsed => {
 };
 
 // Filter and deduplicate evolution details to keep modern canonical methods clean
-const filterEvolutionDetails = (detailsList: any[]): EvolutionDetailParsed[] => {
+const filterEvolutionDetails = (detailsList: EvolutionDetail[]): EvolutionDetailParsed[] => {
   if (!detailsList || detailsList.length === 0) {
     return [{ conditionText: "Evolves" }];
   }
@@ -190,6 +223,56 @@ const filterEvolutionDetails = (detailsList: any[]): EvolutionDetailParsed[] => 
   return unique.slice(0, 1);
 };
 
+const fetchPokemon = async (pokemonName: string): Promise<PokemonData> => {
+  let response: Response;
+  try {
+    response = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(pokemonName)}`);
+  } catch {
+    throw new Error("Couldn't reach the PokeAPI. If on mobile try turning off wifi, or the PokeAPI might be down.");
+  }
+  if (response.status === 404) throw new Error(`No Pokémon called "${pokemonName}". Check the spelling?`);
+  if (!response.ok) throw new Error("The PokeAPI might be down. Try again in a bit.");
+  return response.json();
+};
+
+/** The whole evolution family, with each Pokémon's sprite; null if it can't be loaded */
+const fetchEvolutionTree = async (url: string): Promise<EvolutionNode | null> => {
+  try {
+    const res = await fetch(url);
+    const data = (await res.json()) as { chain: ChainLink };
+
+    const buildTree = async (node: ChainLink): Promise<EvolutionNode> => {
+      let pokeData: { id: number; name: string; sprites?: { front_default?: string | null } };
+      try {
+        const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
+        pokeData = await pokeRes.json();
+      } catch {
+        pokeData = { id: 0, name: node.species.name, sprites: { front_default: "" } };
+      }
+
+      const evolvesTo = await Promise.all(
+        node.evolves_to.map(async evo => {
+          const target = await buildTree(evo);
+          const details = filterEvolutionDetails(evo.evolution_details);
+          return { target, details };
+        })
+      );
+
+      return {
+        id: pokeData.id,
+        name: pokeData.name,
+        sprite: pokeData.sprites?.front_default || "",
+        evolvesTo
+      };
+    };
+
+    return await buildTree(data.chain);
+  } catch (err) {
+    console.error("Failed to fetch evolution tree", err);
+    return null;
+  }
+};
+
 const PokemonSearch: React.FC = () => {
   const [pokemonData, setPokemonData] = useState<PokemonData | null>(null);
   const [speciesData, setSpeciesData] = useState<PokemonSpecies | null>(null);
@@ -212,7 +295,7 @@ const PokemonSearch: React.FC = () => {
       try {
         const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=10000");
         const data = await res.json();
-        setAllPokemonNames(data.results.map((p: any) => p.name));
+        setAllPokemonNames((data as { results: NamedResource[] }).results.map(p => p.name));
       } catch (err) {
         console.error("Failed to load Pokémon names", err);
       }
@@ -220,66 +303,10 @@ const PokemonSearch: React.FC = () => {
     loadAllPokemon();
   }, []);
 
-  const fetchPokemon = async (pokemonName: string) => {
-    const endpoints = [
-      `https://pokeapi.co/api/v2/pokemon/${pokemonName}`,
-      `https://pokedex-api.vercel.app/api/v2/pokemon/${pokemonName}`,
-      `https://pokeapi.fly.dev/pokeapi/v2/pokemon/${pokemonName}`
-    ];
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetch(endpoint);
-        if (response.ok) {
-          return await response.json();
-        }
-      } catch {
-        continue;
-      }
-    }
-    throw new Error("If on mobile try turning off wifi or the PokeAPI might be down.");
-  };
-
-  const fetchEvolutionTree = async (url: string) => {
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-
-      const buildTree = async (node: any): Promise<EvolutionNode> => {
-        let pokeData: any = null;
-        try {
-          const pokeRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${node.species.name}`);
-          pokeData = await pokeRes.json();
-        } catch {
-          pokeData = { id: 0, name: node.species.name, sprites: { front_default: "" } };
-        }
-
-        const evolvesTo = await Promise.all(
-          node.evolves_to.map(async (evo: any) => {
-            const target = await buildTree(evo);
-            const details = filterEvolutionDetails(evo.evolution_details);
-            return { target, details };
-          })
-        );
-
-        return {
-          id: pokeData.id,
-          name: pokeData.name,
-          sprite: pokeData.sprites?.front_default || "",
-          evolvesTo
-        };
-      };
-
-      const root = await buildTree(data.chain);
-      setEvolutionTree(root);
-    } catch (err) {
-      console.error("Failed to fetch evolution tree", err);
-      setEvolutionTree(null);
-    }
-  };
-
   useEffect(() => {
     if (!searchTerm) return;
+    // A newer search makes this one's answers stale: drop them when they arrive
+    let cancelled = false;
 
     const loadData = async () => {
       setLoading(true);
@@ -290,32 +317,40 @@ const PokemonSearch: React.FC = () => {
       setEvolutionTree(null);
       try {
         const pokemon = await fetchPokemon(searchTerm.toLowerCase());
+        if (cancelled) return;
         setPokemonData(pokemon);
 
         const speciesRes = await fetch(pokemon.species.url);
-        const species = await speciesRes.json();
+        const species = (await speciesRes.json()) as PokemonSpecies;
+        if (cancelled) return;
         setSpeciesData(species);
 
         const types = await Promise.all(
-          pokemon.types.map((t: any) =>
-            fetch(t.type.url).then(res => res.json())
+          pokemon.types.map(t =>
+            fetch(t.type.url).then(res => res.json() as Promise<TypeData>)
           )
         );
+        if (cancelled) return;
         setTypeData(types);
 
         if (species.evolution_chain?.url) {
-          fetchEvolutionTree(species.evolution_chain.url);
+          fetchEvolutionTree(species.evolution_chain.url).then(root => {
+            if (!cancelled) setEvolutionTree(root);
+          });
         }
 
         setShowShiny(false);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadData();
+    return () => {
+      cancelled = true;
+    };
   }, [searchTerm, retryCount]);
 
   const getImageUrl = () => {
@@ -620,7 +655,14 @@ const PokemonSearch: React.FC = () => {
         )}
       </div>
       {loading && <div className="loading">Loading...</div>}
-      {error && <div className="error-state">{error}</div>}
+      {error && (
+        <div className="error-state">
+          <div>{error}</div>
+          <button className="retry-button" onClick={() => setRetryCount(count => count + 1)}>
+            Try again
+          </button>
+        </div>
+      )}
       {pokemonData && (
         <div className="pokemon-details">
           <h3 className="pokemon-name">#{pokemonData.id} - {capitalize(pokemonData.name)}</h3>

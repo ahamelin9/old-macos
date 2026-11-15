@@ -4,14 +4,14 @@
   align-items: center;
 }
 
-.camera-view, .photo-preview {
+.camera-view, .camera-photo-preview {
   width: 80%;
   height: 80%;
   border-radius: 8px;
   margin-bottom: 20px;
 }
 
-.capture-button {
+.camera-capture-button {
   padding: 12px 24px;
   background-color: #4CAF50;
   color: white;
@@ -21,12 +21,12 @@
   cursor: pointer;
 }
 
-.photo-actions {
+.camera-photo-actions {
   display: flex;
   gap: 10px;
 }
 
-.action-button {
+.camera-action-button {
   padding: 10px 20px;
   border: none;
   border-radius: 4px;
@@ -34,7 +34,7 @@
   cursor: pointer;
 }
 
-.error-message {
+.camera-error {
   color: red;
   margin-bottom: 20px;
 }

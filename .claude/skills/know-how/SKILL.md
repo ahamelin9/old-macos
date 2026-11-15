@@ -18,8 +18,9 @@ short however much the list grows.
 |---|---|
 | Prove a change works in a real browser | [Proving a change in a real browser](checking.md#proving-a-change-in-a-real-browser) |
 | Check every app still opens after a shared change | [Does every app still open?](checking.md#does-every-app-still-open) |
+| Check the windows, Camera, Notes, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
 | Nothing works on the port the preview reported | [The dev server isn't on the port the preview says](checking.md#the-dev-server-isnt-on-the-port-the-preview-says) |
-| `npm run lint` fails on files you didn't touch | [Lint fails before you changed anything](checking.md#lint-fails-before-you-changed-anything) |
+| `npm run lint` reports a problem | [`npm run lint` fails](checking.md#npm-run-lint-fails) |
 
 **APIs and backends**: [apis.md](apis.md)
 
@@ -37,6 +38,16 @@ short however much the list grows.
 | `TypeError … '_leaflet_pos'` | [Leaflet throws `_leaflet_pos` after the map closes](maps-and-layout.md#leaflet-throws-_leaflet_pos-after-the-map-closes) |
 | A map is part grey after a resize or after being hidden | [A map is half grey or the wrong size](maps-and-layout.md#a-map-is-half-grey-or-the-wrong-size-after-a-resize-or-being-hidden) |
 | Buttons in a row jump by a pixel when one appears | [A row of buttons shifts by a pixel](maps-and-layout.md#a-row-of-buttons-shifts-by-a-pixel-when-one-appears) |
+| One app's CSS restyles other apps, or a CSS change needs proving | [Every button changed when one app's CSS changed](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed) |
+| Something sits past the edge of the 400px window | [A bar's right end is cut off](maps-and-layout.md#a-bars-right-end-is-cut-off-in-the-400px-window) |
+
+**The smaller apps**: [apps.md](apps.md)
+
+| Symptom or task | Entry |
+|---|---|
+| The webcam stays on after Camera closes, or a stream won't stop | [The webcam stays on](apps.md#the-webcam-stays-on-after-camera-closes) |
+| Pokémon blames the wifi for a misspelled name | [Pokémon says "turn off wifi"](apps.md#pokémon-says-turn-off-wifi-for-a-misspelled-name) |
+| Changing a Music setting disconnects the Premium player | [Music's volume and the player](apps.md#changing-musics-volume-would-disconnect-the-premium-player) |
 
 **Answered elsewhere** (these have their one home in another file):
 
@@ -45,7 +56,6 @@ short however much the list grows.
 | A Field Guide tab, or All Species, is missing species | `field-guide` skill, sections 3 and 4 (`Animalia` means "other animals") |
 | A spot-check gives the wrong status for a well-known species | `field-guide` skill, section 3 (autocomplete can return a "complex") and section 6 |
 | The Wikipedia summary is about the wrong thing | `field-guide` skill, section 4 (the Wikipedia guard) |
-| `git status` shows `tsconfig.tsbuildinfo` after a type check | `CLAUDE.md`, **Running and checking** |
 
 ## Scripts in this folder
 
@@ -53,6 +63,9 @@ short however much the list grows.
 |---|---|
 | `cdp.mjs` | Headless Chrome helper for browser checks (see `checking.md`) |
 | `smoke-check.mjs` | Opens every dock app at desktop and phone width; fails on any page error |
+| `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`) |
+| `app-check.mjs` | Camera, Notes, Safari, Pokémon and Music volume (`checking.md`) |
+| `style-diff.mjs` | Snapshots every button's computed style, to diff before and after a CSS change (`maps-and-layout.md`) |
 
 ## Adding an entry
 

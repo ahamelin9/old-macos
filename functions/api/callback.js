@@ -10,7 +10,7 @@ export async function onRequest(context) {
   const redirect_uri = `${url.origin}/api/callback`;
 
   if (error) {
-    return Response.redirect(`${url.origin}/?error=${error}`, 307);
+    return Response.redirect(`${url.origin}/?error=${encodeURIComponent(error)}`, 307);
   }
 
   if (!code) {
@@ -42,7 +42,13 @@ export async function onRequest(context) {
   }
 
   const tokens = await response.json();
-  const finalUrl = `${url.origin}/?access_token=${tokens.access_token}&refresh_token=${tokens.refresh_token}`;
-  
+  // In the fragment (#), which the browser never sends to a server or puts in
+  // a Referer; the page reads it and clears it (SpotifyContext.tsx)
+  const fragment = new URLSearchParams({
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+  });
+  const finalUrl = `${url.origin}/#${fragment}`;
+
   return Response.redirect(finalUrl, 307);
 }

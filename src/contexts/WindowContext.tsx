@@ -1,137 +1,107 @@
 // React
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { useCallback, useMemo, useRef, useState, ReactNode } from 'react';
+// Context
+import { DesktopWindow, MENU_BAR_HEIGHT, Point, Size, WindowContext } from './useWindows';
 
-interface DesktopWindow {
-  id: number;
-  title: string;
-  content: ReactNode;
-  open: boolean;
-  minimized: boolean;
-  maximized: boolean;
-  originalSize?: { width: number; height: number };
-  originalPosition?: { x: number; y: number };
-  position: { x: number; y: number };
-  size: { width: number; height: number };
-  zIndex: number;
-  lastInteraction: number;
-}
+const DEFAULT_SIZE: Size = { width: 400, height: 300 };
+const EDGE_MARGIN = 8;
 
-interface WindowContextType {
-  windows: DesktopWindow[];
-  closeWindow: (id: number) => void;
-  openWindow: (title: string, content: ReactNode) => void;
-  focusWindow: (id: number) => void;
-  minimizeWindow: (id: number) => void;
-  maximizeWindow: (id: number) => void;
-  restoreWindow: (id: number) => void;
-}
+/**
+ * Where a new window opens: a random spot near the top left on a desktop, but
+ * always fully on screen, shrinking to fit a phone (a 400px window used to
+ * open 10px off the left edge of a 390px phone, hiding its close button).
+ */
+const initialFrame = (): { position: Point; size: Size } => {
+  const width = Math.min(DEFAULT_SIZE.width, window.innerWidth - EDGE_MARGIN * 2);
+  const height = Math.min(DEFAULT_SIZE.height, window.innerHeight - MENU_BAR_HEIGHT - EDGE_MARGIN * 2);
+  const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+  const random = () => Math.floor(Math.random() * 200) + 100;
+  return {
+    position: {
+      x: clamp(random(), EDGE_MARGIN, window.innerWidth - width - EDGE_MARGIN),
+      y: clamp(random(), MENU_BAR_HEIGHT + EDGE_MARGIN, window.innerHeight - height - EDGE_MARGIN)
+    },
+    size: { width, height }
+  };
+};
 
-const WindowContext = createContext<WindowContextType | undefined>(undefined);
+/** The z-index that puts a window in front of all the others */
+const frontZ = (windows: DesktopWindow[]) => Math.max(1, ...windows.map(w => w.zIndex)) + 1;
 
 export const WindowProvider = ({ children }: { children: ReactNode }) => {
   const [windows, setWindows] = useState<DesktopWindow[]>([]);
-  const [globalZIndex, setGlobalZIndex] = useState(1);
+  const nextId = useRef(1);
 
-  const closeWindow = (id: number) => {
-    setWindows(prev => prev.map(w => w.id === id ? {...w, open: false} : w));
-  };
+  const update = useCallback((id: number, change: (w: DesktopWindow) => Partial<DesktopWindow>) => {
+    setWindows(prev => prev.map(w => (w.id === id ? { ...w, ...change(w) } : w)));
+  }, []);
 
-  const openWindow = (title: string, content: ReactNode) => {
-    const newZIndex = globalZIndex + 1;
-    setGlobalZIndex(newZIndex);
-    
+  const openWindow = useCallback((title: string, content: ReactNode) => {
+    const id = nextId.current++;
+    const frame = initialFrame();
     setWindows(prev => [
-      ...prev.filter(w => w.open),
-      {
-        id: Date.now(),
-        title,
-        content,
-        open: true,
-        minimized: false,
-        maximized: false,
-        position: {
-          x: Math.min(window.innerWidth - 400, Math.max(0, Math.floor(Math.random() * 200) + 100)),
-          y: Math.min(window.innerHeight - 300, Math.max(0, Math.floor(Math.random() * 200) + 100))
-        },
-        size: {
-          width: 400,
-          height: 300
-        },
-        zIndex: newZIndex,
-        lastInteraction: Date.now()
-      }
+      ...prev,
+      { id, title, content, minimized: false, maximized: false, zIndex: frontZ(prev), ...frame }
     ]);
-  };
+  }, []);
 
-  const focusWindow = (id: number) => {
-    const newZIndex = globalZIndex + 1;
-    setGlobalZIndex(newZIndex);
-    
-    setWindows(prev => prev.map(w => ({
-      ...w,
-      zIndex: w.id === id ? newZIndex : w.zIndex,
-      lastInteraction: w.id === id ? Date.now() : w.lastInteraction
-    })));
-  };
+  const closeWindow = useCallback((id: number) => {
+    setWindows(prev => prev.filter(w => w.id !== id));
+  }, []);
 
-  const minimizeWindow = (id: number) => {
-    setWindows(prev => prev.map(w => 
-      w.id === id ? { ...w, minimized: true } : w
-    ));
-  };
+  const focusWindow = useCallback((id: number) => {
+    setWindows(prev => {
+      const target = prev.find(w => w.id === id);
+      // Already in front: return the same array so nothing re-renders
+      if (!target || prev.every(w => w === target || w.zIndex < target.zIndex)) return prev;
+      const zIndex = frontZ(prev);
+      return prev.map(w => (w.id === id ? { ...w, zIndex } : w));
+    });
+  }, []);
 
-  const maximizeWindow = (id: number) => {
-    setWindows(prev => prev.map(w => {
-      if (w.id !== id) return w;
-      return {
-        ...w,
-        maximized: true,
-        originalSize: w.size,
-        originalPosition: w.position,
-        position: { x: 0, y: 0 },
-        size: { 
-          width: window.innerWidth, 
-          height: window.innerHeight 
-        }
-      };
+  const setWindowFrame = useCallback((id: number, position: Point, size: Size) => {
+    update(id, () => ({ position, size }));
+  }, [update]);
+
+  const minimizeWindow = useCallback((id: number) => {
+    update(id, () => ({ minimized: true }));
+  }, [update]);
+
+  const restoreWindow = useCallback((id: number) => {
+    setWindows(prev => {
+      const zIndex = frontZ(prev);
+      return prev.map(w => (w.id === id ? { ...w, minimized: false, zIndex } : w));
+    });
+  }, []);
+
+  const maximizeWindow = useCallback((id: number, position: Point, size: Size) => {
+    update(id, w => ({
+      maximized: true,
+      restoreFrame: w.maximized ? w.restoreFrame : { position: w.position, size: w.size },
+      position,
+      size
     }));
-  };
+  }, [update]);
 
-  const restoreWindow = (id: number) => {
-    setWindows(prev => prev.map(w => {
-      if (w.id !== id) return w;
-      return {
-        ...w,
-        maximized: false,
-        minimized: false,
-        size: w.originalSize || { width: 400, height: 300 },
-        position: w.originalPosition || {
-          x: Math.min(window.innerWidth - 400, Math.max(0, Math.floor(Math.random() * 200) + 100)),
-          y: Math.min(window.innerHeight - 300, Math.max(0, Math.floor(Math.random() * 200) + 100))
-        }
-      };
+  const unmaximizeWindow = useCallback((id: number) => {
+    update(id, w => ({
+      maximized: false,
+      restoreFrame: undefined,
+      ...(w.restoreFrame ?? initialFrame())
     }));
-  };
+  }, [update]);
 
-  return (
-    <WindowContext.Provider value={{
-      windows,
-      closeWindow,
-      openWindow,
-      focusWindow,
-      minimizeWindow,
-      maximizeWindow,
-      restoreWindow
-    }}>
-      {children}
-    </WindowContext.Provider>
-  );
-};
+  const value = useMemo(() => ({
+    windows,
+    openWindow,
+    closeWindow,
+    focusWindow,
+    setWindowFrame,
+    minimizeWindow,
+    restoreWindow,
+    maximizeWindow,
+    unmaximizeWindow
+  }), [windows, openWindow, closeWindow, focusWindow, setWindowFrame, minimizeWindow, restoreWindow, maximizeWindow, unmaximizeWindow]);
 
-export const useWindows = () => {
-  const context = useContext(WindowContext);
-  if (!context) {
-    throw new Error('useWindows must be used within a WindowProvider');
-  }
-  return context;
+  return <WindowContext.Provider value={value}>{children}</WindowContext.Provider>;
 };

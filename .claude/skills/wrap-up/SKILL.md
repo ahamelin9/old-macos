@@ -73,5 +73,5 @@ prompt names it):
    wrong.
 5. **Ready for a commit** (CLAUDE.md, step 5). Check that `git status`
    shows only the files the work meant to change: no stray
-   `.claude/launch.json`, no scratch files, no `tsconfig.tsbuildinfo` churn.
+   `.claude/launch.json` and no scratch files.
 6. **Report.** Give a short list of what went where, so Alex can check it.

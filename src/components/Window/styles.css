@@ -28,7 +28,7 @@
 
 .window-controls {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   position: absolute;
   left: 8px;
   z-index: 1000;

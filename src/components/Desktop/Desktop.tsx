@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 // Packages
 import { format } from 'date-fns';
 // Components
-import { useWindows } from '../../contexts/WindowContext';
-import { useSpotify } from '../../contexts/SpotifyContext';
+import { useWindows } from '../../contexts/useWindows';
+import { useSpotify } from '../../contexts/useSpotify';
 import Window from '../Window/Window';
 import Dock from '../Dock/Dock';
 // Styling
@@ -23,9 +23,9 @@ const Desktop = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const sortedWindows = [...windows]
-    .filter(window => window.open && !window.minimized)
-    .sort((a, b) => b.zIndex - a.zIndex);
+  // Stacking comes from each window's z-index, so the DOM order stays put
+  // (reordering it on every click would move live content like the camera)
+  const visibleWindows = windows.filter(window => !window.minimized);
 
   return (
     <div className="desktop" style={{ backgroundImage: "url(/mac-os-background.jpg)" }}>
@@ -51,16 +51,15 @@ const Desktop = () => {
         </div>
       </div>
       
-      {sortedWindows.map(window => (
-        <Window 
+      {visibleWindows.map(window => (
+        <Window
           key={window.id}
           id={window.id}
           title={window.title}
           onClose={() => closeWindow(window.id)}
-          initialPosition={window.position}
-          initialSize={window.size}
+          position={window.position}
+          size={window.size}
           zIndex={window.zIndex}
-          minimized={window.minimized}
           maximized={window.maximized}
         >
           {window.content}
