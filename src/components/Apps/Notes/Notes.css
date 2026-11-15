@@ -8,6 +8,7 @@
   border: none;
   resize: none;
   padding: 10px;
-  font-family: 'Geneva', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-strong);
 }

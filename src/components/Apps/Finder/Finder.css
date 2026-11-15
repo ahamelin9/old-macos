@@ -2,31 +2,17 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  font-family: var(--font-body);
+  color: var(--color-text-strong);
 }
 
-.finder-toolbar {
+.finder-toolbar .toolbar-buttons {
   display: flex;
-  align-items: center;
-  padding: 4px;
-  background: #ececec;
-  border-bottom: 1px solid #ccc;
-  color: #222;
+  gap: 4px;
 }
 
-.toolbar-buttons button {
-  margin-right: 4px;
+.finder-toolbar button {
   padding: 2px 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #f9f9f9;
-  color: #222;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.toolbar-buttons button:hover {
-  background: #e0e0e0;
-  color: #222;
 }
 
 .finder-body {
@@ -36,39 +22,29 @@
 
 .finder-sidebar {
   width: 150px;
-  background: #f0f0f0;
-  color: #222;
+  background: var(--color-surface-alt);
   padding: 4px;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--color-border-light);
 }
 
-.sidebar-item {
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
+.finder-sidebar .sidebar-item {
+  font-size: var(--text-base);
 }
 
-.sidebar-item.selected,
-.sidebar-item:hover {
-  background: #cce0ff;
-  color: #222;
-}
-
-.sidebar-links {
+.finder-sidebar .sidebar-links {
   margin-top: 8px;
   display: flex;
   flex-direction: column;
 }
 
-.sidebar-links a {
-  font-size: 12px;
-  color: #0645AD;
+.finder-sidebar .sidebar-links a {
+  font-size: var(--text-md);
+  color: var(--color-link);
   text-decoration: none;
   margin-bottom: 2px;
 }
 
-.sidebar-links a:hover {
+.finder-sidebar .sidebar-links a:hover {
   text-decoration: underline;
 }
 
@@ -76,19 +52,18 @@
   flex: 1;
   padding: 8px;
   overflow-y: auto;
-  color: #222;
 }
 
-.content-section h2 {
+.finder-content h2 {
   margin-top: 0;
-  font-size: 16px;
+  font-size: var(--text-xl);
 }
 
-.content-section p,
-.content-section ul {
-  font-size: 14px;
+.finder-content p,
+.finder-content ul {
+  font-size: var(--text-lg);
 }
 
-.content-section ul {
+.finder-content ul {
   list-style: disc inside;
 }

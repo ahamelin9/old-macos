@@ -26,6 +26,7 @@ for an existing entry and update it instead.
 | A reusable test or check script | **`.claude/skills/know-how/`**, next to `cdp.mjs`, never the scratchpad (it's deleted after the session) | `smoke-check.mjs` |
 | How the site fits together: a new app, a moved file, a new service, a new env var | **`system-map` skill**: the apps table, the env-var table, the Spotify table | A new dock app gets a row |
 | Field Guide data facts, decisions and their reasons, spot-check answers | **`field-guide` skill** (sections 3 to 6) | "All Species sends no group filter" |
+| A shared colour, size or pattern, or a decision about how the site looks | **`tokens.css`** for the value, **`design` skill** for the rule or decision | "Snap to the nearest token" |
 | An idea raised but not built, or a question still open | The **"ideas not done yet"** list in that app's skill (`field-guide` section 8), or system-map's **Known rough edges** for the whole site | Bird sounds |
 | A new skill, or a new kind of thing to look up | **`CLAUDE.md`**: a row in **Table of contents** | A `pokemon` skill once that app grows |
 | A rule every change must keep | **`CLAUDE.md`**, **Guardrails** | No secrets in `VITE_*` vars |

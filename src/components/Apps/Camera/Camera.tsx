@@ -94,7 +94,7 @@ const Camera: React.FC = () => {
             muted
             className="camera-view"
           />
-          <button onClick={takePhoto} className="camera-capture-button" disabled={!streaming}>
+          <button onClick={takePhoto} className="camera-capture-button mac-button-primary" disabled={!streaming}>
             Take Photo
           </button>
         </>

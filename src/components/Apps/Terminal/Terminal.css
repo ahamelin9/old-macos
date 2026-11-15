@@ -1,19 +1,23 @@
-:root {
-  --term-bg: #fff;
-  --term-text: #000;
-  --term-prompt: #6D8CBE;
-  --term-error: #FF5F56;
-}
-
 .terminal-content {
+  /* The terminal's own colours; `theme dark` swaps them (terminal-dark) */
+  --term-bg: var(--color-surface);
+  --term-text: var(--grey-0);
+  --term-prompt: var(--blue-500);
+  --term-error: var(--red-400);
+
   height: 100%;
   display: flex;
   flex-direction: column;
-  font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
   padding: 8px;
   background-color: var(--term-bg);
   color: var(--term-text);
+}
+
+.terminal-content.terminal-dark {
+  --term-bg: var(--grey-13);
+  --term-text: var(--grey-87);
 }
 
 .terminal-output {
@@ -29,7 +33,7 @@
   align-items: center;
 }
 
-.prompt {
+.terminal-content .prompt {
   margin-right: 8px;
   font-weight: bold;
   color: var(--term-prompt);
@@ -59,10 +63,10 @@
 }
 
 .terminal-output::-webkit-scrollbar-thumb {
-  background-color: rgba(109, 140, 190, 0.5);
-  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--term-prompt) 50%, transparent);
+  border-radius: var(--radius);
 }
 
 .terminal-output::-webkit-scrollbar-thumb:hover {
-  background-color: #6D8CBE;
+  background-color: var(--term-prompt);
 }

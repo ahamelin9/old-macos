@@ -1,0 +1,86 @@
+/*
+ * Kit: shared classes for patterns more than one app uses. Add one with
+ * className="mac-…" in any app. A pattern used twice belongs here; an app's
+ * own stylesheet then keeps only what makes it different. It sits in the
+ * `kit` layer, so an app rule overrides it.
+ */
+@layer kit {
+  /* A platinum strip of controls along the top of a window */
+  .mac-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: var(--color-chrome);
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text-strong);
+  }
+
+  /* A one-line text field */
+  .mac-field {
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    color: var(--color-text-strong);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xs);
+    padding: 4px 6px;
+    box-shadow: var(--shadow-inset);
+  }
+
+  .mac-field:focus {
+    outline: 2px solid var(--color-accent-light);
+    outline-offset: 0;
+  }
+
+  /* The blue Aqua button, for the one main action in a view */
+  .mac-button-primary {
+    background: var(--gradient-aqua);
+    border-color: var(--blue-800);
+    color: var(--color-text-on-accent);
+    text-shadow: var(--shadow-text-dark);
+  }
+
+  .mac-button-primary:hover {
+    background: var(--gradient-aqua);
+    filter: brightness(1.08);
+  }
+
+  .mac-button-primary:active {
+    background: var(--blue-700);
+  }
+
+  /* Waiting on something (Camera before the webcam starts): dimmed, not clickable-looking */
+  .mac-button-primary:disabled {
+    background: var(--gradient-aqua);
+    box-shadow: none;
+    filter: saturate(0.4);
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  /* Loading, empty and error messages, centred in the window */
+  .mac-message {
+    padding: 16px;
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    color: var(--color-text-muted);
+  }
+
+  .mac-message-error {
+    color: var(--color-error);
+  }
+
+  /* A row in a sidebar or list that can be selected; add mac-selected to the chosen one */
+  .mac-list-row {
+    padding: 4px 6px;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .mac-list-row:hover,
+  .mac-list-row.mac-selected {
+    background: var(--color-selection);
+  }
+}

@@ -1,4 +1,6 @@
 .trash-container {
   text-align: center;
   margin: 20px;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
 }

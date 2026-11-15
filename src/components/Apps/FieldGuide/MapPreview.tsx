@@ -66,8 +66,8 @@ const MapPreview: React.FC<MapPreviewProps> = ({
     }
 
     const circle = L.circle([lat, lng], {
-      color: '#2a75bb',
-      fillColor: '#6D8CBE',
+      // Its stroke and fill come from .fg-map-zone in FieldGuide.css
+      className: 'fg-map-zone',
       fillOpacity: 0.15,
       weight: 2,
       dashArray: '4, 4',
@@ -77,10 +77,10 @@ const MapPreview: React.FC<MapPreviewProps> = ({
 
     const marker = L.marker([lat, lng], { icon: customPin }).addTo(map);
     marker.bindPopup(`
-      <div style="font-family: 'Geneva', 'Lucida Grande', sans-serif; font-size: 11px; padding: 2px; line-height: 1.4;">
-        <strong style="color: #111;">${locationName}</strong><br/>
-        <span style="color: #666;">Lat: ${lat.toFixed(4)}°, Lng: ${lng.toFixed(4)}°</span><br/>
-        <span style="color: #2a75bb; font-size: 10px;">${radiusKm}km observation zone</span>
+      <div class="fg-map-popup">
+        <strong class="fg-map-popup-name">${locationName}</strong><br/>
+        <span class="fg-map-popup-coords">Lat: ${lat.toFixed(4)}°, Lng: ${lng.toFixed(4)}°</span><br/>
+        <span class="fg-map-popup-zone">${radiusKm}km observation zone</span>
       </div>
     `);
     markerRef.current = marker;

@@ -1,41 +1,46 @@
 .nasa-container {
+  /* NASA's own colours */
+  --nasa-blue: #0b3d91;
+  --nasa-red: #e83f3f;
+
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  font-family: 'Arial', sans-serif;
-  color: #333;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background-color: var(--grey-97);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
 }
 
 .nasa-title {
-  color: #0b3d91;
+  color: var(--nasa-blue);
   text-align: center;
-  border-bottom: 2px solid #0b3d91;
+  border-bottom: 2px solid var(--nasa-blue);
   padding-bottom: 10px;
 }
 
-.apod-container {
+.nasa-container .apod-container {
   margin-top: 20px;
-  background-color: white;
+  background-color: var(--color-surface);
   padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 5px var(--black-a05);
 }
 
-.apod-title {
-  color: #0b3d91;
+.nasa-container .apod-title {
+  color: var(--nasa-blue);
   margin-bottom: 5px;
 }
 
-.apod-date {
-  color: #666;
+.nasa-container .apod-date {
+  color: var(--color-text-muted);
   font-style: italic;
   margin-bottom: 15px;
 }
 
-.apod-image-container, .apod-video-container {
+.nasa-container .apod-image-container,
+.nasa-container .apod-video-container {
   margin: 15px 0;
   text-align: center;
   display: flex;
@@ -45,122 +50,112 @@
   width: 100%;
 }
 
-.quality-indicator {
-  font-size: 11px;
-  background-color: #eee;
+.nasa-container .quality-indicator {
+  font-size: var(--text-sm);
+  background-color: var(--grey-93);
   padding: 4px 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  color: #666;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-muted);
 }
 
-.button-row {
+.nasa-container .button-row {
   display: flex;
   gap: 10px;
   align-items: center;
   margin-top: 10px;
 }
 
-.download-link {
-  font-size: 11px;
-  color: #0b3d91;
+.nasa-container .download-link {
+  font-size: var(--text-sm);
+  color: var(--nasa-blue);
   text-decoration: underline;
   cursor: pointer;
 }
 
-.hd-active {
-  border: 2px solid #0b3d91;
+.nasa-container .hd-active {
+  border: 2px solid var(--nasa-blue);
 }
 
-.apod-image {
+.nasa-container .apod-image {
   max-width: 100%;
   height: auto;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-raised);
 }
 
-video.apod-video {
+.nasa-container video.apod-video {
   width: 100%;
   max-width: 720px;
   height: auto;
   max-height: 420px;
-  background: #000;
-  border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  background: var(--grey-0);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-raised);
 }
 
-iframe.apod-video {
+.nasa-container iframe.apod-video {
   width: 100%;
   max-width: 720px;
   height: 380px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
-.apod-explanation {
+.nasa-container .apod-explanation {
   line-height: 1.6;
   margin: 15px 0;
 }
 
-.apod-copyright {
-  font-size: 0.9em;
-  color: #666;
+.nasa-container .apod-copyright {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
   text-align: right;
   font-style: italic;
 }
 
-.hd-toggle {
-  background: linear-gradient(to bottom, #FFFFFF 0%, #DCDCDC 100%);
-  color: #333;
-  border: 1px solid #999;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+.nasa-container .hd-toggle {
+  padding: 6px 15px;
 }
 
-.hd-toggle:hover {
-  background: #f8f8f8;
-}
-
-.nasa-links {
+.nasa-container .nasa-links {
   margin-top: 25px;
   padding-top: 15px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--grey-87);
 }
 
-.nasa-links h4 {
-  color: #0b3d91;
+.nasa-container .nasa-links h4 {
+  color: var(--nasa-blue);
   margin-bottom: 10px;
 }
 
-.nasa-links ul {
+.nasa-container .nasa-links ul {
   list-style-type: none;
   padding: 0;
 }
 
-.nasa-links li {
+.nasa-container .nasa-links li {
   margin-bottom: 8px;
 }
 
-.nasa-links a {
-  color: #0b3d91;
+.nasa-container .nasa-links a {
+  color: var(--nasa-blue);
   text-decoration: none;
   transition: color 0.3s;
 }
 
-.nasa-links a:hover {
-  color: #e83f3f;
+.nasa-container .nasa-links a:hover {
+  color: var(--nasa-red);
   text-decoration: underline;
 }
 
-.loading, .error {
+.nasa-container.loading,
+.nasa-container.error {
   text-align: center;
   padding: 40px;
-  font-size: 1.2em;
+  font-size: var(--text-2xl);
 }
 
-.error {
-  color: #e83f3f;
+.nasa-container.error {
+  color: var(--color-error);
 }

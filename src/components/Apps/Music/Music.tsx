@@ -329,7 +329,7 @@ const Music = () => {
         <div className="spotify-banner">
           <span className="warning-icon">⚠️</span>
           {authError ? (
-            <span style={{ color: '#ff4444' }}><strong>Login Error:</strong> {authError}</span>
+            <span className="music-error-text"><strong>Login Error:</strong> {authError}</span>
           ) : (
             <span>Connect to Spotify Premium for full songs or enjoy 30-second previews.</span>
           )}
@@ -337,7 +337,7 @@ const Music = () => {
       )}
       
       {isPremium && sdkError && (
-        <div className="spotify-banner" style={{ backgroundColor: '#ffcccc', color: '#cc0000' }}>
+        <div className="spotify-banner music-banner-error">
           <span><strong>Player Issue:</strong> {sdkError}</span>
         </div>
       )}
@@ -372,9 +372,9 @@ const Music = () => {
           
           <div className="track-list-scroll">
             {loadError ? (
-              <div style={{ padding: '10px', color: '#ff4444' }}>{loadError}</div>
+              <div className="mac-message mac-message-error">{loadError}</div>
             ) : tracks.length === 0 ? (
-              <div style={{ padding: '10px', color: '#888' }}>Loading tracks...</div>
+              <div className="mac-message">Loading tracks...</div>
             ) : (
               tracks.map((track) => (
                 <div

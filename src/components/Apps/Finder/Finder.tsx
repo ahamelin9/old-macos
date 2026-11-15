@@ -49,7 +49,7 @@ const Finder: React.FC = () => {
 
   return (
     <div className="finder-inner">
-      <div className="finder-toolbar">
+      <div className="finder-toolbar mac-toolbar">
         <div className="toolbar-buttons">
           <button>Back</button>
           <button>Forward</button>
@@ -63,7 +63,7 @@ const Finder: React.FC = () => {
           {['About Me', 'Interests', 'Projects', 'Skills'].map(item => (
             <div
               key={item}
-              className={`sidebar-item ${activeSection === item ? 'selected' : ''}`}
+              className={`sidebar-item mac-list-row ${activeSection === item ? 'mac-selected' : ''}`}
               onClick={() => setActiveSection(item)}
             >
               {item}

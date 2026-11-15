@@ -3,7 +3,8 @@
    ========================================================= */
 
 .fieldguide-app {
-  /* Colour key -- mirrored in palette.ts, which tints the map tiles. Change both. */
+  /* Colour key. --fg-range and --fg-sightings are mirrored in palette.ts,
+     which tints the map tiles: change both together. */
   --fg-native: #5E9E4A;
   --fg-introduced: #C4763A;
   --fg-endemic: #8E5FBF;
@@ -11,12 +12,33 @@
   --fg-absent: #E8E8E8;
   --fg-range: #5F6B7A;
   --fg-sightings: #C0392B;
+
+  /* The IUCN Red List's own status colours, for the conservation chips */
+  --fg-iucn-dd: #D1D1C6;
+  --fg-iucn-lc: #60C659;
+  --fg-iucn-nt: #CCE226;
+  --fg-iucn-vu: #F9E814;
+  --fg-iucn-en: #FC7F3F;
+  --fg-iucn-cr: #D81E05;
+  --fg-iucn-ew: #542344;
+
+  /* Warm highlight: the chosen season, this month, and notes about missing data */
+  --fg-season: #FFF6E0;
+  --fg-season-edge: #D9B25F;
+  --fg-season-ink: #5A420C;
+  --fg-note-ink: #7A5A12;
+
+  /* Display sizes: photo credits, and the big emoji stand-ins for a missing photo */
+  --fg-text-micro: 8px;
+  --fg-icon-lg: 40px;
+  --fg-icon-xl: 48px;
+
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background-color: #ECE9D8;
-  font-family: 'Geneva', 'Lucida Grande', 'Chicago', Helvetica, Arial, sans-serif;
-  color: #111;
+  background-color: var(--color-chrome);
+  font-family: var(--font-body);
+  color: var(--grey-7);
   user-select: text;
   box-sizing: border-box;
   padding: 8px;
@@ -25,16 +47,16 @@
 }
 
 /* Retro Buttons */
-.retro-button {
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  font-size: 11px;
+.fieldguide-app .retro-button {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
   font-weight: bold;
   padding: 4px 12px;
-  background: linear-gradient(to bottom, #FFFFFF 0%, #E6E6E6 40%, #CCCCCC 100%);
-  border: 1px solid #707070;
-  border-radius: 4px;
-  box-shadow: inset 1px 1px 0px #FFFFFF, 1px 1px 2px rgba(0, 0, 0, 0.2);
-  color: #222;
+  background: linear-gradient(to bottom, var(--color-surface) 0%, var(--grey-90) 40%, var(--grey-80) 100%);
+  border: 1px solid var(--grey-40);
+  border-radius: var(--radius);
+  box-shadow: inset 1px 1px 0px var(--grey-100), 1px 1px 2px var(--black-a20);
+  color: var(--grey-13);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -43,233 +65,233 @@
   line-height: 1.2;
 }
 
-.retro-button:hover {
-  background: linear-gradient(to bottom, #FFFFFF 0%, #D8D8D8 40%, #BFBFBF 100%);
+.fieldguide-app .retro-button:hover {
+  background: linear-gradient(to bottom, var(--color-surface) 0%, var(--grey-84) 40%, var(--grey-77) 100%);
 }
 
-.retro-button:active {
-  background: linear-gradient(to bottom, #B0B0B0 0%, #CCCCCC 100%);
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.4);
+.fieldguide-app .retro-button:active {
+  background: linear-gradient(to bottom, var(--grey-69) 0%, var(--grey-80) 100%);
+  box-shadow: inset 1px 1px 2px var(--black-a40);
 }
 
-.retro-mini-button {
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  font-size: 10px;
+.fieldguide-app .retro-mini-button {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
   padding: 2px 7px;
-  background: #EAEAEA;
-  border: 1px solid #999;
-  border-radius: 3px;
+  background: var(--grey-93);
+  border: 1px solid var(--grey-60);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  color: #333;
+  color: var(--grey-20);
 }
 
-.retro-mini-button:hover {
-  background: #D8E4F8;
-  border-color: #4769A5;
+.fieldguide-app .retro-mini-button:hover {
+  background: var(--blue-100);
+  border-color: var(--blue-600);
 }
 
-.retro-mini-button.active-location,
-.retro-mini-button.active-filter {
-  background: #4769A5;
-  color: white;
-  border-color: #2A487B;
+.fieldguide-app .retro-mini-button.active-location,
+.fieldguide-app .retro-mini-button.active-filter {
+  background: var(--blue-600);
+  color: var(--color-text-on-accent);
+  border-color: var(--blue-800);
   font-weight: bold;
 }
 
 /* Toolbar & Search Form */
 /* The search panel. Its top border is the line the mode tabs stand on, the
    same weight as the category tabs' line. */
-.fieldguide-toolbar {
-  background: #DFDFDF;
-  border: 1px solid #999;
-  border-top: 2px solid #808080;
-  border-left-color: #FFF;
-  border-radius: 0 0 4px 4px;
+.fieldguide-app .fieldguide-toolbar {
+  background: var(--grey-87);
+  border: 1px solid var(--grey-60);
+  border-top: 2px solid var(--grey-50);
+  border-left-color: var(--grey-100);
+  border-radius: 0 0 var(--radius) var(--radius);
   padding: 8px 8px 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 1px 1px 2px var(--black-a05);
 }
 
-.fieldguide-search-form {
+.fieldguide-app .fieldguide-search-form {
   display: flex;
   gap: 6px;
   align-items: center;
 }
 
-.fieldguide-input-wrapper {
+.fieldguide-app .fieldguide-input-wrapper {
   position: relative;
   flex: 1;
   display: flex;
   align-items: center;
 }
 
-.fieldguide-search-icon {
+.fieldguide-app .fieldguide-search-icon {
   position: absolute;
   left: 6px;
-  font-size: 12px;
+  font-size: var(--text-md);
   pointer-events: none;
   opacity: 0.7;
 }
 
-.fieldguide-search-input {
+.fieldguide-app .fieldguide-search-input {
   width: 100%;
   padding: 4px 24px 4px 24px;
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  font-size: 12px;
-  background: #FFFFFF;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  background: var(--color-surface);
   border: 2px solid;
-  border-color: #808080 #DFDFDF #DFDFDF #808080;
-  border-radius: 2px;
+  border-color: var(--grey-50) var(--grey-87) var(--grey-87) var(--grey-50);
+  border-radius: var(--radius-xs);
   box-sizing: border-box;
-  color: #111;
+  color: var(--grey-7);
   outline: none;
 }
 
-.fieldguide-search-input:focus {
-  border-color: #4769A5 #7A9EE5 #7A9EE5 #4769A5;
-  box-shadow: 0 0 3px rgba(71, 105, 165, 0.5);
+.fieldguide-app .fieldguide-search-input:focus {
+  border-color: var(--blue-600) var(--blue-450) var(--blue-450) var(--blue-600);
+  box-shadow: 0 0 3px color-mix(in srgb, var(--blue-600) 50%, transparent);
 }
 
-.fieldguide-clear-btn {
+.fieldguide-app .fieldguide-clear-btn {
   position: absolute;
   right: 5px;
   background: none;
   border: none;
-  font-size: 13px;
-  color: #777;
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 0 3px;
 }
 
-.fieldguide-clear-btn:hover {
-  color: #000;
+.fieldguide-app .fieldguide-clear-btn:hover {
+  color: var(--grey-0);
 }
 
-.search-btn {
-  background: linear-gradient(to bottom, #74A6E8 0%, #4769A5 100%);
-  color: #FFF;
-  border-color: #2A487B;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.4);
+.fieldguide-app .search-btn {
+  background: linear-gradient(to bottom, var(--blue-450) 0%, var(--blue-600) 100%);
+  color: var(--color-text-on-accent);
+  border-color: var(--blue-800);
+  text-shadow: 0 1px 1px var(--black-a40);
 }
 
-.search-btn:hover {
-  background: linear-gradient(to bottom, #86B5F5 0%, #3B5B94 100%);
+.fieldguide-app .search-btn:hover {
+  background: linear-gradient(to bottom, var(--blue-350) 0%, var(--blue-700) 100%);
 }
 
-.search-btn,
-.near-me-btn {
+.fieldguide-app .search-btn,
+.fieldguide-app .near-me-btn {
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 /* Lit up while the results are for the user's own location */
-.near-me-btn.active {
-  background: linear-gradient(to bottom, #DCE7FA 0%, #B9CDF0 100%);
-  border-color: #4769A5;
-  color: #1F3A6B;
+.fieldguide-app .near-me-btn.active {
+  background: linear-gradient(to bottom, var(--blue-100) 0%, var(--blue-200) 100%);
+  border-color: var(--blue-600);
+  color: var(--blue-900);
 }
 
 /* Square icon button, same height as Explore */
-.near-me-btn {
+.fieldguide-app .near-me-btn {
   padding: 4px 7px;
 }
 
-.near-me-icon {
+.fieldguide-app .near-me-icon {
   display: block;
 }
 
-.near-me-btn:disabled {
+.fieldguide-app .near-me-btn:disabled {
   cursor: progress;
 }
 
 /* Blink the crosshair while waiting for a fix */
-.near-me-btn.locating .near-me-icon {
-  animation: near-me-pulse 0.9s ease-in-out infinite;
+.fieldguide-app .near-me-btn.locating .near-me-icon {
+  animation: fieldguide-near-me-pulse 0.9s ease-in-out infinite;
 }
 
-@keyframes near-me-pulse {
+@keyframes fieldguide-near-me-pulse {
   50% { opacity: 0.25; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .near-me-btn.locating .near-me-icon {
+  .fieldguide-app .near-me-btn.locating .near-me-icon {
     animation: none;
     opacity: 0.5;
   }
 }
 
 /* Autocomplete Suggestions Box */
-.fieldguide-suggestions-box {
+.fieldguide-app .fieldguide-suggestions-box {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  background: #FFFFFF;
-  border: 1px solid #707070;
-  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.25);
+  background: var(--color-surface);
+  border: 1px solid var(--grey-40);
+  box-shadow: 2px 4px 8px var(--black-a30);
   list-style: none;
   margin: 2px 0 0 0;
   padding: 0;
   z-index: 2000;
   max-height: 160px;
   overflow-y: auto;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
-.suggestion-row {
+.fieldguide-app .suggestion-row {
   padding: 5px 8px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  border-bottom: 1px solid #F0F0F0;
+  border-bottom: 1px solid var(--grey-94);
 }
 
-.suggestion-row:hover {
-  background-color: #4769A5;
-  color: white;
+.fieldguide-app .suggestion-row:hover {
+  background-color: var(--blue-600);
+  color: var(--color-text-on-accent);
 }
 
-.sug-pin {
-  font-size: 11px;
+.fieldguide-app .sug-pin {
+  font-size: var(--text-sm);
 }
 
-.sug-text {
+.fieldguide-app .sug-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Quick Locations */
-.fieldguide-quick-locations {
+.fieldguide-app .fieldguide-quick-locations {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
 }
 
-.quick-label {
-  font-size: 10px;
+.fieldguide-app .quick-label {
+  font-size: var(--text-xs);
   font-weight: bold;
-  color: #555;
+  color: var(--grey-33);
   margin-right: 2px;
 }
 
 /* Location Status & Map Banner */
-.fieldguide-location-banner {
-  background: #E2E2E2;
-  border: 1px solid #A0A0A0;
-  border-radius: 4px;
+.fieldguide-app .fieldguide-location-banner {
+  background: var(--grey-90);
+  border: 1px solid var(--grey-63);
+  border-radius: var(--radius);
   padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.location-info-bar {
+.fieldguide-app .location-info-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -277,26 +299,26 @@
   gap: 6px;
 }
 
-.location-title-row {
+.fieldguide-app .location-title-row {
   display: flex;
   align-items: baseline;
   gap: 6px;
   overflow: hidden;
 }
 
-.location-badge {
-  font-size: 12px;
+.fieldguide-app .location-badge {
+  font-size: var(--text-md);
   font-weight: bold;
-  color: #1A3668;
+  color: var(--blue-900);
 }
 
-.location-coords {
-  font-size: 10px;
-  color: #666;
-  font-family: 'Monaco', 'Courier New', monospace;
+.fieldguide-app .location-coords {
+  font-size: var(--text-xs);
+  color: var(--grey-40);
+  font-family: var(--font-mono);
 }
 
-.location-controls-row {
+.fieldguide-app .location-controls-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -304,97 +326,123 @@
 }
 
 /* "In season now": a checkbox that reads as one of the row's controls */
-.season-toggle {
+.fieldguide-app .season-toggle {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   padding: 1px 6px 1px 3px;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
-.season-toggle input {
+.fieldguide-app .season-toggle input {
   margin: 0;
 }
 
-.season-toggle.active {
-  background: #FFF6E0;
-  border-color: #D9B25F;
-  color: #5A420C;
+.fieldguide-app .season-toggle.active {
+  background: var(--fg-season);
+  border-color: var(--fg-season-edge);
+  color: var(--fg-season-ink);
 }
 
-.radius-selector-group {
+.fieldguide-app .radius-selector-group {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
-.retro-select {
-  font-family: 'Geneva', sans-serif;
-  font-size: 10px;
-  background: #FFF;
-  border: 1px solid #777;
-  border-radius: 2px;
+.fieldguide-app .retro-select {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-xs);
   padding: 1px 3px;
 }
 
-.map-toggle-btn {
-  font-size: 10px;
+.fieldguide-app .map-toggle-btn {
+  font-size: var(--text-xs);
   padding: 2px 6px;
 }
 
 /* Map Preview Container */
-.fieldguide-map-wrapper {
+.fieldguide-app .fieldguide-map-wrapper {
   border: 2px solid;
-  border-color: #808080 #FFFFFF #FFFFFF #808080;
-  background: #000;
-  border-radius: 3px;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  background: var(--grey-0);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
-.fieldguide-map-header {
-  background: linear-gradient(to bottom, #5978B4, #3B5A96);
-  color: #FFF;
+.fieldguide-app .fieldguide-map-header {
+  background: var(--gradient-titlebar);
+  color: var(--color-text-on-accent);
   padding: 3px 6px;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: bold;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 1px var(--black-a50);
 }
 
-.fieldguide-map-canvas {
+.fieldguide-app .fieldguide-map-canvas {
   width: 100%;
   height: 140px;
-  background: #CAD2D3;
+  background: var(--grey-80);
 }
 
-.retro-map-pin {
-  font-size: 20px;
+/* The observation zone circle and the pin's popup, drawn by Leaflet in MapPreview */
+.fieldguide-app .fg-map-zone {
+  stroke: var(--color-accent);
+  fill: var(--blue-500);
+}
+
+.fieldguide-app .fg-map-popup {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  padding: 2px;
+  line-height: 1.4;
+}
+
+.fieldguide-app .fg-map-popup-name {
+  color: var(--grey-7);
+}
+
+.fieldguide-app .fg-map-popup-coords {
+  color: var(--color-text-muted);
+}
+
+.fieldguide-app .fg-map-popup-zone {
+  color: var(--color-accent);
+  font-size: var(--text-xs);
+}
+
+.fieldguide-app .retro-map-pin {
+  font-size: var(--text-2xl);
   line-height: 1;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  text-shadow: 0 2px 4px var(--black-a50);
   cursor: pointer;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 3px var(--black-a30));
 }
 
 /* Category Tabs (Authentic Classic Mac OS Platinum Notebook Tabs) */
-.fieldguide-tabs-bar {
+.fieldguide-app .fieldguide-tabs-bar {
   container-type: inline-size;
 }
 
 /* One row when wide. It never wraps: a wrapped filter box used to land
    between the tabs and the line they sit on. Narrow windows restack below. */
-.fieldguide-tabs-container {
+.fieldguide-app .fieldguide-tabs-container {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  border-bottom: 2px solid #808080;
+  border-bottom: 2px solid var(--grey-50);
   padding: 0 2px;
   gap: 6px;
   flex-wrap: nowrap;
@@ -402,7 +450,7 @@
   margin-top: 4px;
 }
 
-.fieldguide-tabs {
+.fieldguide-app .fieldguide-tabs {
   display: flex;
   gap: 2px;
   flex-wrap: wrap;
@@ -411,45 +459,45 @@
   bottom: -2px; /* Pulls active tab border directly over container line */
 }
 
-.retro-tab {
+.fieldguide-app .retro-tab {
   all: unset;
   box-sizing: border-box;
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
   padding: 4px 9px 3px 9px;
-  background: linear-gradient(to bottom, #ECE8DF 0%, #D5D0C6 100%);
-  border: 1px solid #999;
-  border-bottom: 2px solid #808080;
-  border-radius: 4px 4px 0 0;
+  background: linear-gradient(to bottom, var(--grey-90) 0%, var(--grey-80) 100%);
+  border: 1px solid var(--grey-60);
+  border-bottom: 2px solid var(--grey-50);
+  border-radius: var(--radius) var(--radius) 0 0;
   cursor: pointer;
-  color: #444;
+  color: var(--grey-33);
   display: inline-flex;
   align-items: center;
   gap: 3px;
   position: relative;
   z-index: 1;
-  box-shadow: inset 0 1px 0 #FFFFFF;
+  box-shadow: inset 0 1px 0 var(--grey-100);
   line-height: 1.2;
 }
 
-.retro-tab:hover {
-  background: linear-gradient(to bottom, #F5F2EB 0%, #DFDBD1 100%);
-  color: #111;
+.fieldguide-app .retro-tab:hover {
+  background: linear-gradient(to bottom, var(--grey-94) 0%, var(--grey-87) 100%);
+  color: var(--grey-7);
 }
 
-.retro-tab.active {
-  background: #ECE9D8;
-  border: 2px solid #808080;
-  border-bottom: 2px solid #ECE9D8;
+.fieldguide-app .retro-tab.active {
+  background: var(--color-chrome);
+  border: 2px solid var(--grey-50);
+  border-bottom: 2px solid var(--color-chrome);
   font-weight: bold;
-  color: #000;
+  color: var(--grey-0);
   padding: 5px 11px 4px 11px;
-  border-radius: 4px 4px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
   z-index: 3;
-  box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px 0 0 #FFFFFF;
+  box-shadow: inset 1px 1px 0 var(--grey-100), inset -1px 0 0 var(--grey-100);
 }
 
-.fieldguide-filter-box {
+.fieldguide-app .fieldguide-filter-box {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -463,7 +511,7 @@
 }
 
 /* Holds the clear button inside the search field */
-.subfilter-field {
+.fieldguide-app .subfilter-field {
   position: relative;
   display: flex;
   align-items: center;
@@ -471,38 +519,38 @@
   min-width: 0;
 }
 
-.fieldguide-subfilter-input {
-  font-family: 'Geneva', sans-serif;
-  font-size: 11px;
+.fieldguide-app .fieldguide-subfilter-input {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
   box-sizing: border-box;
   height: 20px;
   padding: 2px 18px 2px 6px;
-  border: 1px solid #888;
-  border-radius: 2px;
+  border: 1px solid var(--grey-50);
+  border-radius: var(--radius-xs);
   flex: 1;
   min-width: 0;
-  background: #FFF;
+  background: var(--color-surface);
 }
 
-.filter-clear-btn {
+.fieldguide-app .filter-clear-btn {
   position: absolute;
   right: 3px;
   background: none;
   border: none;
-  font-size: 11px;
-  color: #888;
+  font-size: var(--text-sm);
+  color: var(--grey-50);
   cursor: pointer;
 }
 
 /* Narrow window: filters on their own full-width row above, so the tabs
    stay attached to the list they switch. The nine tabs alone take ~810px. */
 @container (max-width: 1000px) {
-  .fieldguide-tabs-container {
+  .fieldguide-app .fieldguide-tabs-container {
     flex-direction: column-reverse;
     align-items: stretch;
   }
 
-  .fieldguide-filter-box {
+  .fieldguide-app .fieldguide-filter-box {
     margin: 0;
   }
 }
@@ -510,7 +558,7 @@
 /* Too narrow for every label: the closed tabs keep just their icon (the
    tooltip names them) and the open one keeps its name... */
 @container (max-width: 830px) {
-  .category-tab:not(.active) .category-tab-label {
+  .fieldguide-app .category-tab:not(.active) .category-tab-label {
     display: none;
   }
 }
@@ -518,42 +566,42 @@
 /* ...until even that would wrap; the summary line under the tabs still says
    which group is showing ("Of 312 bird species..."). */
 @container (max-width: 480px) {
-  .category-tab .category-tab-label {
+  .fieldguide-app .category-tab .category-tab-label {
     display: none;
   }
 }
 
 /* Error Banner */
-.fieldguide-error-banner {
-  background: #FFF2F2;
-  border: 1px solid #D9534F;
-  border-radius: 3px;
+.fieldguide-app .fieldguide-error-banner {
+  background: var(--red-50);
+  border: 1px solid var(--red-500);
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
-  color: #A94442;
+  font-size: var(--text-sm);
+  color: var(--color-error);
 }
 
-.retry-btn {
+.fieldguide-app .retry-btn {
   margin-left: auto;
 }
 
 /* Content Area - Natural Flow (no inner scrollbar) */
-.fieldguide-content-area {
+.fieldguide-app .fieldguide-content-area {
   min-height: 200px;
   flex: 1;
-  background: #FFFFFF;
+  background: var(--color-surface);
   border: 2px solid;
-  border-color: #808080 #DFDFDF #DFDFDF #808080;
-  border-radius: 2px;
+  border-color: var(--grey-50) var(--grey-87) var(--grey-87) var(--grey-50);
+  border-radius: var(--radius-xs);
   padding: 8px;
   box-sizing: border-box;
 }
 
 /* Loading Barber-Pole Progress Bar */
-.fieldguide-loading-box {
+.fieldguide-app .fieldguide-loading-box {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -562,170 +610,170 @@
   gap: 12px;
 }
 
-.retro-progress-container {
+.fieldguide-app .retro-progress-container {
   width: 220px;
   height: 16px;
-  background: #FFF;
+  background: var(--color-surface);
   border: 2px solid;
-  border-color: #808080 #FFF #FFF #808080;
-  border-radius: 2px;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  border-radius: var(--radius-xs);
   overflow: hidden;
   padding: 1px;
 }
 
-.retro-progress-bar-animated {
+.fieldguide-app .retro-progress-bar-animated {
   width: 100%;
   height: 100%;
   background: repeating-linear-gradient(
     -45deg,
-    #5978B4,
-    #5978B4 8px,
-    #7B9DD8 8px,
-    #7B9DD8 16px
+    var(--blue-600),
+    var(--blue-600) 8px,
+    var(--blue-400) 8px,
+    var(--blue-400) 16px
   );
   background-size: 23px 23px;
-  animation: barberpole 0.8s linear infinite;
+  animation: fieldguide-barberpole 0.8s linear infinite;
 }
 
-@keyframes barberpole {
+@keyframes fieldguide-barberpole {
   0% { background-position: 0 0; }
   100% { background-position: 23px 0; }
 }
 
-.loading-caption {
-  font-size: 11px;
-  color: #555;
+.fieldguide-app .loading-caption {
+  font-size: var(--text-sm);
+  color: var(--grey-33);
   font-style: italic;
 }
 
 /* Empty State */
-.fieldguide-empty-box {
+.fieldguide-app .fieldguide-empty-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 160px;
-  color: #666;
+  color: var(--grey-40);
   text-align: center;
   gap: 6px;
 }
 
-.empty-icon {
-  font-size: 28px;
+.fieldguide-app .empty-icon {
+  font-size: var(--text-4xl);
 }
 
-.fieldguide-empty-box h3 {
-  font-size: 13px;
+.fieldguide-app .fieldguide-empty-box h3 {
+  font-size: var(--text-base);
   margin: 0;
-  color: #333;
+  color: var(--grey-20);
 }
 
-.fieldguide-empty-box p {
-  font-size: 11px;
+.fieldguide-app .fieldguide-empty-box p {
+  font-size: var(--text-sm);
   margin: 0;
   max-width: 320px;
 }
 
 /* Species Grid */
-.species-grid {
+.fieldguide-app .species-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 8px;
 }
 
 /* Species Card */
-.species-card {
-  background: #F8F8F8;
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
+.fieldguide-app .species-card {
+  background: var(--grey-97);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease, border-color 0.1s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 1px 1px 3px var(--black-a10);
 }
 
-.species-card:hover {
+.fieldguide-app .species-card:hover {
   transform: translateY(-2px);
-  border-color: #4769A5;
-  box-shadow: 0 3px 6px rgba(71, 105, 165, 0.25);
-  background: #FFF;
+  border-color: var(--blue-600);
+  box-shadow: 0 3px 6px color-mix(in srgb, var(--blue-600) 25%, transparent);
+  background: var(--color-surface);
 }
 
-.species-photo-container {
+.fieldguide-app .species-photo-container {
   position: relative;
   width: 100%;
   height: 110px;
-  background: #E8E8E8;
-  border-bottom: 1px solid #CCC;
+  background: var(--grey-90);
+  border-bottom: 1px solid var(--grey-80);
   overflow: hidden;
 }
 
-.species-photo {
+.fieldguide-app .species-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.species-photo-placeholder {
+.fieldguide-app .species-photo-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #E0E4E8;
+  background: var(--grey-90);
 }
 
-.placeholder-icon {
-  font-size: 32px;
+.fieldguide-app .placeholder-icon {
+  font-size: var(--text-4xl);
 }
 
-.species-badge {
+.fieldguide-app .species-badge {
   position: absolute;
   bottom: 4px;
   left: 4px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #FFF;
-  font-size: 9px;
+  background: var(--black-a70);
+  color: var(--color-text-on-accent);
+  font-size: var(--text-2xs);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   backdrop-filter: blur(2px);
 }
 
 /* Native / Introduced / Unknown, from place checklists (not sighting counts).
    Built like .species-badge, keyed with the same swatches as the range view. */
-.status-badge {
+.fieldguide-app .status-badge {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #FFF;
-  font-size: 9px;
+  background: var(--black-a70);
+  color: var(--color-text-on-accent);
+  font-size: var(--text-2xs);
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   backdrop-filter: blur(2px);
 }
 
-.status-badge .status-swatch {
+.fieldguide-app .status-badge .status-swatch {
   width: 7px;
   height: 7px;
   margin-right: 4px;
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: var(--white-a80);
   vertical-align: 0;
 }
 
-.status-pending {
-  color: #999;
+.fieldguide-app .status-pending {
+  color: var(--grey-60);
 }
 
-.status-badge.status-pending {
-  color: #DDD;
+.fieldguide-app .status-badge.status-pending {
+  color: var(--grey-87);
 }
 
 /* Whole-area Native / Introduced / Unknown counts above the species grid */
-.status-summary {
+.fieldguide-app .status-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -734,21 +782,21 @@
   margin-bottom: 8px;
 }
 
-.status-summary-note {
-  font-size: 10px;
+.fieldguide-app .status-summary-note {
+  font-size: var(--text-xs);
   font-weight: normal;
-  color: #777;
+  color: var(--color-text-muted);
 }
 
-.status-source {
+.fieldguide-app .status-source {
   display: block;
   font-weight: normal;
-  font-size: 9px;
-  color: #555;
+  font-size: var(--text-2xs);
+  color: var(--grey-33);
   margin-top: 2px;
 }
 
-.species-info {
+.fieldguide-app .species-info {
   padding: 6px 8px;
   display: flex;
   flex-direction: column;
@@ -756,10 +804,10 @@
   gap: 2px;
 }
 
-.species-common-name {
-  font-size: 11px;
+.fieldguide-app .species-common-name {
+  font-size: var(--text-sm);
   font-weight: bold;
-  color: #111;
+  color: var(--grey-7);
   margin: 0;
   line-height: 1.25;
   display: -webkit-box;
@@ -768,37 +816,37 @@
   overflow: hidden;
 }
 
-.species-scientific-name {
-  font-size: 10px;
+.fieldguide-app .species-scientific-name {
+  font-size: var(--text-xs);
   font-style: italic;
-  color: #555;
+  color: var(--grey-33);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.species-footer {
+.fieldguide-app .species-footer {
   margin-top: auto;
   padding-top: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 9px;
+  font-size: var(--text-2xs);
 }
 
-.observation-count {
-  color: #2B61A8;
+.fieldguide-app .observation-count {
+  color: var(--color-accent);
   font-weight: bold;
 }
 
-.inspect-link {
-  color: #777;
-  font-size: 9px;
+.fieldguide-app .inspect-link {
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
 }
 
-.species-card:hover .inspect-link {
-  color: #4769A5;
+.fieldguide-app .species-card:hover .inspect-link {
+  color: var(--blue-600);
   font-weight: bold;
 }
 
@@ -806,7 +854,7 @@
    Infinite Scroll Footer & Loaders
    ========================================================= */
 
-.infinite-scroll-footer {
+.fieldguide-app .infinite-scroll-footer {
   grid-column: 1 / -1;
   display: flex;
   justify-content: center;
@@ -814,53 +862,53 @@
   padding: 14px 0 6px 0;
 }
 
-.infinite-scroll-loading {
+.fieldguide-app .infinite-scroll-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
-.mini-progress-bar {
+.fieldguide-app .mini-progress-bar {
   width: 140px;
   height: 10px;
-  background: #FFF;
-  border: 1px solid #808080;
-  border-radius: 2px;
+  background: var(--color-surface);
+  border: 1px solid var(--grey-50);
+  border-radius: var(--radius-xs);
   overflow: hidden;
   padding: 1px;
 }
 
-.mini-progress-fill {
+.fieldguide-app .mini-progress-fill {
   width: 100%;
   height: 100%;
   background: repeating-linear-gradient(
     -45deg,
-    #5978B4,
-    #5978B4 6px,
-    #7B9DD8 6px,
-    #7B9DD8 12px
+    var(--blue-600),
+    var(--blue-600) 6px,
+    var(--blue-400) 6px,
+    var(--blue-400) 12px
   );
   background-size: 17px 17px;
-  animation: barberpole 0.7s linear infinite;
+  animation: fieldguide-barberpole 0.7s linear infinite;
 }
 
-.infinite-loading-text {
-  font-size: 10px;
-  color: #666;
+.fieldguide-app .infinite-loading-text {
+  font-size: var(--text-xs);
+  color: var(--grey-40);
   font-style: italic;
 }
 
-.load-more-button {
-  font-size: 10px;
+.fieldguide-app .load-more-button {
+  font-size: var(--text-xs);
   padding: 4px 14px;
 }
 
-.all-loaded-banner {
+.fieldguide-app .all-loaded-banner {
   grid-column: 1 / -1;
   text-align: center;
-  font-size: 10px;
-  color: #666;
+  font-size: var(--text-xs);
+  color: var(--grey-40);
   padding: 12px 0 4px 0;
   font-style: italic;
 }
@@ -869,13 +917,13 @@
    Retro Mac OS Specimen Inspector Modal Dialog
    ========================================================= */
 
-.retro-modal-overlay {
+.fieldguide-app .retro-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--black-a40);
   z-index: 5000;
   display: flex;
   align-items: center;
@@ -884,23 +932,23 @@
   box-sizing: border-box;
 }
 
-.retro-modal-window {
+.fieldguide-app .retro-modal-window {
   width: 520px;
   max-width: 95vw;
   max-height: calc(85vh - 70px);
   transform: translateY(-20px);
-  background: #ECE9D8;
-  border: 2px solid #505050;
-  border-radius: 6px;
-  box-shadow: 4px 6px 20px rgba(0, 0, 0, 0.4);
+  background: var(--color-chrome);
+  border: 2px solid var(--grey-33);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 6px 20px var(--black-a40);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.retro-modal-header {
-  background: linear-gradient(to bottom, #6D8CBE, #4769A5);
-  color: white;
+.fieldguide-app .retro-modal-header {
+  background: linear-gradient(to bottom, var(--blue-500), var(--blue-600));
+  color: var(--color-text-on-accent);
   padding: 4px 8px;
   display: flex;
   align-items: center;
@@ -908,18 +956,18 @@
   user-select: none;
 }
 
-.retro-modal-controls {
+.fieldguide-app .retro-modal-controls {
   display: flex;
 }
 
-.retro-modal-close {
+.fieldguide-app .retro-modal-close {
   width: 13px;
   height: 13px;
-  border-radius: 50%;
-  border: 1px solid #B02020;
-  background: #FF5F56;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 10px;
+  border-radius: var(--radius-round);
+  border: 1px solid var(--red-500);
+  background: var(--red-400);
+  color: var(--black-a50);
+  font-size: var(--text-xs);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -928,20 +976,20 @@
   line-height: 1;
 }
 
-.retro-modal-close:hover {
-  background: #E0443E;
+.fieldguide-app .retro-modal-close:hover {
+  background: var(--red-500);
 }
 
-.retro-modal-title {
-  font-size: 11px;
+.fieldguide-app .retro-modal-title {
+  font-size: var(--text-sm);
   font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 1px 1px var(--black-a40);
 }
 
-.retro-modal-body {
+.fieldguide-app .retro-modal-body {
   padding: 10px;
   overflow-y: auto;
   display: flex;
@@ -949,83 +997,83 @@
   gap: 10px;
 }
 
-.inspector-layout {
+.fieldguide-app .inspector-layout {
   display: grid;
   grid-template-columns: 190px 1fr;
   gap: 12px;
 }
 
-.inspector-media {
+.fieldguide-app .inspector-media {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.inspector-image-frame {
+.fieldguide-app .inspector-image-frame {
   width: 100%;
   height: 150px;
   border: 2px solid;
-  border-color: #808080 #FFFFFF #FFFFFF #808080;
-  background: #000;
-  border-radius: 3px;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  background: var(--grey-0);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.inspector-image {
+.fieldguide-app .inspector-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.inspector-image-frame.placeholder {
-  background: #DFE3E6;
+.fieldguide-app .inspector-image-frame.placeholder {
+  background: var(--grey-90);
 }
 
-.inspector-image-frame .big-icon {
-  font-size: 48px;
+.fieldguide-app .inspector-image-frame .big-icon {
+  font-size: var(--fg-icon-xl);
 }
 
-.inspector-attribution {
-  font-size: 8px;
-  color: #777;
+.fieldguide-app .inspector-attribution {
+  font-size: var(--fg-text-micro);
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.2;
   word-break: break-all;
 }
 
-.inspector-stats-box {
-  background: #DFDFDF;
-  border: 1px solid #B0B0B0;
-  border-radius: 3px;
+.fieldguide-app .inspector-stats-box {
+  background: var(--grey-87);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius-sm);
   padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
-.stat-row {
+.fieldguide-app .stat-row {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px dashed #CCC;
+  border-bottom: 1px dashed var(--grey-80);
   padding-bottom: 2px;
 }
 
-.stat-label {
-  color: #555;
+.fieldguide-app .stat-label {
+  color: var(--grey-33);
 }
 
-.stat-value {
+.fieldguide-app .stat-value {
   font-weight: bold;
-  color: #111;
+  color: var(--grey-7);
   text-align: right;
 }
 
 /* Global Status: the IUCN code + name, with the authority underneath */
-.iucn-link {
+.fieldguide-app .iucn-link {
   display: inline-flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -1035,104 +1083,104 @@
   text-decoration: none;
 }
 
-.iucn-link:hover {
+.fieldguide-app .iucn-link:hover {
   text-decoration: underline;
 }
 
-.iucn-link .status-source {
+.fieldguide-app .iucn-link .status-source {
   flex-basis: 100%;
   text-align: right;
   margin-top: 0;
 }
 
-.inspector-details {
+.fieldguide-app .inspector-details {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.inspector-names {
-  border-bottom: 1px solid #CCC;
+.fieldguide-app .inspector-names {
+  border-bottom: 1px solid var(--grey-80);
   padding-bottom: 6px;
 }
 
-.inspector-common {
-  font-size: 15px;
+.fieldguide-app .inspector-common {
+  font-size: var(--text-lg);
   margin: 0;
-  color: #1A3668;
+  color: var(--blue-900);
 }
 
-.inspector-scientific {
-  font-size: 12px;
+.fieldguide-app .inspector-scientific {
+  font-size: var(--text-md);
   margin: 2px 0 0 0;
-  color: #555;
+  color: var(--grey-33);
 }
 
-.inspector-encyclopedia {
-  background: #FFF;
+.fieldguide-app .inspector-encyclopedia {
+  background: var(--color-surface);
   border: 2px solid;
-  border-color: #808080 #FFF #FFF #808080;
-  border-radius: 2px;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  border-radius: var(--radius-xs);
   padding: 8px;
   flex: 1;
   min-height: 110px;
   overflow-y: auto;
 }
 
-.inspector-encyclopedia h4 {
+.fieldguide-app .inspector-encyclopedia h4 {
   margin: 0 0 4px 0;
-  font-size: 11px;
-  color: #333;
+  font-size: var(--text-sm);
+  color: var(--grey-20);
 }
 
-.mini-loading {
-  font-size: 10px;
-  color: #777;
+.fieldguide-app .mini-loading {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
-.encyclopedia-text {
-  font-size: 11px;
+.fieldguide-app .encyclopedia-text {
+  font-size: var(--text-sm);
   line-height: 1.4;
-  color: #222;
+  color: var(--grey-13);
   margin: 0;
 }
 
-.inspector-external-links {
+.fieldguide-app .inspector-external-links {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.external-btn {
-  font-size: 10px;
+.fieldguide-app .external-btn {
+  font-size: var(--text-xs);
   padding: 3px 8px;
 }
 
 /* Lineage: an indented tree, one classic rank per row, the specimen last */
-.inspector-lineage,
-.inspector-season {
-  background: #FFF;
+.fieldguide-app .inspector-lineage,
+.fieldguide-app .inspector-season {
+  background: var(--color-surface);
   border: 2px solid;
-  border-color: #808080 #FFF #FFF #808080;
-  border-radius: 2px;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  border-radius: var(--radius-xs);
   padding: 8px;
 }
 
-.inspector-lineage h4,
-.inspector-season h4 {
+.fieldguide-app .inspector-lineage h4,
+.fieldguide-app .inspector-season h4 {
   margin: 0 0 6px 0;
-  font-size: 11px;
-  color: #333;
+  font-size: var(--text-sm);
+  color: var(--grey-20);
 }
 
-.lineage-tree {
+.fieldguide-app .lineage-tree {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.lineage-node {
+.fieldguide-app .lineage-node {
   position: relative;
   padding-left: calc(var(--depth) * 14px);
   line-height: 17px;
@@ -1142,32 +1190,32 @@
 }
 
 /* Elbow from under the parent's first letter into this row */
-.lineage-node + .lineage-node::before {
+.fieldguide-app .lineage-node + .lineage-node::before {
   content: '';
   position: absolute;
   left: calc(var(--depth) * 14px - 10px);
   top: 0;
   width: 7px;
   height: 50%;
-  border-left: 1px solid #A0A0A0;
-  border-bottom: 1px solid #A0A0A0;
+  border-left: 1px solid var(--grey-63);
+  border-bottom: 1px solid var(--grey-63);
 }
 
-.lineage-hint {
+.fieldguide-app .lineage-hint {
   font-weight: normal;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-style: italic;
-  color: #888;
+  color: var(--grey-50);
   margin-left: 6px;
 }
 
-.lineage-label {
+.fieldguide-app .lineage-label {
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 /* Ancestor rows are buttons that open that group's range */
-button.lineage-link {
+.fieldguide-app button.lineage-link {
   font: inherit;
   line-height: inherit;
   color: inherit;
@@ -1182,57 +1230,57 @@ button.lineage-link {
   vertical-align: top;
 }
 
-button.lineage-link:hover {
-  background: #D8E4F8;
+.fieldguide-app button.lineage-link:hover {
+  background: var(--blue-100);
 }
 
-button.lineage-link:hover .lineage-name {
+.fieldguide-app button.lineage-link:hover .lineage-name {
   text-decoration: underline;
 }
 
-.lineage-rank {
-  font-size: 8px;
+.fieldguide-app .lineage-rank {
+  font-size: var(--fg-text-micro);
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: #888;
+  color: var(--grey-50);
   margin-right: 5px;
 }
 
-.lineage-name {
-  font-size: 11px;
+.fieldguide-app .lineage-name {
+  font-size: var(--text-sm);
   font-weight: bold;
-  color: #1A3668;
+  color: var(--blue-900);
 }
 
-.lineage-name.italic {
+.fieldguide-app .lineage-name.italic {
   font-style: italic;
 }
 
-.lineage-common {
-  font-size: 10px;
-  color: #666;
+.fieldguide-app .lineage-common {
+  font-size: var(--text-xs);
+  color: var(--grey-40);
   margin-left: 4px;
 }
 
 /* The specimen itself, highlighted like a selected Finder row */
-.lineage-node.current .lineage-label {
-  background: #4769A5;
+.fieldguide-app .lineage-node.current .lineage-label {
+  background: var(--blue-600);
 }
 
-.lineage-node.current .lineage-rank,
-.lineage-node.current .lineage-name,
-.lineage-node.current .lineage-common {
-  color: #FFF;
+.fieldguide-app .lineage-node.current .lineage-rank,
+.fieldguide-app .lineage-node.current .lineage-name,
+.fieldguide-app .lineage-node.current .lineage-common {
+  color: var(--color-text-on-accent);
 }
 
-.inspector-footer {
+.fieldguide-app .inspector-footer {
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid #CCC;
+  border-top: 1px solid var(--grey-80);
   padding-top: 8px;
 }
 
-.close-dialog-btn {
+.fieldguide-app .close-dialog-btn {
   min-width: 70px;
 }
 
@@ -1241,22 +1289,22 @@ button.lineage-link:hover .lineage-name {
    ========================================================= */
 
 @media (max-width: 580px) {
-  .inspector-layout {
+  .fieldguide-app .inspector-layout {
     grid-template-columns: 1fr;
   }
 
-  .species-grid {
+  .fieldguide-app .species-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 
-  .fieldguide-tabs {
+  .fieldguide-app .fieldguide-tabs {
     overflow-x: auto;
     width: 100%;
     padding-bottom: 2px;
   }
 
-  .retro-tab {
-    font-size: 10px;
+  .fieldguide-app .retro-tab {
+    font-size: var(--text-xs);
     padding: 3px 6px;
     white-space: nowrap;
   }
@@ -1267,7 +1315,7 @@ button.lineage-link:hover .lineage-name {
    ========================================================= */
 
 /* No gap between the mode row and the search panel: the tabs stand on it */
-.fieldguide-header {
+.fieldguide-app .fieldguide-header {
   display: flex;
   flex-direction: column;
 }
@@ -1275,7 +1323,7 @@ button.lineage-link:hover .lineage-name {
 /* Always one row: Back (left) shortens with an ellipsis if it must, the tabs
    (right) never move, and the hint between them shows only when it fits.
    Pulled 2px down over the panel's top border, which the tabs stand on. */
-.fieldguide-mode-switch {
+.fieldguide-app .fieldguide-mode-switch {
   container-type: inline-size;
   display: flex;
   align-items: flex-end;
@@ -1286,21 +1334,21 @@ button.lineage-link:hover .lineage-name {
 
 /* The category row's notebook tabs (.retro-tab). The open one takes the
    search panel's grey rather than the window's, so it runs into the panel. */
-.mode-switch-buttons {
+.fieldguide-app .mode-switch-buttons {
   flex: none;
   display: flex;
   align-items: flex-end;
   gap: 2px;
 }
 
-.mode-tab.active {
-  background: #DFDFDF;
-  border-bottom-color: #DFDFDF;
+.fieldguide-app .mode-tab.active {
+  background: var(--grey-87);
+  border-bottom-color: var(--grey-87);
 }
 
 /* Small windows: "📍 Places" / "🐾 Species", leaving Back room to read */
 @container (max-width: 480px) {
-  .mode-tab-verb {
+  .fieldguide-app .mode-tab-verb {
     display: none;
   }
 }
@@ -1308,7 +1356,7 @@ button.lineage-link:hover .lineage-name {
 /* Takes whatever room is left, right-aligned against the tabs. The hint shows
    only if it fits whole: the empty ::before holds the first line, so a hint
    too long for it wraps onto a second line, which the fixed height clips. */
-.mode-switch-hint-box {
+.fieldguide-app .mode-switch-hint-box {
   flex: 1 1 0;
   min-width: 0;
   height: 21px;
@@ -1320,35 +1368,35 @@ button.lineage-link:hover .lineage-name {
   align-items: center;
 }
 
-.mode-switch-hint-box::before {
+.fieldguide-app .mode-switch-hint-box::before {
   content: '';
   height: 21px;
 }
 
-.mode-switch-hint {
-  font-size: 10px;
+.fieldguide-app .mode-switch-hint {
+  font-size: var(--text-xs);
   font-style: italic;
-  color: #666;
+  color: var(--grey-40);
   white-space: nowrap;
 }
 
 /* Back: a plain button floating above the panel, unlike the tabs on it.
    Fixed height, as an emoji in the label (⚡ Kanto) would otherwise make it
    taller and lift the whole row. */
-.fieldguide-back-btn {
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  font-size: 10px;
+.fieldguide-app .fieldguide-back-btn {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
   font-weight: bold;
   line-height: 1.3;
   padding: 3px 10px;
   height: 21px;
   box-sizing: border-box;
   margin-bottom: 6px;
-  background: linear-gradient(to bottom, #FFFFFF 0%, #E6E6E6 40%, #CCCCCC 100%);
-  border: 1px solid #909090;
-  border-radius: 3px;
-  box-shadow: inset 1px 1px 0px #FFFFFF;
-  color: #555;
+  background: linear-gradient(to bottom, var(--color-surface) 0%, var(--grey-90) 40%, var(--grey-80) 100%);
+  border: 1px solid var(--grey-60);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 1px 1px 0px var(--grey-100);
+  color: var(--grey-33);
   cursor: pointer;
   flex: 0 1 auto;
   min-width: 0;
@@ -1358,49 +1406,49 @@ button.lineage-link:hover .lineage-name {
   white-space: nowrap;
 }
 
-.fieldguide-back-btn:hover {
-  background: linear-gradient(to bottom, #FFFFFF 0%, #DCE8FA 100%);
-  color: #1A3668;
+.fieldguide-app .fieldguide-back-btn:hover {
+  background: linear-gradient(to bottom, var(--color-surface) 0%, var(--blue-100) 100%);
+  color: var(--blue-900);
 }
 
 /* Species autocomplete rows */
-.taxon-suggestion-row {
+.fieldguide-app .taxon-suggestion-row {
   gap: 7px;
 }
 
-.sug-thumb {
+.fieldguide-app .sug-thumb {
   width: 22px;
   height: 22px;
   object-fit: cover;
-  border: 1px solid #999;
-  border-radius: 2px;
+  border: 1px solid var(--grey-60);
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
-  background: #DFE3E6;
+  background: var(--grey-90);
 }
 
-.taxon-suggestion-row .sug-text {
+.fieldguide-app .taxon-suggestion-row .sug-text {
   flex: 1;
 }
 
-.sug-sci {
-  color: #666;
-  font-size: 10px;
+.fieldguide-app .sug-sci {
+  color: var(--grey-40);
+  font-size: var(--text-xs);
 }
 
-.suggestion-row:hover .sug-sci,
-.suggestion-row:hover .sug-rank {
-  color: #DCE8FA;
+.fieldguide-app .suggestion-row:hover .sug-sci,
+.fieldguide-app .suggestion-row:hover .sug-rank {
+  color: var(--blue-100);
 }
 
-.sug-rank {
-  font-size: 9px;
-  color: #888;
+.fieldguide-app .sug-rank {
+  font-size: var(--text-2xs);
+  color: var(--grey-50);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   flex-shrink: 0;
 }
 
-.species-examples {
+.fieldguide-app .species-examples {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1413,32 +1461,32 @@ button.lineage-link:hover .lineage-name {
    Species Range Panel
    ========================================================= */
 
-.species-range-panel {
+.fieldguide-app .species-range-panel {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.range-header-card {
+.fieldguide-app .range-header-card {
   display: flex;
   gap: 10px;
-  background: #F8F8F8;
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+  background: var(--grey-97);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
+  box-shadow: 1px 1px 3px var(--black-a10);
   padding: 8px;
 }
 
 /* A button, not a frame: clicking the photo opens the Specimen Inspector */
-.range-header-photo {
+.fieldguide-app .range-header-photo {
   position: relative;
   width: 92px;
   height: 92px;
   flex-shrink: 0;
   border: 2px solid;
-  border-color: #808080 #FFFFFF #FFFFFF #808080;
-  background: #000;
-  border-radius: 3px;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  background: var(--grey-0);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -1448,28 +1496,28 @@ button.lineage-link:hover .lineage-name {
   cursor: pointer;
 }
 
-.range-header-photo:hover {
-  border-color: #4769A5 #9DB8E0 #9DB8E0 #4769A5;
+.fieldguide-app .range-header-photo:hover {
+  border-color: var(--blue-600) var(--blue-300) var(--blue-300) var(--blue-600);
 }
 
-.range-header-photo:active {
-  border-color: #FFFFFF #808080 #808080 #FFFFFF;
+.fieldguide-app .range-header-photo:active {
+  border-color: var(--grey-100) var(--grey-50) var(--grey-50) var(--grey-100);
 }
 
-.range-header-photo:focus-visible {
-  outline: 2px solid #4769A5;
+.fieldguide-app .range-header-photo:focus-visible {
+  outline: 2px solid var(--blue-600);
   outline-offset: 1px;
 }
 
 /* Caption slides up on hover so the photo reads as an action */
-.range-header-photo-hint {
+.fieldguide-app .range-header-photo-hint {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(26, 54, 104, 0.82);
-  color: #FFFFFF;
-  font-size: 9px;
+  background: color-mix(in srgb, var(--blue-900) 82%, transparent);
+  color: var(--color-text-on-accent);
+  font-size: var(--text-2xs);
   font-weight: bold;
   padding: 2px 0;
   text-align: center;
@@ -1478,146 +1526,146 @@ button.lineage-link:hover .lineage-name {
   pointer-events: none;
 }
 
-.range-header-photo:hover .range-header-photo-hint,
-.range-header-photo:focus-visible .range-header-photo-hint {
+.fieldguide-app .range-header-photo:hover .range-header-photo-hint,
+.fieldguide-app .range-header-photo:focus-visible .range-header-photo-hint {
   opacity: 1;
 }
 
-.range-header-photo img {
+.fieldguide-app .range-header-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.range-header-photo .big-icon {
-  font-size: 40px;
+.fieldguide-app .range-header-photo .big-icon {
+  font-size: var(--fg-icon-lg);
 }
 
-.range-header-text {
+.fieldguide-app .range-header-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.range-common-name {
-  font-size: 15px;
+.fieldguide-app .range-common-name {
+  font-size: var(--text-lg);
   margin: 0;
-  color: #1A3668;
+  color: var(--blue-900);
 }
 
-.range-scientific-name {
-  font-size: 11px;
+.fieldguide-app .range-scientific-name {
+  font-size: var(--text-sm);
   margin: 0;
-  color: #555;
+  color: var(--grey-33);
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.range-rank-chip {
-  font-size: 9px;
+.fieldguide-app .range-rank-chip {
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  background: #C9D4E8;
-  border: 1px solid #9BAAC6;
-  border-radius: 2px;
+  background: var(--blue-100);
+  border: 1px solid var(--blue-300);
+  border-radius: var(--radius-xs);
   padding: 0 4px;
-  color: #33507E;
+  color: var(--blue-800);
   font-style: normal;
 }
 
-.range-lineage {
-  font-size: 9px;
-  color: #777;
+.fieldguide-app .range-lineage {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
   margin: 2px 0 0 0;
 }
 
-.range-header-stats {
+.fieldguide-app .range-header-stats {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 5px;
 }
 
-.range-stat {
-  font-size: 10px;
-  background: #FFF;
-  border: 1px solid #B8B8B8;
-  border-radius: 2px;
+.fieldguide-app .range-stat {
+  font-size: var(--text-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius-xs);
   padding: 1px 5px;
-  color: #333;
+  color: var(--grey-20);
 }
 
-.conservation-chip {
+.fieldguide-app .conservation-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   text-decoration: none;
 }
 
-a.conservation-chip:hover {
-  border-color: #777;
-  color: #000;
+.fieldguide-app a.conservation-chip:hover {
+  border-color: var(--color-text-muted);
+  color: var(--grey-0);
 }
 
 /* The IUCN category code in the Red List's own colours, which readers of
    field guides already know. Text colour picked per fill for contrast. */
-.iucn-code {
+.fieldguide-app .iucn-code {
   display: inline-block;
   min-width: 18px;
   padding: 0 3px;
-  border-radius: 7px;
-  font-size: 9px;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-2xs);
   font-weight: bold;
   line-height: 13px;
   text-align: center;
   letter-spacing: 0.02em;
-  color: #1A1A1A;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  color: var(--grey-13);
+  border: 1px solid var(--black-a30);
 }
 
-.iucn-dd { background: #D1D1C6; }
-.iucn-lc { background: #60C659; }
-.iucn-nt { background: #CCE226; }
-.iucn-vu { background: #F9E814; }
-.iucn-en { background: #FC7F3F; }
-.iucn-cr { background: #D81E05; color: #FFF; }
-.iucn-ew { background: #542344; color: #FFF; }
-.iucn-ex { background: #000; color: #FFF; }
+.fieldguide-app .iucn-dd { background: var(--fg-iucn-dd); }
+.fieldguide-app .iucn-lc { background: var(--fg-iucn-lc); }
+.fieldguide-app .iucn-nt { background: var(--fg-iucn-nt); }
+.fieldguide-app .iucn-vu { background: var(--fg-iucn-vu); }
+.fieldguide-app .iucn-en { background: var(--fg-iucn-en); }
+.fieldguide-app .iucn-cr { background: var(--fg-iucn-cr); color: var(--color-text-on-accent); }
+.fieldguide-app .iucn-ew { background: var(--fg-iucn-ew); color: var(--color-text-on-accent); }
+.fieldguide-app .iucn-ex { background: var(--grey-0); color: var(--color-text-on-accent); }
 
-.extinct-chip {
-  background: #F2F2F2;
-  border-color: #999;
-  color: #555;
+.fieldguide-app .extinct-chip {
+  background: var(--grey-94);
+  border-color: var(--grey-60);
+  color: var(--grey-33);
 }
 
 /* Range map + layer legend */
-.range-map-wrapper {
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+.fieldguide-app .range-map-wrapper {
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
+  box-shadow: 1px 1px 3px var(--black-a10);
 }
 
-.range-map-canvas {
+.fieldguide-app .range-map-canvas {
   height: 230px;
-  border-top: 1px solid #7A7A7A;
+  border-top: 1px solid var(--grey-50);
 }
 
-.range-map-legend {
+.fieldguide-app .range-map-legend {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  background: #DFDFDF;
-  border-top: 1px solid #A8A8A8;
+  background: var(--grey-87);
+  border-top: 1px solid var(--grey-69);
   padding: 4px 6px;
-  font-size: 10px;
-  color: #333;
+  font-size: var(--text-xs);
+  color: var(--grey-20);
 }
 
-.range-layer-toggle {
+.fieldguide-app .range-layer-toggle {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1625,64 +1673,64 @@ a.conservation-chip:hover {
   user-select: none;
 }
 
-.legend-swatch {
+.fieldguide-app .legend-swatch {
   width: 11px;
   height: 11px;
-  border: 1px solid #666;
-  border-radius: 2px;
+  border: 1px solid var(--grey-40);
+  border-radius: var(--radius-xs);
   display: inline-block;
 }
 
-.swatch-range {
+.fieldguide-app .swatch-range {
   background: var(--fg-range);
 }
 
-.swatch-sightings {
+.fieldguide-app .swatch-sightings {
   background: var(--fg-sightings);
 }
 
-.range-legend-note {
-  color: #666;
+.fieldguide-app .range-legend-note {
+  color: var(--grey-40);
   font-style: italic;
 }
 
-.range-missing-note {
+.fieldguide-app .range-missing-note {
   font-style: italic;
-  color: #7A5A12;
+  color: var(--fg-note-ink);
   margin-left: auto;
 }
 
 /* Establishment-means groups */
-.range-places-section {
-  background: #F8F8F8;
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+.fieldguide-app .range-places-section {
+  background: var(--grey-97);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
+  box-shadow: 1px 1px 3px var(--black-a10);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.range-section-header {
+.fieldguide-app .range-section-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
-  border-bottom: 1px solid #DDD;
+  border-bottom: 1px solid var(--grey-87);
   padding-bottom: 4px;
   flex-wrap: wrap;
 }
 
-.range-section-header h4 {
+.fieldguide-app .range-section-header h4 {
   margin: 0;
-  font-size: 12px;
-  color: #333;
+  font-size: var(--text-md);
+  color: var(--grey-20);
 }
 
-.range-truncation-note {
-  font-size: 9px;
-  color: #888;
+.fieldguide-app .range-truncation-note {
+  font-size: var(--text-2xs);
+  color: var(--grey-50);
   font-style: italic;
 }
 
@@ -1697,47 +1745,47 @@ a.conservation-chip:hover {
 
 
 
-.range-no-places {
-  font-size: 11px;
-  color: #666;
+.fieldguide-app .range-no-places {
+  font-size: var(--text-sm);
+  color: var(--grey-40);
   margin: 0;
   line-height: 1.4;
 }
 
 
-.range-summary-section {
-  background: #F8F8F8;
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+.fieldguide-app .range-summary-section {
+  background: var(--grey-97);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
+  box-shadow: 1px 1px 3px var(--black-a10);
   padding: 8px;
 }
 
-.range-summary-section h4 {
+.fieldguide-app .range-summary-section h4 {
   margin: 0 0 4px 0;
-  font-size: 11px;
-  color: #333;
+  font-size: var(--text-sm);
+  color: var(--grey-20);
 }
 
-.range-links {
+.fieldguide-app .range-links {
   padding-bottom: 4px;
 }
 
 @media (max-width: 580px) {
-  .range-header-card {
+  .fieldguide-app .range-header-card {
     flex-direction: column;
   }
 
-  .range-header-photo {
+  .fieldguide-app .range-header-photo {
     width: 100%;
     height: 120px;
   }
 
-  .mode-switch-hint {
+  .fieldguide-app .mode-switch-hint {
     display: none;
   }
 
-  .range-map-canvas {
+  .fieldguide-app .range-map-canvas {
     height: 180px;
   }
 }
@@ -1752,145 +1800,145 @@ a.conservation-chip:hover {
 
 
 
-.range-country-header {
+.fieldguide-app .range-country-header {
   display: flex;
   align-items: baseline;
   gap: 6px;
   flex-wrap: wrap;
-  border-top: 1px solid #DDD;
+  border-top: 1px solid var(--grey-87);
   padding-top: 6px;
-  font-size: 11px;
-  color: #333;
+  font-size: var(--text-sm);
+  color: var(--grey-20);
 }
 
-.range-country-hint {
-  font-size: 10px;
-  color: #777;
+.fieldguide-app .range-country-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
 /* Keep the sample caveat on the right edge now that a hint follows the title */
-.range-country-header .range-truncation-note {
+.fieldguide-app .range-country-header .range-truncation-note {
   margin-left: auto;
 }
 
 /* Featured species gallery (species mode, nothing selected yet) */
-.featured-species-view {
+.fieldguide-app .featured-species-view {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.featured-intro {
-  border-bottom: 1px solid #DDD;
+.fieldguide-app .featured-intro {
+  border-bottom: 1px solid var(--grey-87);
   padding-bottom: 8px;
 }
 
-.featured-intro h3 {
+.fieldguide-app .featured-intro h3 {
   margin: 0 0 3px 0;
-  font-size: 13px;
-  color: #1A3668;
+  font-size: var(--text-base);
+  color: var(--blue-900);
 }
 
-.featured-intro p {
+.fieldguide-app .featured-intro p {
   margin: 0;
-  font-size: 11px;
-  color: #666;
+  font-size: var(--text-sm);
+  color: var(--grey-40);
   line-height: 1.4;
 }
 
 /* Classic Platinum list view -- same construction as the iTunes track list */
-.platinum-list {
+.fieldguide-app .platinum-list {
   border: 2px solid;
-  border-color: #808080 #FFFFFF #FFFFFF #808080;
-  background: #FFFFFF;
+  border-color: var(--grey-50) var(--grey-100) var(--grey-100) var(--grey-50);
+  background: var(--color-surface);
   overflow: hidden;
 }
 
-.platinum-list-header {
+.fieldguide-app .platinum-list-header {
   display: grid;
   grid-template-columns: 1fr 150px;
-  background: linear-gradient(to bottom, #F9F9F9 0%, #E0E0E0 100%);
-  border-bottom: 1px solid #A0A0A0;
-  font-size: 10px;
+  background: linear-gradient(to bottom, var(--grey-97) 0%, var(--grey-87) 100%);
+  border-bottom: 1px solid var(--grey-63);
+  font-size: var(--text-xs);
   font-weight: bold;
-  color: #333;
+  color: var(--grey-20);
 }
 
-.platinum-list-header > div {
+.fieldguide-app .platinum-list-header > div {
   padding: 3px 7px;
-  border-right: 1px solid #C0C0C0;
+  border-right: 1px solid var(--grey-77);
 }
 
-.platinum-list-header > div:last-child {
+.fieldguide-app .platinum-list-header > div:last-child {
   border-right: none;
 }
 
-.platinum-list-row {
+.fieldguide-app .platinum-list-row {
   display: grid;
   grid-template-columns: 1fr 150px;
   align-items: center;
-  font-size: 11px;
-  color: #000;
-  border-bottom: 1px solid #EAEAEA;
+  font-size: var(--text-sm);
+  color: var(--grey-0);
+  border-bottom: 1px solid var(--grey-93);
 }
 
-.platinum-list-row:nth-child(even) {
-  background-color: #F4F8FF;
+.fieldguide-app .platinum-list-row:nth-child(even) {
+  background-color: var(--blue-50);
 }
 
-.platinum-list-row:last-child {
+.fieldguide-app .platinum-list-row:last-child {
   border-bottom: none;
 }
 
-.platinum-list-row > div {
+.fieldguide-app .platinum-list-row > div {
   padding: 3px 7px;
 }
 
-.platinum-list-row.row-absent {
-  color: #999;
+.fieldguide-app .platinum-list-row.row-absent {
+  color: var(--grey-60);
 }
 
 /* Small square status chips, the period way to key a list column */
-.status-swatch {
+.fieldguide-app .status-swatch {
   width: 9px;
   height: 9px;
-  border: 1px solid #6B6B6B;
+  border: 1px solid var(--grey-40);
   display: inline-block;
   margin-right: 5px;
   vertical-align: -1px;
 }
 
-.swatch-native {
+.fieldguide-app .swatch-native {
   background: var(--fg-native);
 }
 
-.swatch-endemic {
+.fieldguide-app .swatch-endemic {
   background: var(--fg-endemic);
 }
 
-.swatch-introduced {
+.fieldguide-app .swatch-introduced {
   background: var(--fg-introduced);
 }
 
 /* Seen here, but no checklist entry classifies how it got here */
-.swatch-present {
+.fieldguide-app .swatch-present {
   background: var(--fg-present);
 }
 
-.swatch-absent {
+.fieldguide-app .swatch-absent {
   background: var(--fg-absent);
 }
 
 /* Country rows, built like the "Hotspots:" row in places mode */
-.range-means-row {
+.fieldguide-app .range-means-row {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
   gap: 4px;
 }
 
-.range-means-row .quick-label {
+.fieldguide-app .range-means-row .quick-label {
   white-space: nowrap;
   line-height: 18px;
   flex-shrink: 0;
@@ -1898,7 +1946,7 @@ a.conservation-chip:hover {
 
 /* Country names vary in width, so the row is height-clamped rather than
    item-counted; CountryRow measures the overflow and offers the toggle. */
-.range-means-buttons {
+.fieldguide-app .range-means-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -1907,26 +1955,26 @@ a.conservation-chip:hover {
 }
 
 /* max-height is set from a measured button height in CountryRow */
-.range-means-buttons.clamped {
+.fieldguide-app .range-means-buttons.clamped {
   overflow: hidden;
 }
 
-.range-means-buttons.expanded {
+.fieldguide-app .range-means-buttons.expanded {
   max-height: none;
 }
 
-.range-expand-btn {
+.fieldguide-app .range-expand-btn {
   flex-shrink: 0;
   font-weight: bold;
   white-space: nowrap;
 }
 
-.range-legend-line {
-  font-size: 9px;
-  color: #777;
+.fieldguide-app .range-legend-line {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
   margin: 0;
   line-height: 1.6;
-  border-top: 1px solid #D4D4D4;
+  border-top: 1px solid var(--grey-84);
   padding-top: 6px;
 }
 
@@ -1934,25 +1982,25 @@ a.conservation-chip:hover {
    Similar Species (commonly-confused taxa)
    ========================================================= */
 
-.similar-species-section {
-  background: #F8F8F8;
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.08);
+.fieldguide-app .similar-species-section {
+  background: var(--grey-97);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
+  box-shadow: 1px 1px 3px var(--black-a10);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.similar-loading {
-  font-size: 10px;
-  color: #777;
+.fieldguide-app .similar-loading {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
   font-style: italic;
   margin: 0;
 }
 
-.similar-species-grid {
+.fieldguide-app .similar-species-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
   gap: 6px;
@@ -1960,52 +2008,52 @@ a.conservation-chip:hover {
 
 /* Compact sibling of .species-card -- same chrome, smaller footprint,
    since this is a secondary section rather than the main results grid. */
-.similar-card {
+.fieldguide-app .similar-card {
   all: unset;
   box-sizing: border-box;
-  font-family: 'Geneva', 'Lucida Grande', sans-serif;
-  background: #FFFFFF;
-  border: 1px solid #B0B0B0;
-  border-radius: 4px;
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  border: 1px solid var(--grey-69);
+  border-radius: var(--radius);
   overflow: hidden;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 1px 1px 2px var(--black-a05);
   transition: border-color 0.1s ease, box-shadow 0.1s ease;
 }
 
-.similar-card:hover {
-  border-color: #4769A5;
-  box-shadow: 0 0 0 1px #4769A5, 1px 1px 3px rgba(0, 0, 0, 0.12);
+.fieldguide-app .similar-card:hover {
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 1px var(--blue-600), 1px 1px 3px var(--black-a10);
 }
 
-.similar-card:active {
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
+.fieldguide-app .similar-card:active {
+  box-shadow: inset 1px 1px 2px var(--black-a30);
 }
 
-.similar-photo {
+.fieldguide-app .similar-photo {
   width: 100%;
   height: 74px;
-  background: #E8E8E8;
-  border-bottom: 1px solid #CCC;
+  background: var(--grey-90);
+  border-bottom: 1px solid var(--grey-80);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
-.similar-photo img {
+.fieldguide-app .similar-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.similar-placeholder {
-  font-size: 26px;
+.fieldguide-app .similar-placeholder {
+  font-size: var(--text-3xl);
 }
 
-.similar-info {
+.fieldguide-app .similar-info {
   padding: 4px 6px 5px 6px;
   display: flex;
   flex-direction: column;
@@ -2013,102 +2061,102 @@ a.conservation-chip:hover {
   min-width: 0;
 }
 
-.similar-common {
-  font-size: 11px;
+.fieldguide-app .similar-common {
+  font-size: var(--text-sm);
   font-weight: bold;
-  color: #1A3668;
+  color: var(--blue-900);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.similar-scientific {
-  font-size: 9px;
+.fieldguide-app .similar-scientific {
+  font-size: var(--text-2xs);
   font-style: italic;
-  color: #666;
+  color: var(--grey-40);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.similar-count {
-  font-size: 9px;
-  color: #8A6D3B;
+.fieldguide-app .similar-count {
+  font-size: var(--text-2xs);
+  color: var(--fg-note-ink);
   margin-top: 2px;
 }
 
 /* The one in-app action in a row of external links, so it takes the primary
    (blue) treatment used by the Explore/Track buttons rather than looking
    like a third "leave the app" link. */
-.range-jump-btn {
-  background: linear-gradient(to bottom, #74A6E8 0%, #4769A5 100%);
-  color: #FFF;
-  border-color: #2A487B;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+.fieldguide-app .range-jump-btn {
+  background: linear-gradient(to bottom, var(--blue-450) 0%, var(--blue-600) 100%);
+  color: var(--color-text-on-accent);
+  border-color: var(--blue-800);
+  text-shadow: 0 1px 1px var(--black-a40);
   font-weight: bold;
 }
 
-.range-jump-btn:hover {
-  background: linear-gradient(to bottom, #86B5F5 0%, #3B5B94 100%);
+.fieldguide-app .range-jump-btn:hover {
+  background: linear-gradient(to bottom, var(--blue-350) 0%, var(--blue-700) 100%);
 }
 
-.range-jump-btn:active {
-  background: linear-gradient(to bottom, #3B5B94 0%, #2A487B 100%);
-  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.4);
+.fieldguide-app .range-jump-btn:active {
+  background: linear-gradient(to bottom, var(--blue-700) 0%, var(--blue-800) 100%);
+  box-shadow: inset 1px 1px 2px var(--black-a40);
 }
 
 /* =========================================================
    When to look: sightings by month
    ========================================================= */
 
-.season-headline {
+.fieldguide-app .season-headline {
   margin: 0 0 4px 0;
-  font-size: 11px;
-  color: #333;
+  font-size: var(--text-sm);
+  color: var(--grey-20);
 }
 
-.season-caveat {
-  font-size: 9px;
+.fieldguide-app .season-caveat {
+  font-size: var(--text-2xs);
   font-style: italic;
-  color: #777;
+  color: var(--color-text-muted);
 }
 
-.month-chart {
+.fieldguide-app .month-chart {
   /* Room above the plot for the peak label and the hover readout */
   padding: 26px 0 0 28px;
-  font-size: 9px;
-  color: #555;
+  font-size: var(--text-2xs);
+  color: var(--grey-33);
 }
 
-.month-chart-plot {
+.fieldguide-app .month-chart-plot {
   position: relative;
   height: 72px;
 }
 
 /* Hairline gridlines, labelled on the left; the plot's own baseline is the 0 line */
-.month-grid {
+.fieldguide-app .month-grid {
   position: absolute;
   left: 0;
   right: 0;
   height: 0;
-  border-top: 1px solid #E4E4E4;
+  border-top: 1px solid var(--grey-90);
 }
 
-.month-grid:first-child {
-  border-top-color: #9A9A9A;
+.fieldguide-app .month-grid:first-child {
+  border-top-color: var(--grey-60);
 }
 
-.month-grid-label {
+.fieldguide-app .month-grid-label {
   position: absolute;
   right: calc(100% + 4px);
   top: -6px;
   font-variant-numeric: tabular-nums;
-  color: #777;
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-.month-cols {
+.fieldguide-app .month-cols {
   position: absolute;
   inset: 0;
   display: grid;
@@ -2116,7 +2164,7 @@ a.conservation-chip:hover {
 }
 
 /* The whole column is the hover target, not just the bar */
-.month-col {
+.fieldguide-app .month-col {
   position: relative;
   display: flex;
   align-items: flex-end;
@@ -2126,37 +2174,37 @@ a.conservation-chip:hover {
 }
 
 /* This month: a warm wash behind the column, matching "In season now" */
-.month-col.now {
-  background: #FFF6E0;
+.fieldguide-app .month-col.now {
+  background: var(--fg-season);
 }
 
-.month-col:focus-visible {
-  box-shadow: inset 0 0 0 1px #1A3668;
+.fieldguide-app .month-col:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--blue-900);
 }
 
-.month-bar {
+.fieldguide-app .month-bar {
   width: min(16px, 60%);
   background: var(--fg-sightings);
   /* Rounded at the data end, square on the baseline */
-  border-radius: 3px 3px 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   min-height: 1px;
 }
 
-.month-col.hovered .month-bar {
+.fieldguide-app .month-col.hovered .month-bar {
   filter: brightness(1.15);
 }
 
-.month-peak-label {
+.fieldguide-app .month-peak-label {
   position: absolute;
   left: 50%;
   transform: translate(-50%, -2px);
   font-weight: bold;
-  color: #333;
+  color: var(--grey-20);
   white-space: nowrap;
   pointer-events: none;
 }
 
-.month-tooltip {
+.fieldguide-app .month-tooltip {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -2165,79 +2213,79 @@ a.conservation-chip:hover {
   flex-direction: column;
   align-items: center;
   padding: 2px 6px;
-  background: #FFFFE1;
-  border: 1px solid #555;
-  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+  background: var(--yellow-50);
+  border: 1px solid var(--grey-33);
+  box-shadow: 1px 1px 0 var(--black-a30);
   white-space: nowrap;
   pointer-events: none;
   line-height: 1.25;
 }
 
-.month-tooltip strong {
-  font-size: 11px;
-  color: #111;
+.fieldguide-app .month-tooltip strong {
+  font-size: var(--text-sm);
+  color: var(--grey-7);
 }
 
-.month-tooltip span {
-  color: #555;
+.fieldguide-app .month-tooltip span {
+  color: var(--grey-33);
 }
 
 /* Keep the end months' readouts inside the box */
-.month-tooltip.align-left {
+.fieldguide-app .month-tooltip.align-left {
   left: 0;
   transform: none;
   align-items: flex-start;
 }
 
-.month-tooltip.align-right {
+.fieldguide-app .month-tooltip.align-right {
   left: auto;
   right: 0;
   transform: none;
   align-items: flex-end;
 }
 
-.month-axis {
+.fieldguide-app .month-axis {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   margin-top: 2px;
   text-align: center;
-  color: #666;
+  color: var(--grey-40);
 }
 
-.month-axis .now {
+.fieldguide-app .month-axis .now {
   font-weight: bold;
-  color: #111;
+  color: var(--grey-7);
 }
 
-.month-chart-table {
+.fieldguide-app .month-chart-table {
   margin-top: 6px;
 }
 
-.month-chart-table summary {
+.fieldguide-app .month-chart-table summary {
   cursor: pointer;
-  color: #1A3668;
+  color: var(--blue-900);
   width: max-content;
 }
 
-.month-table-scroll {
+.fieldguide-app .month-table-scroll {
   overflow-x: auto;
 }
 
-.month-chart-table table {
+.fieldguide-app .month-chart-table table {
   border-collapse: collapse;
   margin-top: 4px;
   font-variant-numeric: tabular-nums;
 }
 
-.month-chart-table th,
-.month-chart-table td {
-  border: 1px solid #DDD;
+.fieldguide-app .month-chart-table th,
+.fieldguide-app .month-chart-table td {
+  border: 1px solid var(--grey-87);
   padding: 1px 4px;
   text-align: right;
   font-weight: normal;
 }
 
-.month-chart-table th {
-  background: #F2F2F2;
-  color: #555;
+.fieldguide-app .month-chart-table th {
+  background: var(--grey-94);
+  color: var(--grey-33);
 }

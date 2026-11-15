@@ -50,14 +50,13 @@ Part of the `know-how` skill. The index is in `SKILL.md`.
   of buttons in other apps.
 - **Cause:** `Calculator.css` had bare `button {…}` and `button:active` rules
   and a `.window-controls` rule. Every stylesheet is global, so they reached
-  every button and the window's own controls. `main.tsx` imports `App` before
-  `src/styles.css`, so app stylesheets load first and `src/styles.css` wins
+  every button and the window's own controls. The global stylesheet won
   wherever both set a property; only what it didn't set leaked through.
 - **Fix:** the site-wide button look, bold and shadows included, is in
-  `src/styles.css` on purpose now. The Calculator's classes are
-  `calculator-…`, and the 8px gap lives in `Window/styles.css`. In an app's
-  stylesheet, put everything under the app's own classes, never a bare
-  element.
+  `src/styles/base.css` on purpose now. The Calculator's classes are
+  `calculator-…`, and the 8px gap lives in `Window/styles.css`. Since then
+  the design check fails on any app selector that doesn't start with the
+  app's class (the `design` skill).
 - **Check:** `style-diff.mjs` snapshots every button's computed style. Take
   two before the change (they should match), one after, then `--diff`. This
   fix changed 0 of 136 elements.

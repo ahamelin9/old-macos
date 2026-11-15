@@ -71,22 +71,22 @@ const Safari: React.FC = () => {
         <div className="safari-logo">Search 🔎 </div>
         <form className="safari-search-box" onSubmit={handleSearch}>
           <input
-            className="safari-input"
+            className="safari-input mac-field"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search the web..."
           />
-          <button className="safari-button" type="submit">Search</button>
+          <button className="safari-button mac-button-primary" type="submit">Search</button>
         </form>
       </div>
 
-      {error && <div className="safari-error">{error}</div>}
+      {error && <div className="mac-message mac-message-error">{error}</div>}
 
-      {loading && <div className="safari-error">Loading...</div>}
+      {loading && <div className="mac-message">Loading...</div>}
 
       {searched && !loading && !error && results.length === 0 && (
-        <div className="safari-error">No results found.</div>
+        <div className="mac-message">No results found.</div>
       )}
 
       <div className="safari-results">

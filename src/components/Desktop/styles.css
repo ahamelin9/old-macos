@@ -12,61 +12,70 @@
 }
 
 .mac-menu-bar {
+  /* Spotify's green, for the menu bar's Spotify item */
+  --mac-menu-bar-spotify: #1db954;
+
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 25px;
-  background: #ECECEC;
+  background: var(--color-chrome);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 10px;
-  color: #141414;
-  font-size: 13px;
-  font-family: 'Lucida Grande', Arial, sans-serif;
+  color: var(--grey-7);
+  font-size: var(--text-base);
+  font-family: var(--font-body);
   /* make the apple grey too unsure if I like the hue though */
   filter: grayscale(100%);
   z-index: 1000;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 5px var(--black-a30);
 }
 
-.apple-menu {
+.mac-menu-bar .apple-menu {
   display: flex;
   align-items: center;
 }
 
-.apple-logo {
-  font-size: 16px;
+.mac-menu-bar .apple-logo {
+  font-size: var(--text-xl);
   margin-right: 15px;
 }
 
-.menu-item {
+.mac-menu-bar .menu-item {
   margin-right: 15px;
   cursor: default;
   padding: 2px 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.mac-menu-bar .menu-item:hover {
+  background: var(--white-a15);
+}
+
+.mac-menu-bar .menu-item-spotify {
+  color: var(--mac-menu-bar-spotify);
+  font-weight: bold;
+  cursor: pointer;
 }
 
 @media (max-width: 600px) {
-  .menu-item {
-    display: none !important;
+  .mac-menu-bar .menu-item {
+    display: none;
   }
 }
 
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.menu-status {
+.mac-menu-bar .menu-status {
   display: flex;
   align-items: center;
   margin-right: 15px;
 }
 
-.status-item {
+.mac-menu-bar .status-item {
   padding: 0 5px;
   font-feature-settings: "tnum";
 }

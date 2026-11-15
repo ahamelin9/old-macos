@@ -13,6 +13,8 @@ const Terminal: React.FC = () => {
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isClearing, setIsClearing] = useState(false);
+  // `theme dark` darkens this terminal only (it used to recolour the whole page's variables)
+  const [dark, setDark] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
@@ -53,8 +55,7 @@ const Terminal: React.FC = () => {
     theme: (args) => {
       const theme = args[0];
       if (theme === 'dark' || theme === 'light') {
-        document.documentElement.style.setProperty('--term-bg', theme === 'dark' ? '#222' : '#fff');
-        document.documentElement.style.setProperty('--term-text', theme === 'dark' ? '#ddd' : '#000');
+        setDark(theme === 'dark');
         return { result: [`Theme set to ${theme}`, ''] };
       }
       return { result: ['theme: specify "light" or "dark"', ''] };
@@ -123,7 +124,7 @@ const Terminal: React.FC = () => {
   }, []);
 
   return (
-    <div className={`terminal-content ${isClearing ? 'clearing' : ''}`}>
+    <div className={`terminal-content ${dark ? 'terminal-dark' : ''} ${isClearing ? 'clearing' : ''}`}>
       <div className="terminal-output" ref={outputRef}>
         {output.map((line, i) => (
           <div key={i} className={`terminal-line ${

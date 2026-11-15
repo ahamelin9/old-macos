@@ -1,10 +1,14 @@
 .safari-container {
+  /* Safari's own logo */
+  --safari-blue: #4285f4;
+  --safari-logo-size: 48px;
+
   max-width: 800px;
   margin: 4rem auto;
   padding: 0 1rem;
-  font-family: Arial, sans-serif;
-  color: #222;
-  background-color: #fff;
+  font-family: var(--font-body);
+  color: var(--color-text-strong);
+  background-color: var(--color-surface);
 }
 
 .safari-header {
@@ -13,9 +17,9 @@
 }
 
 .safari-logo {
-  font-size: 3rem;
+  font-size: var(--safari-logo-size);
   font-weight: bold;
-  color: #4285f4;
+  color: var(--safari-blue);
 }
 
 .safari-search-box {
@@ -25,34 +29,17 @@
   margin-bottom: 1rem;
 }
 
+/* 16px, not smaller: an iPhone zooms the page into any field under 16px */
 .safari-input {
   width: 100%;
   max-width: 500px;
   padding: 0.6rem 1rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  background-color: #fff;
-  color:#222;
+  font-size: var(--text-xl);
 }
 
 .safari-button {
   padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  background-color: #f8f9fa;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.safari-button:hover {
-  background-color: #f1f1f1;
-}
-
-.safari-error {
-  color: red;
-  text-align: center;
-  margin-bottom: 1rem;
+  font-size: var(--text-xl);
 }
 
 .safari-results {
@@ -64,8 +51,8 @@
 }
 
 .safari-result-title {
-  font-size: 1.1rem;
-  color: #1a0dab;
+  font-size: var(--text-xl);
+  color: var(--color-link);
   text-decoration: none;
 }
 
@@ -74,15 +61,14 @@
 }
 
 .safari-result-url {
-  color: #006621;
-  font-size: 0.9rem;
+  color: var(--color-success);
+  font-size: var(--text-md);
   word-break: break-word;
   overflow-wrap: anywhere;
   white-space: normal;
 }
 
-
 .safari-result-snippet {
-  font-size: 0.95rem;
+  font-size: var(--text-lg);
   margin-top: 0.1rem;
 }

@@ -63,3 +63,24 @@ skill. This file is only for troubleshooting.
 - **Fix:** `npm run backend` (or `npm run start:all`), with `backend/.env`
   filled in from `backend/.env.example`. In production, the Pages Function
   answers instead (`system-map`, section 5).
+
+## NASA News says "HTTP error! status: 500", or loads forever
+
+*2026-11-15. Diagnosed, not fixed yet.*
+
+- **Symptom:** NASA News shows `Error: HTTP error! status: 500`, or stays on
+  "Loading NASA data..." for 20 seconds or more. It happens on some days and
+  not others.
+- **Cause:** NASA's picture-of-the-day API itself, not our key or a rate
+  limit (the key had about 9,960 requests left that hour). On 2026-11-15, a
+  request for today (no `date`, which is what `NasaNews.tsx` sends) answered
+  500 or hung past 20 s five times out of six. The same request with
+  `date=2026-11-14` or `date=2026-11-10` answered 200 in under 4 s. So when
+  the API can't serve a day's entry, it fails for that whole day.
+- **Fix (to do):**
+  - give the request a timeout of about 10 s (`AbortController`);
+  - on a 5xx or a timeout, ask for yesterday (`date=`, counted in US Eastern
+    time, NASA's calendar), and say that today's picture isn't available yet.
+- **Check:** request with and without `date=`, without printing the key:
+  read it into a shell variable from `.env`, and `unset` it afterwards.
+

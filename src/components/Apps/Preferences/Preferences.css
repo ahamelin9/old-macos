@@ -5,8 +5,8 @@
 .preferences-category {
   padding: 10px;
   margin-bottom: 10px;
-  background-color: #f0f0f0;
-  border-radius: 4px;
+  background-color: var(--color-surface-alt);
+  border-radius: var(--radius);
   cursor: pointer;
-  color: black;
+  color: var(--color-text-strong);
 }

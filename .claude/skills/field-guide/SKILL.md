@@ -93,7 +93,7 @@ places and Wikipedia for summaries. No key is needed.
 | `conservation.ts` | The global IUCN status from `conservation_statuses` |
 | `months.ts` / `months.test.ts` | `peakMonths()`: "Apr–May, Sep–Oct", "year-round"…, and its tests |
 | `MonthChart.tsx` | The 12-column sightings chart, with the current month highlighted |
-| `palette.ts` | The colour key for the map tiles. **Mirrored as CSS custom properties on `.fieldguide-app` in `FieldGuide.css`: change both together.** |
+| `palette.ts` | The two colours handed to iNaturalist's map tiles (range and sightings). The whole colour key is the `--fg-*` custom properties on `.fieldguide-app` in `FieldGuide.css`; **these two mirror `--fg-range` and `--fg-sightings` there: change both together.** |
 | `useGridColumns.ts` | How many cards fit on a row, measured from the element and not the browser (it returns a callback ref) |
 | `FieldGuide.css` | All the styles. It uses container queries (`container-type: inline-size`) at 1000, 830 and 480px |
 

@@ -40,7 +40,7 @@ const Desktop = () => {
           <span className="menu-item">Window</span>
           <span className="menu-item">Help</span>
           {accessToken && (
-            <span className="menu-item" onClick={logout} style={{ color: '#1DB954', fontWeight: 'bold' }}>
+            <span className="menu-item menu-item-spotify" onClick={logout}>
               Disconnect Spotify
             </span>
           )}

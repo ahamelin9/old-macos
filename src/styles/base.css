@@ -1,0 +1,50 @@
+/*
+ * Base: the page itself and the default look of plain elements. This is the
+ * only stylesheet that may style a bare element (button, input…): anywhere
+ * else, a bare element rule restyles every app (know-how, maps-and-layout.md).
+ * It sits in the `base` layer, so any app rule overrides it.
+ */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: var(--font-system);
+    background-color: var(--color-desktop);
+    color: var(--color-text);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+  }
+
+  /* Classic Mac OS platinum, for every button on the site */
+  button {
+    font-family: inherit;
+    background: var(--gradient-platinum);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 2px 8px;
+    font-size: var(--text-md);
+    font-weight: bold;
+    box-shadow: var(--shadow-button);
+    text-shadow: var(--shadow-text);
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: var(--gradient-platinum-hover);
+  }
+
+  button:active {
+    background: var(--gradient-platinum-pressed);
+    box-shadow: var(--shadow-pressed);
+  }
+}

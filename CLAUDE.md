@@ -15,6 +15,7 @@ file first.
 | How the site fits together: desktop, windows, dock, every app, the outside services each one calls, env vars, deploy | the `system-map` skill |
 | Adding a new app to the dock | the `system-map` skill, **Adding an app** |
 | Anything in the Field Guide: places, species, tabs, native/endemic/introduced, maps, Back, the inspector | the `field-guide` skill |
+| Any CSS or visual change: the shared tokens, base and kit, the design check, before-and-after screenshots | the `design` skill |
 | A problem that may have been solved before, or proving a change in a real browser | the `know-how` skill (an index pointing into topic files) |
 | Where a learning, preference or decision goes; the end of a session | the `wrap-up` skill |
 
@@ -29,7 +30,7 @@ Each skill opens with its own contents list. To search all of them at once:
 | Spotify backend (local) | `npm run backend` or `npm run start:all` | FastAPI on port 8000. Only Music needs it. |
 | Unit tests | `npm test` | Vitest. Test files sit next to the code (`*.test.ts`). |
 | Type check | `npx tsc -b` | Its cache, `tsconfig.tsbuildinfo`, is gitignored. |
-| Lint | `npm run lint` | The whole repo lints clean; keep it that way. |
+| Lint | `npm run lint` | ESLint, then the design check (`scripts/design-check.mjs`, the `design` skill). Both pass; keep it that way. |
 | Build | `npm run build` | Runs `tsc -b`, then `vite build` into `dist/`. A type error stops the deploy. |
 
 ## How a change goes
@@ -73,6 +74,7 @@ Each skill opens with its own contents list. To search all of them at once:
   `ResizeObserver`), not from `window.innerWidth`.
 - **Be gentle with free APIs.** iNaturalist, Nominatim, Wikipedia and PokeAPI
   need no key, but they rate-limit bursts.
-- **Keep the retro look, and prefix CSS classes with the app**
-  (`fieldguide-…`). Every stylesheet is global, so a generic class name can
-  restyle another app.
+- **Keep the retro look, built from the shared styles.** Values come from
+  `src/styles/tokens.css`, and every selector in an app's stylesheet starts
+  with that app's class, because every stylesheet is global. The design
+  check in `npm run lint` enforces both (the `design` skill).

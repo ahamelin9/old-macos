@@ -80,7 +80,7 @@ try {
   t.check('only web links are links', safari.href0 === null && safari.href1 === 'https://example.com/', `${safari.href0} / ${safari.href1}`);
   t.check('entities read as text', safari.text1 === 'plain & simple', safari.text1);
   await search('nothing');
-  t.check('no results says so', await t.ev(`[...document.querySelectorAll('.safari-error')].some(e => e.textContent === 'No results found.')`));
+  t.check('no results says so', await t.ev(`[...document.querySelectorAll('.safari-container .mac-message')].some(e => e.textContent === 'No results found.')`));
 
   // ---- Pokémon (two real PokeAPI requests for the missing name, one for Pikachu)
   await t.openApp('Pokemon');

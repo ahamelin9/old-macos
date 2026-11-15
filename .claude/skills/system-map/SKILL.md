@@ -154,9 +154,9 @@ Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
 
 ## 7. Adding an app
 
-1. Make `src/components/Apps/<Name>/<Name>.tsx` and `<Name>.css`. Give the
-   root element an app-prefixed class and prefix every class: stylesheets are
-   global (section 8).
+1. Make `src/components/Apps/<Name>/<Name>.tsx` and `<Name>.css`. Style it
+   from the shared tokens and kit, with an app-prefixed root class (the
+   `design` skill, **Style a new app**).
 2. Add an icon at `public/<name>-icon.png`, in the same style as the others.
 3. Add an entry to `apps` in `Dock.tsx`: `{ name, icon, action: () => openWindow('<Window title>', <Name />) }`.
    The order in the array is the order in the dock.
@@ -175,12 +175,8 @@ Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
 These are facts to know while working, not tasks. Raise one with Alex only
 when it gets in the way.
 
-- All CSS is global. Prefix every class with the app, and never style a bare
-  element (`button {…}`) in an app's stylesheet: it restyles the whole site
-  (know-how, `maps-and-layout.md`). The site-wide button look lives in
-  `src/styles.css`. Some older classes aren't prefixed yet, such as
-  `.loading`, `.error-state` and `.search-form` in Pokemon and
-  `.control-button` and `.progress-bar` in Music.
+- All CSS is global; the `design` skill says how the shared styles and the
+  design check keep apps from restyling each other.
 - System Preferences and Trash are placeholders.
 - Music's Premium player gets its token once, when it's built: the SDK's
   `getOAuthToken` hands back the token from that moment. After about an hour

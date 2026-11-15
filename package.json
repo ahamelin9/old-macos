@@ -8,7 +8,7 @@
     "backend": "python3 backend/main.py",
     "start:all": "concurrently \"npm run backend\" \"npm run dev\"",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "eslint . && node scripts/design-check.mjs",
     "preview": "vite preview",
     "test": "vitest run"
   },

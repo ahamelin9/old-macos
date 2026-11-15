@@ -30,6 +30,7 @@ short however much the list grows.
 | A UI piece never appears because its field is always empty | [A field the code reads is always empty](apis.md#a-field-the-code-reads-is-always-empty) |
 | A test script gets 403 or 429 | [A script gets 403 or 429 from iNaturalist or Wikipedia](apis.md#a-script-gets-403-or-429-from-inaturalist-or-wikipedia) |
 | Music logs "Guest fetch error" in dev | [Music logs "Guest fetch error" locally](apis.md#music-logs-guest-fetch-error-locally) |
+| NASA News shows "status: 500" or loads forever | [NASA News says status 500](apis.md#nasa-news-says-http-error-status-500-or-loads-forever) |
 
 **Maps and layout**: [maps-and-layout.md](maps-and-layout.md)
 
@@ -66,6 +67,7 @@ short however much the list grows.
 | `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`) |
 | `app-check.mjs` | Camera, Notes, Safari, Pokémon and Music volume (`checking.md`) |
 | `style-diff.mjs` | Snapshots every button's computed style, to diff before and after a CSS change (`maps-and-layout.md`) |
+| `app-shots.mjs` | Before-and-after screenshots of every app on a laptop and a phone, with a pixel diff (`design` skill, section 4) |
 
 ## Adding an entry
 
