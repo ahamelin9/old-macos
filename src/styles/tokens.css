@@ -134,6 +134,8 @@
     --gradient-platinum-pressed: linear-gradient(to bottom, var(--grey-84), var(--grey-77));
     --gradient-titlebar: linear-gradient(to bottom, var(--blue-500), var(--blue-600));
     --gradient-aqua: linear-gradient(to bottom, var(--blue-450), var(--blue-600));
+    /* The shine across the top half of an Aqua gel button, laid over --gradient-aqua */
+    --gradient-gloss: linear-gradient(to bottom, var(--white-a80), var(--white-a15));
 
     /* ---- Shadows */
     --shadow-button:

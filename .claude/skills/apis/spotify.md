@@ -50,16 +50,28 @@ section 5.**
 126; Music showed the first 100 of each. It now asks for each next page of
 100 (`offset`) until Spotify says there are no more, up to 1,000 tracks.
 
-### Music logs "Guest fetch error" locally
+### Music logs "Guest fetch error" locally, or the backend won't start
 
 *2026-11-15*
 
 - **Symptom:** opening Music in dev logs `Guest fetch error: SyntaxError …
   Unexpected end of JSON input`.
-- **Cause:** locally, Vite proxies `/api/client_credentials` to the FastAPI
-  backend on port 8000, and nothing is running there.
-- **Fix:** `npm run backend` (or `npm run start:all`), with `backend/.env`
+- **Cause:** locally, Vite proxies `/api/*` to the FastAPI backend on port
+  8000 (it drops the `/api`, so the backend's routes are `/login`,
+  `/client_credentials` and so on), and nothing is running there.
+- **Fix:** `npm run backend` (or `npm run dev:all`), with `backend/.env`
   filled in from `backend/.env.example`.
+- **Symptom 2:** `npm run backend` fails with `ModuleNotFoundError: No
+  module named 'fastapi'`.
+- **Cause:** whichever `python3` comes first on the PATH runs the backend.
+  With Anaconda's `(base)` active, that's Anaconda's Python, which doesn't
+  have FastAPI, even though the Mac's own Python 3.10 does.
+- **Fix:** the backend has its own Python environment, `backend/.venv`
+  (gitignored), and `npm run backend` runs that one. Set it up once with
+  `npm run backend:setup`, and again after `requirements.txt` changes.
+- **Check:** with `npm run dev` running, start the backend, then
+  `curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:5173/api/client_credentials`
+  should print 200.
 
 ### The Premium player's token after an hour
 

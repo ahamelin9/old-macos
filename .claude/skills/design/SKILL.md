@@ -198,3 +198,8 @@ Send Alex the pairs that changed on purpose.
    as regular. With Lucida Grande first in `--font-body`, the headings and
    buttons that were always meant to be bold (Finder, Pokémon, Field Guide)
    now are.
+6. **Aqua gel buttons, with a nod to glass** (Alex, 2026-11-15). NASA
+   News's round ☰ is the classic Aqua gel: `--gradient-aqua` at 92% over a
+   light `backdrop-filter` blur, `--gradient-gloss` on its top half, a thin
+   `--blue-800` border and `--shadow-raised`. It is in `NasaNews.css`; make
+   it a kit class when a second app wants one.

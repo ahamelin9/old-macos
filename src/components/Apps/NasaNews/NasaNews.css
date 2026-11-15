@@ -1,8 +1,307 @@
-.nasa-container {
+/* NASA News: a sidebar of past days beside (or over) the day's picture. How
+   the sidebar fits the window is at the end of this file. */
+.nasa-app {
   /* NASA's own colours */
   --nasa-blue: #0b3d91;
   --nasa-red: #e83f3f;
 
+  container-type: inline-size;
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  font-family: var(--font-body);
+}
+
+/* The ☰: a round Aqua gel button. The blue is the shared Aqua gradient, a
+   little see-through over a blur of what's behind it; the shine on its top
+   half is the shared gloss. */
+.nasa-app .nasa-gel-button {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  /* ☰ sits low in its line box; this centres it in the circle */
+  padding: 0 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--blue-800);
+  border-radius: var(--radius-round);
+  background: none;
+  backdrop-filter: blur(6px) saturate(1.4);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-text-on-accent);
+  text-shadow: var(--shadow-text-dark);
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.nasa-app .nasa-gel-button::before,
+.nasa-app .nasa-gel-button::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: var(--radius-round);
+}
+
+.nasa-app .nasa-gel-button::before {
+  inset: 0;
+  background: var(--gradient-aqua);
+  opacity: 0.92;
+}
+
+.nasa-app .nasa-gel-button::after {
+  top: 2px;
+  left: 6px;
+  right: 6px;
+  height: 46%;
+  background: var(--gradient-gloss);
+}
+
+.nasa-app .nasa-gel-button:hover {
+  filter: brightness(1.08);
+}
+
+.nasa-app .nasa-gel-button:active {
+  filter: brightness(0.88);
+  box-shadow: var(--shadow-pressed);
+}
+
+.nasa-app .nasa-gel-button:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: 2px;
+}
+
+/* Where the picture scrolls; the padding matches every other window's */
+.nasa-app .nasa-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 5px;
+  background: var(--color-surface);
+}
+
+/* The sidebar of past days. In a wide window it sits beside the picture,
+   like Music's playlists */
+.nasa-app .nasa-sidebar {
+  display: none;
+  flex: none;
+  flex-direction: column;
+  width: 34%;
+  min-width: 210px;
+  max-width: 280px;
+  overflow: hidden;
+  background-color: var(--color-surface-alt);
+  border-right: 1px solid var(--grey-63);
+}
+
+.nasa-app .nasa-sidebar-open {
+  display: flex;
+}
+
+/* The header, search and date stay put; the list scrolls under them */
+.nasa-app .nasa-sidebar-top {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.nasa-app .nasa-sidebar-header {
+  padding: 4px 8px 0;
+  font-size: var(--text-sm);
+  font-weight: bold;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Shown only in a narrow window (the end of this file) */
+.nasa-app .nasa-sidebar-close {
+  display: none;
+}
+
+/* The search box, with a round ✕ inside its right end. 16px text, or a
+   phone zooms in when it's tapped (the design skill) */
+.nasa-app .nasa-search {
+  position: relative;
+  margin: 0 8px;
+}
+
+.nasa-app .nasa-search-field,
+.nasa-app .nasa-date-field {
+  width: 100%;
+  min-width: 0;
+  font-size: var(--text-xl);
+}
+
+.nasa-app .nasa-search-field {
+  padding-right: 28px;
+}
+
+/* Our own ✕ instead of the browser's, so it looks the same everywhere */
+.nasa-app .nasa-search-field::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.nasa-app .nasa-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--grey-63);
+  box-shadow: none;
+  color: var(--color-text-on-accent);
+  text-shadow: none;
+  font-size: var(--text-2xs);
+}
+
+.nasa-app .nasa-search-clear:hover {
+  background: var(--grey-50);
+}
+
+.nasa-app .nasa-search-clear:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: 1px;
+}
+
+.nasa-app .nasa-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 8px;
+  font-size: var(--text-sm);
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.nasa-app .nasa-date-field {
+  flex: 1;
+}
+
+/* A date APOD doesn't have (before 1995-06-16, or after today) */
+.nasa-app .nasa-date-field:invalid {
+  border-color: var(--color-error);
+}
+
+.nasa-app .nasa-day-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: 4px;
+}
+
+.nasa-app .nasa-result-count {
+  padding: 2px 10px 6px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.nasa-app .nasa-day-list {
+  list-style: none;
+  padding: 0 4px;
+  margin: 0;
+}
+
+/* A row is a button (mac-list-row gives the hover and the selected blue)
+   without the platinum */
+.nasa-app .nasa-day {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font-weight: normal;
+  color: var(--color-text-strong);
+  border: none;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.nasa-app .nasa-day:not(:hover, .mac-selected) {
+  background: none;
+}
+
+.nasa-app .nasa-thumb {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border-light);
+  box-shadow: var(--shadow-raised);
+}
+
+/* A day without a picture of its own (many older days, and some videos) */
+.nasa-app .nasa-thumb-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--nasa-blue);
+  color: var(--color-text-on-accent);
+  font-size: var(--text-xl);
+}
+
+.nasa-app .nasa-day-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.nasa-app .nasa-day-date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.nasa-app .nasa-day-today .nasa-day-date {
+  font-weight: bold;
+  color: var(--nasa-blue);
+}
+
+.nasa-app .nasa-day-title {
+  font-size: var(--text-md);
+  line-height: 1.25;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* The end of the list: when it scrolls near view, the next page loads */
+.nasa-app .nasa-list-end {
+  height: 1px;
+  flex: none;
+}
+
+.nasa-app .nasa-list-note {
+  padding: 10px 8px;
+}
+
+.nasa-app .nasa-list-note button {
+  margin-top: 8px;
+  font-size: var(--text-sm);
+}
+
+/* Shown only behind the sliding list in a narrow window */
+.nasa-app .nasa-scrim {
+  display: none;
+}
+
+.nasa-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
@@ -13,11 +312,20 @@
   box-shadow: var(--shadow-card);
 }
 
+/* The ☰ at the left of the heading, and an empty column as wide on the
+   right, so the heading stays centred and never runs under the button */
+.nasa-container .nasa-heading-row {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid var(--nasa-blue);
+  padding-bottom: 10px;
+}
+
 .nasa-title {
   color: var(--nasa-blue);
   text-align: center;
-  border-bottom: 2px solid var(--nasa-blue);
-  padding-bottom: 10px;
 }
 
 .nasa-container .apod-container {
@@ -149,13 +457,66 @@
   text-decoration: underline;
 }
 
-.nasa-container.loading,
-.nasa-container.error {
+/* Loading, and what went wrong, under the heading */
+.nasa-container .nasa-status {
   text-align: center;
-  padding: 40px;
+  padding: 20px;
   font-size: var(--text-2xl);
 }
 
-.nasa-container.error {
+.nasa-container .nasa-status-error {
   color: var(--color-error);
+}
+
+/* Under a day's error: the day on NASA Science, in normal-sized text */
+.nasa-container .nasa-day-link {
+  display: block;
+  margin-top: 12px;
+  font-size: var(--text-md);
+  color: var(--nasa-blue);
+}
+
+/* A narrow window (the 400px one it opens in, or a phone): the list slides
+   over the picture instead of squeezing it, and closes when a day is picked.
+   NasaNews.tsx tells the two layouts apart by the list's position. */
+@container (max-width: 639px) {
+  .nasa-app .nasa-sidebar {
+    display: flex;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+    width: min(280px, 85%);
+    min-width: 0;
+    max-width: none;
+    box-shadow: var(--shadow-window);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.2s ease-out, visibility 0s linear 0.2s;
+  }
+
+  .nasa-app .nasa-sidebar-open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.2s ease-out;
+  }
+
+  /* The list covers the ☰ on the page, so it brings its own */
+  .nasa-app .nasa-sidebar-header {
+    padding: 8px 8px 0;
+    gap: 8px;
+  }
+
+  .nasa-app .nasa-sidebar-close {
+    display: flex;
+  }
+
+  .nasa-app .nasa-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-color: var(--black-a20);
+  }
 }

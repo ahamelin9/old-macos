@@ -22,22 +22,37 @@ import { launch, sleep } from './cdp.mjs';
 const args = process.argv.slice(2);
 const slug = (name) => name.replace(/\W+/g, '-').toLowerCase();
 
-// The same "random" numbers on every run, and a fixed NASA picture of the
-// day (it changes daily). The reply is shaped like science.nasa.gov's APOD
-// posts (the apis skill, nasa.md).
+// The same "random" numbers on every run, and fixed NASA pictures of the day
+// (they change daily). The replies are shaped like science.nasa.gov's APOD
+// posts (the apis skill, nasa.md): today (per_page=1), the sidebar's list of
+// past days (per_page=20&page=N, three pages, with X-WP-TotalPages), and one
+// day's post (image-article/<id>). Every seventh day has no thumbnail.
 const SEEDED_RANDOM = `(() => {
   let s = 20261115; Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
   const realFetch = window.fetch;
-  window.fetch = (url, opts) => String(url).includes('science.nasa.gov/wp-json/wp/v2/image-article')
-    ? Promise.resolve(new Response(JSON.stringify([{
-        date: '2026-11-15T00:05:00', link: 'https://science.nasa.gov/apod/',
-        title: { rendered: 'APOD: 2026 November 15 &#8211; A Test Sky' },
-        content: { rendered: '<p><strong>Explanation:</strong> ' +
-          'A fixed picture for screenshot checks, so the layout can be compared from one run to the next. '.repeat(4) +
-          '</p><p>Date: November 15, 2026</p><p>Credit &amp; Copyright: Test Photographer</p><p>Authors &amp; editors: Test</p>' },
-        _embedded: { 'wp:featuredmedia': [{ source_url: '/mac-os-background.jpg' }] }
-      }]), { headers: { 'Content-Type': 'application/json' } }))
-    : realFetch(url, opts);
+  const post = (n) => ({
+    id: 1000 - n,
+    date: new Date(Date.UTC(2026, 10, 15 - n)).toISOString().slice(0, 10) + 'T00:05:00',
+    link: 'https://science.nasa.gov/apod/',
+    title: { rendered: n ? 'A Test Sky, ' + n + ' days ago' : 'APOD: 2026 November 15 &#8211; A Test Sky' },
+    content: { rendered: '<p><strong>Explanation:</strong> ' +
+      'A fixed picture for screenshot checks, so the layout can be compared from one run to the next. '.repeat(4) +
+      '</p><p>Date: November 15, 2026</p><p>Credit &amp; Copyright: Test Photographer</p><p>Authors &amp; editors: Test</p>' },
+    _embedded: { 'wp:featuredmedia': [{ source_url: '/mac-os-background.jpg',
+      media_details: { sizes: n % 7 === 6 ? {} : { 'thumbnail-sm': { source_url: '/mac-os-background.jpg' } } } }] }
+  });
+  const reply = (body, headers = {}) =>
+    Promise.resolve(new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json', ...headers } }));
+  window.fetch = (url, opts) => {
+    const u = String(url);
+    if (!u.includes('science.nasa.gov/wp-json/wp/v2/image-article')) return realFetch(url, opts);
+    const one = u.match(/image-article\\/(\\d+)/);
+    if (one) return reply(post(1000 - Number(one[1])));
+    const q = new URL(u).searchParams;
+    const per = Number(q.get('per_page') || 10), page = Number(q.get('page') || 1);
+    return reply(Array.from({ length: per }, (_, i) => post((page - 1) * per + i)),
+      { 'X-WP-Total': String(per * 3), 'X-WP-TotalPages': '3' });
+  };
 })();`;
 const STEADY = `const st = document.createElement('style');
   st.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; } .menu-status { visibility: hidden !important; }';

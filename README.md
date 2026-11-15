@@ -27,11 +27,12 @@ npm run dev
 
 The site is at http://127.0.0.1:5173 (Spotify won't redirect to `localhost`).
 
-Music's Spotify login runs on a small FastAPI backend locally:
+Music's Spotify login runs on a small FastAPI backend locally. It has its
+own Python environment in `backend/.venv`, so set that up once:
 
 ```bash
-pip install -r backend/requirements.txt
-npm run start:all
+npm run backend:setup
+npm run dev:all
 ```
 
 ## Settings

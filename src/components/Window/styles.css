@@ -93,8 +93,10 @@
   background: var(--color-surface);
 }
 
-/* Music fills its window edge to edge */
-.window-content:has(.retro-itunes) {
+/* Music fills its window edge to edge. NASA News too: its list of past days
+   and its picture each scroll on their own */
+.window-content:has(.retro-itunes),
+.window-content:has(.nasa-app) {
   padding: 0;
   overflow: hidden;
   display: flex;

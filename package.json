@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "backend": "python3 backend/main.py",
-    "start:all": "concurrently \"npm run backend\" \"npm run dev\"",
+    "backend": "backend/.venv/bin/python backend/main.py",
+    "backend:setup": "python3 -m venv backend/.venv && backend/.venv/bin/pip install -r backend/requirements.txt",
+    "dev:all": "concurrently \"npm run backend\" \"npm run dev\"",
     "build": "tsc -b && vite build",
     "lint": "eslint . && node scripts/design-check.mjs",
     "preview": "vite preview",

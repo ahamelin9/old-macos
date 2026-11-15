@@ -19,6 +19,7 @@ short however much the list grows.
 | Prove a change works in a real browser | [Proving a change in a real browser](checking.md#proving-a-change-in-a-real-browser) |
 | Check every app still opens after a shared change | [Does every app still open?](checking.md#does-every-app-still-open) |
 | Check the windows, Camera, Notes, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
+| Check NASA News's sidebar: past days, scrolling, search, dates | [Does NASA News's sidebar still work?](checking.md#does-nasa-newss-sidebar-still-work) |
 | Nothing works on the port the preview reported | [The dev server isn't on the port the preview says](checking.md#the-dev-server-isnt-on-the-port-the-preview-says) |
 | `npm run lint` reports a problem | [`npm run lint` fails](checking.md#npm-run-lint-fails) |
 
@@ -30,7 +31,7 @@ short however much the list grows.
 | "Failed to fetch", "Could not load this specimen", or a page of Unknown badges | `apis` skill, `inaturalist.md` (rate limits) |
 | A UI piece never appears because its field is always empty | `apis` skill, `inaturalist.md` (a field always empty) |
 | A test script gets 403 or 429 | `apis` skill, `inaturalist.md` and `wikipedia.md` |
-| Music logs "Guest fetch error" in dev | `apis` skill, `spotify.md` |
+| Music logs "Guest fetch error" in dev, or the backend says `No module named 'fastapi'` | `apis` skill, `spotify.md` |
 | NASA News shows an error, loads forever, or shows a NASA logo titled "NASA Science" | `apis` skill, `nasa.md` |
 | Safari says "No results found" for a real search | `apis` skill, `brave-search.md` |
 
@@ -69,6 +70,7 @@ short however much the list grows.
 | `smoke-check.mjs` | Opens every dock app at desktop and phone width; fails on any page error |
 | `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`) |
 | `app-check.mjs` | Camera, Notes, Safari, Pokémon and Music volume (`checking.md`) |
+| `nasa-check.mjs` | NASA News's sidebar against live NASA at three sizes (`checking.md`) |
 | `style-diff.mjs` | Snapshots every button's computed style, to diff before and after a CSS change (`maps-and-layout.md`) |
 | `app-shots.mjs` | Before-and-after screenshots of every app on a laptop and a phone, with a pixel diff (`design` skill, section 4) |
 

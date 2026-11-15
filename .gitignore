@@ -13,3 +13,7 @@ dist
 tsconfig.tsbuildinfo
 *.local
 .env
+
+# The Spotify backend's own Python environment (npm run backend:setup)
+backend/.venv/
+__pycache__/

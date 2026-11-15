@@ -46,6 +46,8 @@ index.html  →  src/main.tsx  →  App.tsx
     it measures from `.dock`. It re-measures when the browser resizes.
   - A press anywhere inside a window brings it to the front.
   - Content sits in `.window-content`, which is the element that scrolls.
+    Music and NASA News fill it edge to edge and scroll their own panes
+    instead (`.window-content:has(…)` in `Window/styles.css`).
 - **Dock** (`Dock.tsx`): the `apps` array. Each entry has a name, an icon
   from `public/`, and `openWindow(title, <App />)`.
   - Under 800px wide (`isMobile`), only Finder, Safari, Field Guide, Nasa
@@ -84,7 +86,7 @@ All of them live in `src/components/Apps/<Folder>/`, as `<Name>.tsx` and
 |---|---|---|---|---|
 | Finder | `Finder` | About Alex: About Me, Projects, Skills and Interests, with LinkedIn and GitHub links | none | ✓ |
 | Safari | `Safari` | Web search with results listed. Snippets show as text with the matched words bold, never as outside HTML; only http(s) results are links | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | ✓ |
-| Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day | science.nasa.gov's WordPress API (no key; `apis` skill, nasa.md) | ✓ |
+| Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day. The round ☰ in the heading opens a sidebar of past days (20 at a time as it scrolls), with a search box and a date box; a picked day shows in the same layout. Wide windows put the list beside the picture, narrow ones slide it over | science.nasa.gov's WordPress API (no key; `apis` skill, nasa.md) | ✓ |
 | Pokemon | `PokemonSearch` | Pokédex: fuzzy search (`fuzzysort`), stats in US units, a clickable evolution chain, shiny toggle, type chart | PokeAPI only (the two mirror APIs it used to try were dead); sprites from the PokeAPI GitHub | ✓ |
 | Field Guide | `FieldGuide` | What lives near a place, and where a species lives. The biggest app by far | iNaturalist, Nominatim (OpenStreetMap), Wikipedia, Wikidata. **See the `field-guide` skill.** | ✓ |
 | Music | `Music` | Spotify player with Alex's playlists (`PLAYLISTS`). Playback needs Spotify Premium. A volume slider shows when the window is wider than 620px | Spotify Web API and Web Playback SDK, through `SpotifyContext` | |
@@ -173,6 +175,12 @@ when it gets in the way.
 - All CSS is global; the `design` skill says how the shared styles and the
   design check keep apps from restyling each other.
 - System Preferences and Trash are placeholders.
+- The local Spotify backend listens on `0.0.0.0:8000` (`backend/main.py`), so
+  other devices on the same network can reach it while it runs. `127.0.0.1`
+  would be enough, since Vite's proxy is on the same Mac.
+- NASA News in the 400×300 window fits only three past days below the
+  search and date boxes. A small calendar button in place of the date box
+  would leave room for more (an idea, 2026-11-15).
 - Music's Premium player gets its token once, when it's built: the SDK's
   `getOAuthToken` hands back the token from that moment. After about an hour
   of playing, the SDK may report an auth error. Fixing it needs a Premium

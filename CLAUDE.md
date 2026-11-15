@@ -28,7 +28,7 @@ Each skill opens with its own contents list. To search all of them at once:
 | What | Command | Notes |
 |---|---|---|
 | Dev server | `npm run dev` | Serves http://127.0.0.1:5173. It binds to `127.0.0.1`, not `localhost`, because Spotify redirects there. Alex often has it running already; check with `lsof -nP -iTCP:5173 -sTCP:LISTEN` first. |
-| Spotify backend (local) | `npm run backend` or `npm run start:all` | FastAPI on port 8000. Only Music needs it. |
+| Spotify backend (local) | `npm run backend` or `npm run dev:all` | FastAPI on port 8000. Only Music needs it. It runs from its own Python environment, `backend/.venv`; set it up once with `npm run backend:setup` (the `apis` skill, `spotify.md`). |
 | Unit tests | `npm test` | Vitest. Test files sit next to the code (`*.test.ts`). |
 | Type check | `npx tsc -b` | Its cache, `tsconfig.tsbuildinfo`, is gitignored. |
 | Lint | `npm run lint` | ESLint, then the design check (`scripts/design-check.mjs`, the `design` skill). Both pass; keep it that way. |

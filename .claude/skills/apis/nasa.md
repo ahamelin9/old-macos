@@ -1,8 +1,9 @@
 # NASA APOD (Astronomy Picture of the Day)
 
 Part of the `apis` skill. Used by NASA News
-(`src/components/Apps/NasaNews/`: `apod.ts` fetches and reads the post,
-`NasaNews.tsx` shows it).
+(`src/components/Apps/NasaNews/`: `apod.ts` fetches and reads a post,
+`apodDays.ts` fetches the sidebar's past days, searches and dates, and
+`NasaNews.tsx` shows them).
 
 ## What the site uses
 
@@ -29,13 +30,77 @@ or the embedded picture is dropped. What `apod.ts` reads from the post:
 | Link | `link`, the day's page |
 
 The media's `caption` looks like the explanation but is cut short with
-"[…]": don't use it.
+"[…]": don't use it. The media's `alt_text` has entities (`&#039;`), so it
+is decoded too.
+
+### NASA's stand-in picture
+
+Many older days (GIFs, videos, all of 1995) have NASA's generic "news"
+picture as their featured image:
+`…/cosmic-origins/images/misc/news-thumbnail.png`. It is never the day's
+picture. 19 of 109 days sampled on 2026-11-15 had it, from 1995 to 2026.
+`isStandInImage` spots it by file name. The day's real picture is then an
+`<img>` inside the post, in the APOD folder on `assets.science.nasa.gov`,
+inside a link to the full-size file; `readApodPost` uses that. A video day
+with the stand-in gets its video from the post as usual. In the sidebar, a
+stand-in day shows a ✦ placeholder.
+
+Title and credit quirks `readApodPost` handles:
+
+- Titles come as "APOD: 2026 November 15 – …" and "APOD: 29 October 2026 – …",
+  with the dash as `&#8211;` or a plain "–" (`cleanTitle`).
+- Older pages put a bare "Credit" label before NASA's own credit line
+  ("Credit Video Credit & Copyright: Ken Murphy"); the app shows just the line.
+
+### The sidebar: past days, search and dates
+
+All three are the same `image-article` list, category 22766. A row needs no
+post text, so the list asks only for what a row shows:
+
+```
+https://science.nasa.gov/wp-json/wp/v2/image-article?categories=22766&per_page=20&page=N&_embed=wp:featuredmedia&_fields=id,date,title,link,_links,_embedded
+```
+
+- About 2 s and 270 KB a page; 11,469 days on 2026-11-15, back to
+  1995-06-16, so 574 pages (the last has 9).
+- `X-WP-TotalPages` and `X-WP-Total` say how many there are; browsers can
+  read them (`Access-Control-Expose-Headers`). A page past the end answers
+  400 (`rest_post_invalid_page_number`), so stop at `X-WP-TotalPages`.
+- Pages are by position, newest first: a new day published between two
+  pages pushes the next page down one, so `mergeDays` drops repeats by `id`.
+- **Thumbnails:** `media_details.sizes['thumbnail-sm']` (fits 140×100,
+  about 20 KB), else `sizes.thumbnail` (319 px). Some `thumbnail-sm` URLs on
+  `…/dynamicimage/…` say `w=0&h=0`, which is the whole picture (150 KB);
+  that server sizes any picture from `w` and `h`, so `smallThumb` asks for
+  `w=140&h=100` (3 KB). A picture with `sizes: {}` (2025-10-15) gets the same
+  server's copy of its file: `/content/dam/X` is also at
+  `/dynamicimage/assets/X`.
+- **One day,** when its row is picked:
+  `image-article/{id}?_embed=wp:featuredmedia&_fields=date,link,title,content,_links,_embedded`,
+  read by `readApodPost`. About 25 KB, under a second. Kept for the visit.
+- **Search:** add `&search=<words>&orderby=relevance`. It searches the title
+  **and** the explanation ("rocket": 301 days; the 2026-10-16 day says it
+  only in its text). `search_columns=post_title` is ignored, so titles alone
+  can't be searched. `orderby=relevance` puts title matches first: on
+  2026-11-15 "horsehead" gave 5 title matches in the top 5 against 2 newest
+  first, and "rocket" 8 of the top 10 against 4. No results: `[]` with
+  `X-WP-Total: 0`.
+- **A date:** `per_page=1&after=<day before>T23:59:59&before=<day after>T00:00:00`
+  with the one-day `_fields`. Early years have gaps: 1995-06-18 answers `[]`
+  (the app says "No picture on 1995-06-18."), and 1995 posts are dated
+  00:00:00. The first day is 1995-06-16; the date box allows up to today in
+  US Eastern time.
+- Video days for testing: 2026-10-28 (NASA's own .mp4), 2026-10-18 (YouTube),
+  2019-12-22 (Vimeo), 2010-01-20 (YouTube, with the stand-in picture).
 
 ## Setup and limits
 
 - No key. It answers browsers from any site (it echoes the `Origin` in
   `Access-Control-Allow-Origin`), and caches for 60 s.
-- No published rate limit; NASA News makes one request each time it opens.
+- No published rate limit. NASA News makes one request when it opens. The
+  sidebar adds a page when it first opens and one more each time its end
+  scrolls into view (never two at once), one per picked day or date (kept
+  for the visit), and searches only after typing pauses for 400 ms.
 - New days appear just after midnight US Eastern time.
 
 ## Known issues
@@ -65,3 +130,12 @@ curl -s -A "macos-1999-api-check/1.0" "https://science.nasa.gov/wp-json/wp/v2/im
 ```
 
 Should print today's date (Eastern time) and "APOD: …" with today's title.
+
+The sidebar's list, with its page count:
+
+```bash
+curl -s -D - -o /dev/null -A "macos-1999-apod-check/1.0" "https://science.nasa.gov/wp-json/wp/v2/image-article?categories=22766&per_page=20&page=1&_fields=id" | grep -i '^x-wp-total'
+```
+
+Should print `x-wp-total` (about 11,500 and growing) and `x-wp-totalpages`.
+The whole sidebar, in a browser at three sizes: know-how's `nasa-check.mjs`.

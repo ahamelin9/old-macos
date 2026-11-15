@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { decodeEntities, fetchApod, htmlToText, readApodPost } from './apod';
+import { cleanTitle, decodeEntities, fetchApod, htmlToText, readApodPost } from './apod';
 
 // Shaped like science.nasa.gov's real APOD posts (2026-11-15, 2026-10-28, 2026-10-18)
 const page = (media: string, credit = '<strong>Credit &amp; Copyright:</strong> <a href="#">Luo Hongyang</a>') => `
@@ -74,8 +74,53 @@ describe('readApodPost', () => {
     expect(readApodPost(doubled)?.credit).toBe('Image Credit: NASA, ESA');
   });
 
+  it('reads the older pages\' bare "Credit" label before NASA\'s own credit line', () => {
+    // As on 2010-01-20, 2019-12-22 and 1999-12-25
+    const credit = (line: string) => readApodPost({ ...imagePost, content: { rendered: page('', line) } })?.credit;
+    expect(credit('<strong>Credit</strong> Credit &amp; Copyright: <a href="#">American Museum of Natural History</a>'))
+      .toBe('Credit & Copyright: American Museum of Natural History');
+    expect(credit('Credit Video Credit &amp; Copyright: Ken Murphy (<a href="#"> MurphLab</a>)'))
+      .toBe('Video Credit & Copyright: Ken Murphy (MurphLab)');
+    expect(credit('Credit Credit: The Clementine Project')).toBe('Credit: The Clementine Project');
+  });
+
+  it('decodes entities in the alt text', () => {
+    const media = { ...imagePost._embedded['wp:featuredmedia'][0], alt_text: 'Ganymede casts a shadow on Jupiter&#039;s disk.' };
+    expect(readApodPost({ ...imagePost, _embedded: { 'wp:featuredmedia': [media] } })?.alt).toBe("Ganymede casts a shadow on Jupiter's disk.");
+  });
+
+  it("shows the post's own picture when the featured one is NASA's stand-in", () => {
+    // As on 1995-06-20 and 1999-12-25: a GIF in the post, and NASA's generic "news" picture as the featured image
+    const gif = 'https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/1999/december/earthmos_clem_big.gif';
+    const old = {
+      ...imagePost,
+      content: {
+        rendered: page(
+          `<figure><a href="${gif}" target="_blank"><img decoding="async" width="732" height="629" src="${gif}" ` +
+          'alt="See Explanation. Clicking on the picture will download the highest resolution version available."></a></figure>'
+        )
+      },
+      _embedded: { 'wp:featuredmedia': [{ source_url: 'https://assets.science.nasa.gov/dynamicimage/assets/science/astro/programs/cosmic-origins/images/misc/news-thumbnail.png' }] }
+    };
+    expect(readApodPost(old)).toMatchObject({ media_type: 'image', url: gif, hdurl: gif, alt: undefined });
+  });
+
+  it('never shows the stand-in, even with nothing else to show', () => {
+    const standIn = { source_url: 'https://assets.science.nasa.gov/dynamicimage/assets/science/astro/programs/cosmic-origins/images/misc/news-thumbnail.png' };
+    expect(readApodPost({ ...imagePost, content: { rendered: page('') }, _embedded: { 'wp:featuredmedia': [standIn] } })).toBeNull();
+  });
+
   it('gives up on a post with no picture or video', () => {
     expect(readApodPost({ ...imagePost, _embedded: {} })).toBeNull();
+  });
+});
+
+describe('cleanTitle', () => {
+  it('drops the "APOD: date –" prefix, in either date order', () => {
+    expect(cleanTitle('APOD: 2026 November 15 &#8211; Leonid Meteors Through Orion')).toBe('Leonid Meteors Through Orion');
+    expect(cleanTitle('APOD: 2026 October 24 – Rosetta&#8217;s Selfie')).toBe('Rosetta’s Selfie');
+    expect(cleanTitle('APOD: 29 October 2026 &#8211; The Horns of Venus')).toBe('The Horns of Venus');
+    expect(cleanTitle('APOD: 2000 January 09 &#8211; Galaxy Dwingeloo 1 Emerges')).toBe('Galaxy Dwingeloo 1 Emerges');
   });
 });
 
@@ -98,5 +143,10 @@ describe('fetchApod', () => {
   it('says when NASA Science is having trouble', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => Promise.resolve(new Response('{}', { status: 503 })));
     await expect(fetchApod()).rejects.toThrow(/having trouble/);
+  });
+
+  it("says when the reply isn't JSON, rather than showing the parser's error", async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(() => Promise.resolve(new Response('<html>Maintenance</html>')));
+    await expect(fetchApod()).rejects.toThrow("NASA Science sent something NASA News can't read. Try again later.");
   });
 });

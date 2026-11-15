@@ -122,6 +122,32 @@ node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 <outDir>
 - For a CSS change, use `style-diff.mjs`
   ([maps-and-layout.md](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed)).
 
+## Does NASA News's sidebar still work?
+
+*2026-11-15*
+
+```bash
+node .claude/skills/know-how/nasa-check.mjs http://127.0.0.1:5199 <outDir>
+```
+
+It drives the sidebar of past days against live science.nasa.gov at
+400×300, maximized and on a 390px phone, and saves a screenshot of each
+step. It checks the ☰ in the heading row; that scrolling loads 20 more, one
+page at a time; a picture day, an .mp4 day and a YouTube day; search, its
+count, "No days match" and clearing it; the date box (1995-06-20, and the
+gap day 1995-06-18); Today; and that late replies are dropped. Its header
+lists every check. About 15 requests per size; run it after any change to
+NASA News. When its default days are more than five pages old, pass newer
+ones (`apis` skill, `nasa.md`).
+
+Lessons from writing it:
+
+- An IntersectionObserver reports at once whether its target is in view, so
+  "scrolling loads more" needs a check that it *stops*: the script waits,
+  then checks the end of the list is more than the 200px margin below view.
+- A list sliding shut still covers what's under it for its 0.2 s
+  transition; wait before clicking the ☰ again.
+
 ## The dev server isn't on the port the preview says
 
 *2026-11-09*
