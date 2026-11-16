@@ -60,8 +60,12 @@ the provider file exports only a component (react-refresh).
   darker shade of its own colour (`--color-*-glyph`). A window that isn't in
   front has grey buttons (`--color-control-idle`), in colour while hovered.
   Graphite greys all three. On a touch screen the front window always shows
-  its glyphs, and each button's hit box (`::after`) is about 30×28px; on a
-  mouse it covers the title bar's height and half the gap each side.
+  its glyphs. Each button's hit box (`::after`) covers half the gap each
+  side and the title bar's height. On a touch screen the buttons keep the
+  desktop spacing (Alex found the old wide spacing odd); only the hit boxes
+  grow, taller and out past the outer two, so the middle one is about 21px
+  wide. If that proves fiddly, make the buttons a little bigger rather than
+  spreading them out.
 
 ## 3. Minimize
 

@@ -27,8 +27,9 @@
 //     to its right edge, after a restore (Near Me faked at Portland);
 //   - on a 390px touch phone: three minimized windows fold into one tile
 //     with a count, the Dock fits on screen, a tap restores the newest, an
-//     app's icon restores its own, the buttons show their glyphs and have
-//     hit boxes about 30px wide.
+//     app's icon restores its own, the buttons show their glyphs, sit as
+//     close as on a desktop, and have hit boxes that fill the gaps, the title
+//     bar's height and a margin past the outer two.
 //
 //   node .claude/skills/know-how/minimize-check.mjs http://127.0.0.1:5173
 //
@@ -366,9 +367,9 @@ try {
   const hits = await t.ev(`(() => {
     const w = ${front};
     const at = (x, y) => document.elementFromPoint(x, y)?.className;
-    return [at(${c.cx + 13}, ${c.cy}), at(${m.cx - 13}, ${m.cy}), at(${m.cx + 13}, ${m.cy}), at(${c.cx}, ${c.cy + 11}), at(${c.cx - 10}, ${c.cy})];
+    return [at(${c.cx + 9}, ${c.cy}), at(${m.cx - 9}, ${m.cy}), at(${m.cx + 9}, ${m.cy}), at(${c.cx}, ${c.cy + 11}), at(${c.cx - 13}, ${c.cy})];
   })()`);
-  t.check('each button\'s hit box is about 30px wide and fills the title bar', hits.join() === 'window-close,window-minimize,window-minimize,window-close,window-close', hits.join(', '));
+  t.check('the buttons sit as on a desktop, and each hit box fills its gaps, the title bar and the outer margin', m.cx - c.cx === 21 && hits.join() === 'window-close,window-minimize,window-minimize,window-close,window-close', hits.join(', '));
 
   for (const app of ['Finder', 'Safari', 'Nasa News']) await minimize(t, app === 'Nasa News' ? 'Nasa News' : app);
   const folded = `document.querySelector('.dock .minimized-window')`;

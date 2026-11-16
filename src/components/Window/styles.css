@@ -153,8 +153,9 @@
   --window-edge: var(--color-control-idle-edge);
 }
 
-/* A touch screen has no hover: the front window shows its glyphs, and each
-   button is a bigger target, spaced out to match */
+/* A touch screen has no hover: the front window shows its glyphs. The
+   buttons look and sit as they do on a desktop; only their invisible hit
+   boxes grow, taller, and out past the outer two buttons */
 @media (hover: none) {
   .window.window-active .window-controls > button {
     --window-glyph: var(--window-ink);
@@ -163,12 +164,15 @@
 
 @media (pointer: coarse) {
   .window {
-    --window-button-gap: 16px;
     --window-button-reach: 8px;
   }
 
-  .window-controls {
-    left: 10px;
+  .window-controls > button:first-child::after {
+    left: -8px;
+  }
+
+  .window-controls > button:last-child::after {
+    right: -10px;
   }
 }
 
