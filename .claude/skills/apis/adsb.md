@@ -75,8 +75,8 @@ leaves it out. There is no aircraft name, only the type code.
   each good reply in Cloudflare's cache for those five seconds
   (`caches.default`), so several visitors over one city cost adsb.lol one
   call. Cloudflare's outgoing addresses are shared with other sites, so
-  adsb.lol's limit may bite the live site sooner than it does in dev: not
-  yet seen either way.
+  adsb.lol's limit may bite the live site sooner than it does in dev: no
+  429 seen there yet (first deployed 2026-11-16).
 - **In dev, Vite proxies the same path straight to adsb.lol**
   (`vite.config.ts`; the `/api/planes` rule must stay above `/api`). So
   Planes needs only `npm run dev`, and **there is no twin route in
@@ -218,6 +218,17 @@ name, a line about it and its English Wikipedia article.
   only the middle is covered.
 
 ## Known issues
+
+- *2026-11-16.* Right after the first deploy, the live proxy's first few
+  calls took 9 to 10 seconds (two ran into its 10-second limit and answered
+  504, "did not answer"); a minute later the same calls took about 2
+  seconds, against 1 second direct. The app shows "took too long" and asks
+  again in 10 seconds, so it mends itself. If it turns out to happen often,
+  `opendata.adsb.fi` answered in 0.4 s and could stand in when adsb.lol is
+  slow (its paths differ: `v2/lat/…/lon/…/dist/…`, and its credit would
+  have to show). A new deploy serves the site's own page (HTML, status 200)
+  for `/api/planes/…` until it is live: check the content type, not just
+  the status.
 
 - *2026-11-15.* airplanes.live (the same API shape) answers 403 with a
   note to email them, and OpenSky allows only its own website (CORS) with a
