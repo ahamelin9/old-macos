@@ -206,10 +206,10 @@ try {
   await t.ev(`${win('About This Mac')}.dataset.checkAbout = '1'`);
   await t.shot('about-laptop-400x300.png', '[data-check-about]');
 
-  await dockClick(t, 'Notes');
+  await dockClick(t, 'Terminal');
   await sleep(300);
   await choose(t, 'About This Mac');
-  t.check('About This Mac again: still one window, brought in front of Notes', (await count(t, 'About This Mac')) === 1 && (await frontTitle(t)) === 'About This Mac');
+  t.check('About This Mac again: still one window, brought in front of Terminal', (await count(t, 'About This Mac')) === 1 && (await frontTitle(t)) === 'About This Mac');
   await t.ev(`${win('About This Mac')}.querySelector('.window-maximize').click()`);
   await sleep(300);
   const maxFit = await t.ev(`(() => { const c = ${win('About This Mac')}.querySelector('.window-content'); return c.scrollWidth <= c.clientWidth + 1; })()`);
@@ -225,14 +225,14 @@ try {
   await closeAll(t);
   await choose(t, 'System Preferences…');
   t.check('System Preferences… opens Preferences', (await count(t, 'Preferences')) === 1 && (await frontTitle(t)) === 'Preferences');
-  await dockClick(t, 'Notes');
+  await dockClick(t, 'Terminal');
   await sleep(300);
   await choose(t, 'System Preferences…');
-  t.check('System Preferences… twice: one window, brought in front of Notes', (await count(t, 'Preferences')) === 1 && (await frontTitle(t)) === 'Preferences');
+  t.check('System Preferences… twice: one window, brought in front of Terminal', (await count(t, 'Preferences')) === 1 && (await frontTitle(t)) === 'Preferences');
   await closeAll(t);
   await dockClick(t, 'System Preferences');
   await sleep(300);
-  await dockClick(t, 'Notes');
+  await dockClick(t, 'Terminal');
   await sleep(300);
   await choose(t, 'System Preferences…');
   t.check('it finds a Preferences window the Dock opened', (await count(t, 'Preferences')) === 1 && (await frontTitle(t)) === 'Preferences');
@@ -247,7 +247,7 @@ try {
   t.check('Dock Preferences… switches the open Preferences to the Dock pane', (await count(t, 'Preferences')) === 1 && (await paneTitle()) === 'Dock', await paneTitle());
   await t.ev(`${win('Preferences')}.querySelector('.preferences-show-all').click()`);
   await sleep(150);
-  await dockClick(t, 'Notes');
+  await dockClick(t, 'Terminal');
   await sleep(300);
   await chooseInDock(t, 'Dock Preferences…');
   t.check('after Show All, Dock Preferences… goes back to the Dock pane, in front', (await paneTitle()) === 'Dock' && (await frontTitle(t)) === 'Preferences', await paneTitle());
@@ -271,16 +271,16 @@ try {
 
   // ---- Force Quit
   await closeAll(t);
-  for (const app of ['Notes', 'Calculator', 'Finder']) { await dockClick(t, app); await sleep(250); }
-  await t.ev(`${win('Notes')}.querySelector('.window-minimize').click()`);
+  for (const app of ['Terminal', 'Calculator', 'Finder']) { await dockClick(t, app); await sleep(250); }
+  await t.ev(`${win('Terminal')}.querySelector('.window-minimize').click()`);
   await sleep(250);
   await choose(t, 'Force Quit…');
   const FQ = win('Force Quit Applications');
   await t.waitFor(FQ, 'Force Quit', 5000);
   await sleep(300);
   const list = await t.ev(`[...${FQ}.querySelectorAll('[role="option"]')].map(o => ({ name: o.querySelector('.forcequit-name').textContent, icon: o.querySelector('img').naturalWidth > 0, src: o.querySelector('img').getAttribute('src'), minimized: !!o.querySelector('.forcequit-state') }))`);
-  t.check('Force Quit lists every other window, minimized ones too', list.map(l => l.name).join(',') === 'Notes,Calculator,Finder', list.map(l => l.name).join(','));
-  t.check('each with its app\'s icon, loaded', list.every(l => l.icon) && list[0].src === '/notes-icon.png' && list[2].src === '/finder-icon.webp', list.map(l => l.src).join(','));
+  t.check('Force Quit lists every other window, minimized ones too', list.map(l => l.name).join(',') === 'Terminal,Calculator,Finder', list.map(l => l.name).join(','));
+  t.check('each with its app\'s icon, loaded', list.every(l => l.icon) && list[0].src === '/terminal-icon.png' && list[2].src === '/finder-icon.webp', list.map(l => l.src).join(','));
   t.check('the minimized one is marked', list[0].minimized && !list[1].minimized);
   const quitButton = `[...${FQ}.querySelectorAll('button')].find(b => b.textContent === 'Force Quit')`;
   t.check('Force Quit is greyed until a window is picked', await t.ev(`${quitButton}.disabled`));
@@ -290,9 +290,9 @@ try {
   await t.shot('forcequit-laptop-light.png', '[data-check-fq]');
   await clickOn(t, quitButton);
   await sleep(250);
-  t.check('Force Quit closes the minimized Notes, and it leaves the Dock', (await count(t, 'Notes')) === 0
-    && !(await t.ev(`[...document.querySelectorAll('.dock-item.minimized-window')].some(d => d.textContent.includes('Notes'))`))
-    && !(await t.ev(`${FQ}.textContent.includes('Notes')`)));
+  t.check('Force Quit closes the minimized Terminal, and it leaves the Dock', (await count(t, 'Terminal')) === 0
+    && !(await t.ev(`[...document.querySelectorAll('.dock-item.minimized-window')].some(d => d.textContent.includes('Terminal'))`))
+    && !(await t.ev(`${FQ}.textContent.includes('Terminal')`)));
   t.check('and picks the next row', await t.ev(`${FQ}.querySelector('[aria-selected="true"] .forcequit-name')?.textContent === 'Calculator'`));
   await clickOn(t, quitButton);
   await sleep(250);
@@ -300,7 +300,7 @@ try {
   await t.ev(`${FQ}.querySelector('[role="listbox"]').focus()`);
   await press(t, 'ArrowDown');
   t.check('Down in the list picks a row from the keyboard', await t.ev(`${FQ}.querySelector('[aria-selected="true"] .forcequit-name')?.textContent === 'Finder'`));
-  await dockClick(t, 'Notes');
+  await dockClick(t, 'Terminal');
   await sleep(300);
   await choose(t, 'Force Quit…');
   t.check('Force Quit… again: one window, brought in front', (await count(t, 'Force Quit Applications')) === 1 && (await frontTitle(t)) === 'Force Quit Applications');
@@ -366,7 +366,7 @@ try {
     await t.ev(`${win('About This Mac')}.dataset.checkAbout = '1'`);
     await t.shot(`about-laptop-${name}.png`, '[data-check-about]');
     if (name === 'dark') {
-      await dockClick(t, 'Notes');
+      await dockClick(t, 'Terminal');
       await sleep(250);
       await choose(t, 'Force Quit…');
       await clickOn(t, `${win('Force Quit Applications')}.querySelector('[role="option"]')`);

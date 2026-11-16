@@ -57,7 +57,7 @@ export const PREFIXES = {
   'src/components/Apps/ForceQuit/ForceQuit.css': ['forcequit'],
   'src/components/Apps/Music/Music.css': ['music', 'retro-itunes'],
   'src/components/Apps/NasaNews/NasaNews.css': ['nasa'],
-  'src/components/Apps/Notes/Notes.css': ['notes'],
+  'src/components/Apps/Planes/Planes.css': ['planes'],
   'src/components/Apps/PokemonSearch/PokemonSearch.css': ['pokemon'],
   'src/components/Apps/Preferences/Preferences.css': ['preferences'],
   'src/components/Apps/Safari/Safari.css': ['safari'],

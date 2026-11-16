@@ -84,6 +84,47 @@
     background: var(--color-selection);
   }
 
+  /* A skeleton: a soft grey block that shimmers where something is still
+     loading (a picture, a line of text). Give the element its size in the
+     app's own class. Still, not shimmering, for anyone who asks for less
+     motion. */
+  .mac-skeleton {
+    background: linear-gradient(100deg, var(--tone-84) 30%, var(--tone-93) 50%, var(--tone-84) 70%);
+    background-size: 300% 100%;
+    animation: mac-skeleton-shimmer 1.4s linear infinite;
+  }
+
+  @keyframes mac-skeleton-shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: 0 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mac-skeleton {
+      animation: none;
+    }
+  }
+
+  /* The box Kit/LoadingImage.tsx draws: a skeleton until its picture has
+     loaded, then the picture, faded in. The picture fills the box. */
+  .mac-loading-image {
+    display: block;
+    overflow: hidden;
+  }
+
+  .mac-loading-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .mac-loading-image.mac-loaded img {
+    opacity: 1;
+  }
+
   /* A pull-down menu, as in Mac OS X 10.0-10.2: a little see-through in the
      theme's colours, square under the menu bar and rounded below. It is a
      role="menu" of role="menuitem" rows and role="separator" lines; the row

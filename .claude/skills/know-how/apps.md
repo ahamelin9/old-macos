@@ -3,6 +3,18 @@
 Part of the `know-how` skill. The index is in `SKILL.md`. For checking these
 apps in a browser, see `app-check.mjs` (`checking.md`).
 
+## Two files whose names differ only by capitals
+
+*2026-11-15*
+
+- **Symptom:** `npx tsc -b` fails with "File name '…/Planes/planes.ts'
+  differs from already included file name '…/Planes/Planes.ts' only in
+  casing", and `launch.tsx` says the component "has no default export".
+- **Cause:** a helper `planes.ts` sat beside the component `Planes.tsx`. A
+  Mac's disk ignores capitals, so `./Planes/Planes` found `planes.ts` first.
+- **Fix:** give the helper a different name (`aircraft.ts`).
+- **Check:** `npx tsc -b` prints nothing.
+
 ## The webcam stays on after Camera closes
 
 *2026-11-15*

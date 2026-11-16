@@ -28,7 +28,7 @@ and an app's own stylesheet holds only what makes it different.
 |---|---|---|
 | `src/styles/tokens.css` | `tokens` | Every value: the palette (`--grey-*`, `--blue-*`…), which never changes; the tones (`--tone-*`), faces (`--face-*`) and tints (`--tint-*`), which follow light and dark; roles (`--color-*`); fonts, text sizes, corners, gradients, shadows, the wallpapers and the Dock's sizes, then the **Settings** block (below). Its comments say what each is for. **The one home for values: never copy them here.** |
 | `src/styles/base.css` | `base` | The page, the reset, and the default look of plain elements (the platinum `button`). The only file allowed to style a bare element. |
-| `src/styles/kit.css` | `kit` | Shared `mac-…` classes for patterns more than one app uses (toolbar, field, primary button, message, list row, pull-down menu). |
+| `src/styles/kit.css` | `kit` | Shared `mac-…` classes for patterns more than one app uses (toolbar, field, primary button, message, list row, skeleton, pull-down menu). A kit class that needs behaviour has a small component beside the apps, in `src/components/Kit/` (`LoadingImage`). |
 | Each app's `<Name>.css`, and the shell's `styles.css` files | none | That app's layout and its deliberate differences, built from tokens. |
 
 `main.tsx` imports the three shared files before `App`, and `tokens.css`
@@ -146,6 +146,30 @@ Two things the check can't see:
    `className="mac-… <app class>"`, and delete what each app duplicated.
 3. Prove both apps (section 4).
 
+### Show a skeleton while something loads
+
+*Alex, 2026-11-16: skeletons everywhere in time; Planes is the first.*
+
+A skeleton is a soft grey block that shimmers where a picture or a line of
+text is on its way, so nothing shows empty, jumps in, or shows its alt
+text. The shimmer stops for anyone who asks for less motion.
+
+- **A picture:** `<LoadingImage className="<app>-<thing>" src alt />`
+  (`src/components/Kit/LoadingImage.tsx`). It is a skeleton until the
+  picture has loaded, then fades it in; a picture that fails leaves an
+  empty box. The app's class gives the box its size (a width and an
+  `aspect-ratio`, or a height): the skeleton needs a size before the
+  picture has one.
+- **Anything else** (a lookup that hasn't answered, a line of text): an
+  element with `mac-skeleton` and the app's class for its size.
+- **Three states, not two.** Not known yet is a skeleton; known and there
+  is a picture; known and there is none shows nothing. Planes keeps
+  `undefined`, a photo or `null` for these. **A lookup that fails must end
+  the skeleton** (Planes sets `null`), or it shimmers for ever.
+- First used by Planes: the chosen plane's photo, and the cards of
+  Spotter's Picks. To move another app over, swap its `<img>` for
+  `LoadingImage`, give the box a size, and check it at 400×300.
+
 ### Style a new app
 
 1. Give its root element a class with the app's prefix (`<name>-app`), and
@@ -153,7 +177,7 @@ Two things the check can't see:
 2. Add its stylesheet and prefixes to `PREFIXES` in
    `scripts/design-check.mjs`. The check fails until you do.
 3. Start from the kit: `mac-toolbar`, `mac-field`, `mac-button-primary`,
-   `mac-message`, `mac-list-row`, `mac-menu` (a pull-down menu: its comment
+   `mac-message`, `mac-list-row`, `mac-skeleton` (above), `mac-menu` (a pull-down menu: its comment
    in `kit.css` says how to mark the rows), and plain `<button>`s, which are
    already platinum. Write only what's left.
 4. `npm run lint`, then check it at 400×300, maximized and on a phone, in

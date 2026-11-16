@@ -72,7 +72,8 @@ An app's palette (design rule 2) holds what is the app's own. In dark:
   from the fixed palette: `--fg-iucn-ink: var(--grey-13)`, not
   `var(--color-text-strong)`, which turns light in dark.
 - **What sits on something that stays light** stays light with it: Field
-  Guide's map popup and credit line (`--fg-map-*`), Music's LCD ink.
+  Guide's map popup and credit line (`--fg-map-*`), Planes' markers and
+  credit line (`--planes-*`), Music's LCD ink.
 - **A colour that needs a dark twin** is written
   `light-dark(<light>, <dark>)` in the palette:
   `--music-sidebar: light-dark(#e2e8f0, #262b33)`. It follows the theme
@@ -87,8 +88,7 @@ An app's palette (design rule 2) holds what is the app's own. In dark:
   and show that one colour as the inherited one; the shared tokens don't
   use it for that reason.)
 
-Notes has no yellow paper: its page is the window's, white in light and
-dark in dark. Terminal follows the site too; its own `theme dark` command
+Terminal follows the site; its own `theme dark` command
 still makes one terminal dark in either theme.
 
 ## 4. The rule for a new app

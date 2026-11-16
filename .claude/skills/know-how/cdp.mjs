@@ -40,7 +40,9 @@ const CHROME = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Conte
 // back the same way. Pictures and video are never saved: a picture gets a
 // 1x1 PNG, a video an empty body. The site's own /api (the Spotify backend)
 // is never recorded, as it hands out tokens; in replay it answers 503, as
-// when the backend is off.
+// when the backend is off. The one exception is /api/planes, which only
+// passes adsb.lol's public data through: it is saved and replayed like an
+// outside host.
 const MODE = process.env.CHECK_RECORD === '1' ? 'record' : process.env.CHECK_LIVE === '1' ? 'live' : 'replay';
 /** True when replies are canned (the default), so a check can skip pacing meant for live APIs */
 export const CANNED = MODE === 'replay';
@@ -226,7 +228,8 @@ export async function launch(appUrl, outDir, { width = 1280, height = 1000, chro
       const text = (t) => Buffer.from(t).toString('base64');
       if (!outside(url) || url.startsWith('data:')) return s('Fetch.continueRequest', { requestId }).catch(() => {});
       if (method === 'OPTIONS') return fulfil(204, {}, '');
-      if (url.startsWith(`${origin}/api/`) || NEVER_RECORD.test(url)) return fulfil(503, { 'content-type': 'text/plain' }, text('canned: backend off'));
+      // /api/planes only passes adsb.lol's public data through, so it is canned like an outside service
+      if ((url.startsWith(`${origin}/api/`) && !url.startsWith(`${origin}/api/planes/`)) || NEVER_RECORD.test(url)) return fulfil(503, { 'content-type': 'text/plain' }, text('canned: backend off'));
       // An embedded page (YouTube) is never saved: it gets an empty page
       if (resourceType === 'Document') return fulfil(200, { 'content-type': 'text/html' }, text('<!doctype html><title>canned</title>'));
       const media = resourceType === 'Image' || resourceType === 'Media';

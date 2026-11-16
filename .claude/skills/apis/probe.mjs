@@ -58,6 +58,19 @@ const PROBES = {
     const r = (await json('https://itunes.apple.com/search?term=zach%20bryan%20something%20in%20the%20orange&entity=song&limit=1')).results?.[0];
     expect(r?.previewUrl, `no preview for ${r?.artistName} - ${r?.trackName}`);
   },
+  planes: async () => {
+    const near = await json('https://api.adsb.lol/v2/point/51.47/-0.45/25');
+    expect(Array.isArray(near.ac), 'adsb.lol sent no "ac" list');
+    // Heathrow at 4am can be empty; when there are planes, they must have the fields the app reads
+    expect(near.ac.every(a => typeof a.hex === 'string'), 'an aircraft has no hex');
+    expect(!near.ac.length || near.ac.some(a => typeof a.lat === 'number' && typeof a.lon === 'number'), 'no aircraft has a position');
+    await new Promise(r => setTimeout(r, 1000));
+    const res = await get('https://api.adsbdb.com/v0/callsign/BAW117');
+    expect(res.ok, `adsbdb ${res.status}`);
+    expect(res.headers.get('access-control-allow-origin') === '*', 'adsbdb no longer answers browsers from any site');
+    const route = (await res.json()).response?.flightroute;
+    expect(route?.callsign_icao === 'BAW117' && typeof route?.origin?.latitude === 'number' && route?.destination?.iata_code, `adsbdb route for BAW117: ${JSON.stringify(route)?.slice(0, 120)}`);
+  },
   spotify: async () => {
     // A guest token from the live site, never printed
     const { access_token } = await json('https://old-macos-2vr.pages.dev/api/client_credentials');

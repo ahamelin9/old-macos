@@ -1,11 +1,11 @@
 ---
 name: apis
-description: Every outside API the macOS 1999 site calls (NASA APOD, PokeAPI, iNaturalist, Wikipedia and Wikidata, OpenStreetMap's Nominatim, Photon and map tiles, Brave Search through Alex's Cloudflare worker, Spotify, Apple's iTunes Search), with one file per service covering what the site uses, setup and keys, limits and usage rules, known issues and how to probe it live. Also the rules every API call follows, the env vars, and the latest API audit with its WSJF ranking. Read it before touching any fetch, adding a service, or troubleshooting an app that loads data.
+description: Every outside API the macOS 1999 site calls (NASA APOD, PokeAPI, iNaturalist, Wikipedia and Wikidata, OpenStreetMap's Nominatim, Photon and map tiles, Brave Search through Alex's Cloudflare worker, Spotify, Apple's iTunes Search, adsb.lol, adsbdb and planespotters.net for live planes), with one file per service covering what the site uses, setup and keys, limits and usage rules, known issues and how to probe it live. Also the rules every API call follows, the env vars, and the latest API audit with its WSJF ranking. Read it before touching any fetch, adding a service, or troubleshooting an app that loads data.
 ---
 
 # APIs: every outside service the site calls
 
-All of these are free, and only Spotify needs a key (a secret one). Each service has its own file; read only the one you need.
+All of these are free, and only Spotify needs a key (a secret one). Planes' `/api/planes` is a proxy with no key. Each service has its own file; read only the one you need.
 
 ## Contents
 
@@ -22,11 +22,12 @@ All of these are free, and only Spotify needs a key (a secret one). Each service
 | NASA APOD (science.nasa.gov) | NASA News | No | APOD moved; `api.nasa.gov`'s APOD answers junk now | [nasa.md](nasa.md) |
 | PokeAPI | Pokémon | No | Cache what you can; 37 species are filed under a form name | [pokeapi.md](pokeapi.md) |
 | iNaturalist | Field Guide | No | About 60 requests a minute; bursts get 429 | [inaturalist.md](inaturalist.md) |
-| Wikipedia, Wikidata | Field Guide | No | About 1 request a second from scripts, with a User-Agent | [wikipedia.md](wikipedia.md) |
+| Wikipedia, Wikidata | Field Guide, Planes (card pictures) | No | About 1 request a second from scripts, with a User-Agent | [wikipedia.md](wikipedia.md) |
 | Nominatim, Photon, OSM tiles | Field Guide | No | Nominatim: 1 a second, never type-ahead. Tiles: show the credit | [openstreetmap.md](openstreetmap.md) |
 | Brave Search | Safari | In Alex's worker | 1 search a second, 2,000 a month | [brave-search.md](brave-search.md) |
 | Spotify | Music, the menu bar | Yes, **secret** | No 30-second previews any more; dev mode allows listed users only | [spotify.md](spotify.md) |
 | iTunes Search | Music (guest previews) | No | About 20 requests a minute: look up on play, never a whole playlist | [itunes.md](itunes.md) |
+| adsb.lol, adsbdb, planespotters.net | Planes | No | adsb.lol answers no browser, so it goes through `/api/planes`, and it answers a burst with 429s; a photo must link back and credit its photographer | [adsb.md](adsb.md) |
 
 Where the code is: each file names it. The Spotify login's two backends are
 in `system-map`, section 6. What iNaturalist's fields mean is in the

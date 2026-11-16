@@ -2,10 +2,10 @@
 
 Alex's personal site, built to look like a late-90s Mac desktop. It has a menu
 bar, windows you can drag and resize, and a dock of small apps: Field Guide,
-Pokémon, NASA, Music (Spotify), Safari search, Finder (about me) and a few
-toys. It's built with React 19, TypeScript and Vite, and deployed on Cloudflare
+Pokémon, NASA, Music (Spotify), Planes (live aircraft), Safari search, Finder
+(about me) and a few toys. It's built with React 19, TypeScript and Vite, and deployed on Cloudflare
 Pages (project `old-macos`). Cloudflare Pages Functions handle the Spotify
-login. The repo is `github.com/ahamelin9/old-macos`. Every session reads this
+login and pass Planes' data through. The repo is `github.com/ahamelin9/old-macos`. Every session reads this
 file first.
 
 ## Table of contents: where things live
@@ -14,11 +14,12 @@ file first.
 |---|---|
 | How the site fits together: desktop, windows (minimize, the buttons), the Dock, every app, the Spotify login, deploy and the live address | the `system-map` skill |
 | The Apple menu (🍎): About This Mac, Force Quit, Sleep, Restart, and `showApp`, which brings an app's window forward or opens one | the `system-map` skill, `apple-menu.md` |
-| Any outside API (NASA, PokeAPI, iNaturalist, Wikipedia, OpenStreetMap, Brave, Spotify, iTunes): setup, keys and env vars, limits, known issues, live probes, the API audit | the `apis` skill (an index, one file per service) |
+| Any outside API (NASA, PokeAPI, iNaturalist, Wikipedia, OpenStreetMap, Brave, Spotify, iTunes, adsb.lol and adsbdb): setup, keys and env vars, limits, known issues, live probes, the API audit | the `apis` skill (an index, one file per service) |
+| Planes: where the positions, routes and photos come from, the `/api/planes` proxy, when a route is shown, the map's shapes, Spotter's Picks | the `apis` skill, `adsb.md` |
 | Adding a new app to the dock | the `system-map` skill, **Adding an app** |
 | System Preferences and its settings: the store, the early script in `index.html`, the desktop picture, the theme, adding a setting | the `system-map` skill, **Settings** |
 | Anything in the Field Guide: places, species, tabs, native/endemic/introduced, maps, Back, the inspector | the `field-guide` skill |
-| Any CSS or visual change: the shared tokens, base and kit, the design check, before-and-after screenshots | the `design` skill |
+| Any CSS or visual change: the shared tokens, base and kit, skeleton loaders, the design check, before-and-after screenshots | the `design` skill |
 | Dark mode: how it switches, which token to use, an app's own colours, the contrast scan | the `design` skill, `dark-mode.md` |
 | Checking a change: `npm run check`, what it picks, canned API replies, timing | the `know-how` skill, `checking.md` |
 | A problem that may have been solved before, or proving a change in a real browser | the `know-how` skill (an index pointing into topic files) |

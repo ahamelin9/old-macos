@@ -22,12 +22,12 @@ export interface AppInfo {
 /** In Dock order. About This Mac and Force Quit open from the Apple menu only. */
 export const APPS = [
   { id: 'finder', name: 'Finder', title: 'Finder', icon: '/finder-icon.webp', inDock: true, onPhone: true },
-  { id: 'safari', name: 'Safari', title: 'Safari', icon: '/safari-icon.png', inDock: true, onPhone: true },
+  { id: 'safari', name: 'Safari', title: 'Safari', icon: '/safari-icon.png', inDock: true, onPhone: false },
   { id: 'nasa', name: 'Nasa News', title: 'Nasa News', icon: '/nasa-icon.png', inDock: true, onPhone: true },
   { id: 'pokemon', name: 'Pokemon', title: 'Pokemon Search', icon: '/pokemon-icon.png', inDock: true, onPhone: true },
   { id: 'fieldguide', name: 'Field Guide', title: 'Field Guide (Flora & Fauna)', icon: '/fieldguide-icon.png', inDock: true, onPhone: true },
+  { id: 'planes', name: 'Planes', title: 'Planes', icon: '/planes-icon.png', inDock: true, onPhone: true },
   { id: 'music', name: 'Music', title: 'Music', icon: '/music-icon.png', inDock: true, onPhone: false },
-  { id: 'notes', name: 'Notes', title: 'Notes', icon: '/notes-icon.png', inDock: true, onPhone: false },
   { id: 'camera', name: 'Camera', title: 'Camera', icon: '/camera-icon.png', inDock: true, onPhone: false },
   { id: 'calculator', name: 'Calculator', title: 'Calculator', icon: '/calculator-icon.png', inDock: true, onPhone: false },
   { id: 'terminal', name: 'Terminal', title: 'Terminal', icon: '/terminal-icon.png', inDock: true, onPhone: false },

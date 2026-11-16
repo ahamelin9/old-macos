@@ -16,7 +16,7 @@ describe('dockApps', () => {
 
   it('shows only the five phone apps, and no Trash, on a phone', () => {
     const { apps, trash } = dockApps(true);
-    expect(apps.map(a => a.id)).toEqual(['finder', 'safari', 'nasa', 'pokemon', 'fieldguide']);
+    expect(apps.map(a => a.id)).toEqual(['finder', 'nasa', 'pokemon', 'fieldguide', 'planes']);
     expect(trash).toBeUndefined();
   });
 
@@ -33,8 +33,8 @@ describe('runningApps', () => {
   });
 
   it('counts an app with a window showing or minimized, once however many it has', () => {
-    const running = runningApps([win(1, 'notes'), win(2, 'notes'), win(3, 'finder', 1)]);
-    expect([...running].sort()).toEqual(['finder', 'notes']);
+    const running = runningApps([win(1, 'planes'), win(2, 'planes'), win(3, 'finder', 1)]);
+    expect([...running].sort()).toEqual(['finder', 'planes']);
   });
 
   it('ignores a window opened without an app', () => {
@@ -42,7 +42,7 @@ describe('runningApps', () => {
   });
 
   it('drops an app once its last window closes', () => {
-    const open = [win(1, 'notes'), win(2, 'camera')];
+    const open = [win(1, 'planes'), win(2, 'camera')];
     expect(runningApps(open).has('camera')).toBe(true);
     expect(runningApps(open.filter(w => w.id !== 2)).has('camera')).toBe(false);
   });
@@ -50,25 +50,25 @@ describe('runningApps', () => {
 
 describe('windowTiles', () => {
   it('has no tiles when nothing is minimized', () => {
-    expect(windowTiles([win(1, 'notes'), win(2, 'finder')], { fold: false })).toEqual([]);
+    expect(windowTiles([win(1, 'planes'), win(2, 'finder')], { fold: false })).toEqual([]);
     expect(windowTiles([], { fold: true })).toEqual([]);
   });
 
   it('gives each minimized window its own tile on a laptop, with its title and app', () => {
-    const tiles = windowTiles([win(1, 'notes', 1, 'Notes'), win(2, 'finder'), win(3, 'music', 2, 'Music')], { fold: false });
+    const tiles = windowTiles([win(1, 'planes', 1, 'Planes'), win(2, 'finder'), win(3, 'music', 2, 'Music')], { fold: false });
     expect(tiles).toEqual([
-      { key: 'window-1', windowIds: [1], restoreId: 1, appId: 'notes', title: 'Notes', count: 1 },
+      { key: 'window-1', windowIds: [1], restoreId: 1, appId: 'planes', title: 'Planes', count: 1 },
       { key: 'window-3', windowIds: [3], restoreId: 3, appId: 'music', title: 'Music', count: 1 }
     ]);
   });
 
   it('keeps the order they were minimized in, not the order they opened in', () => {
-    const tiles = windowTiles([win(1, 'notes', 5), win(2, 'finder', 3), win(3, 'music', 4)], { fold: false });
+    const tiles = windowTiles([win(1, 'planes', 5), win(2, 'finder', 3), win(3, 'music', 4)], { fold: false });
     expect(tiles.map(t => t.restoreId)).toEqual([2, 3, 1]);
   });
 
   it('gives two windows of one app a tile each', () => {
-    expect(windowTiles([win(1, 'notes', 1), win(2, 'notes', 2)], { fold: false })).toHaveLength(2);
+    expect(windowTiles([win(1, 'planes', 1), win(2, 'planes', 2)], { fold: false })).toHaveLength(2);
   });
 
   it('keeps a lone minimized window as a plain tile on a phone', () => {

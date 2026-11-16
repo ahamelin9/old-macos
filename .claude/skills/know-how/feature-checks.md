@@ -170,6 +170,48 @@ Lessons from writing it:
 - **To prove a reload,** set a marker on `window` first and wait for it to
   vanish; `ev` throws while the page navigates, so catch and retry.
 
+## Does Planes still work?
+
+*2026-11-15*
+
+```bash
+node .claude/skills/know-how/planes-check.mjs http://127.0.0.1:5173
+```
+
+About 50 seconds, 11 of them proving a minimized window asks for nothing;
+its last part is a 390px touch phone.
+Its header lists every check. **The sky is made up in the script** (three
+planes over New York, three A380s around the world): the page's `fetch`
+answers `/api/planes`, adsbdb, planespotters and the "over" lookup from
+it, so the check never depends on what is flying. Only Photon's "Kyoto",
+the cards' Wikipedia pictures and the A380's page (Wikipedia and Wikidata)
+come from canned replies. The other
+checks that open Planes (smoke, the contrast scan) get a real, canned
+adsb.lol reply instead.
+
+Lessons from writing it:
+
+- **A check on live-moving data needs its own data.** A recorded sky would
+  replay the same way, but nobody could say what the panel should read.
+  Made-up planes give exact expectations ("552 mph (480 kt)") and cases the
+  real sky rarely offers on cue: a reused flight number, a plane parked.
+- **Leaflet markers answer a plain `.click()`** on their icon element, and
+  a marker's `title` option becomes the element's `title`, which is how the
+  check finds a plane.
+- **To see a loading state, make the stand-in reply late.** The made-up
+  photo reply waits 700 ms, so the skeleton is on screen long enough to
+  check; then every later step that reads the result has to wait for it.
+- **Leaflet merges a line's points when they lie straight**, so a trail of
+  five positions can be a path of two. Judge a drawn line by
+  `getTotalLength()`, not by counting its points.
+- **planespotters refuses headless Chrome**, so a live look at the photo
+  needs the browser pane (set its viewport to 1280 wide first: under 800
+  the Dock has no Planes).
+- **The live look found what the made-up sky couldn't**: a wrong route for
+  a real flight, and a military aircraft whose callsign was `@@@@@@@@`
+  (`apis` skill, adsb.md). After a change to what the panel
+  shows, open the app against the real services once and read a few planes.
+
 ## Does minimize still work?
 
 *2026-11-15*
@@ -181,7 +223,7 @@ node .claude/skills/know-how/minimize-check.mjs http://127.0.0.1:5173
 About a minute, pass/fail only, no screenshots. Outside requests: Field
 Guide's Near Me load (faked at Portland) and NASA's picture of the day.
 Its header lists every check: a minimized window stays mounted but hidden,
-inert and never the front one; Notes, Field Guide's search and its map,
+inert and never the front one; Terminal's typed text, Field Guide's search and its map,
 Music's playing `<audio>` and Camera's webcam through minimize and restore;
 the Dock's tile (icon, label, after the divider, left of the Trash) and the
 triangle; Dock clicks restoring rather than opening a second window; the

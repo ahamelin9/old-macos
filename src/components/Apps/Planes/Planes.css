@@ -1,0 +1,773 @@
+.planes-app {
+  /* The map's tiles look the same in light and dark, so what is drawn on
+     them (the planes, the credit line) keeps its colours in both too. */
+  --planes-ink: #1d3f8f;
+  --planes-outline: #ffffff;
+  --planes-ground: #6b7280;
+  --planes-chosen: #d92b1c;
+  --planes-credit-ink: #555555;
+  --planes-credit-link: #1d4ed8;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--color-text-strong);
+  background: var(--color-surface);
+  container: planes / inline-size;
+  /* Its layers (Find a Plane over the map, the chosen plane's panel) stack
+     inside the app, never over the window's own parts: without this, Find
+     a Plane covered the window's resize handle */
+  isolation: isolate;
+}
+
+/* ---- The toolbar: the two tabs, then the box for the one showing */
+
+.planes-toolbar {
+  flex: none;
+  gap: 6px;
+}
+
+.planes-tabs {
+  display: flex;
+  flex: none;
+}
+
+.planes-tab {
+  padding: 3px 8px;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  border-radius: 0;
+}
+
+.planes-tab:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.planes-tab:last-child {
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* The deeper Aqua of a menu's highlighted row: white text reads on it */
+.planes-tab[aria-selected="true"] {
+  background: var(--gradient-highlight);
+  border-color: var(--blue-800);
+  color: var(--color-text-on-accent);
+  text-shadow: var(--shadow-text-dark);
+}
+
+.planes-search {
+  position: relative;
+  display: flex;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.planes-field {
+  flex: 1;
+  min-width: 0;
+  /* A hint too long for a narrow window ends in … */
+  text-overflow: ellipsis;
+}
+
+
+.planes-near,
+.planes-find-button {
+  flex: none;
+  padding: 3px 8px;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+/* A square icon button: the crosshair, blinking while the location is found */
+.planes-near {
+  padding: 4px 7px;
+}
+
+.planes-near-icon {
+  display: block;
+}
+
+.planes-near:disabled {
+  cursor: progress;
+}
+
+.planes-near-locating .planes-near-icon {
+  animation: planes-near-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes planes-near-pulse {
+  50% { opacity: 0.25; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planes-near-locating .planes-near-icon {
+    animation: none;
+    opacity: 0.5;
+  }
+}
+
+.planes-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  /* Over Leaflet's panes and controls, which go up to 1000 inside the map */
+  z-index: 1100;
+  margin: 2px 0 0;
+  padding: 2px;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-window);
+}
+
+.planes-suggestion {
+  display: block;
+  width: 100%;
+  border: none;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  font-size: var(--text-md);
+  color: var(--color-text-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- The sky: the map, with the chosen plane beside or over it */
+
+.planes-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.planes-sky {
+  display: flex;
+  height: 100%;
+}
+
+.planes-map {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.planes-canvas {
+  flex: 1;
+  min-height: 0;
+  background: var(--color-photo-mat);
+  /* Leaflet's layers stack inside the map, not over the app's own parts */
+  isolation: isolate;
+}
+
+.planes-status {
+  flex: none;
+  margin: 0;
+  padding: 3px 8px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  background: var(--color-chrome);
+  border-top: 1px solid var(--color-border-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planes-status-error {
+  color: var(--color-error);
+}
+
+.planes-note {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  margin: 0;
+  padding: 4px 8px;
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius);
+  /* Over the chosen plane's panel */
+  z-index: 2;
+}
+
+/* The filter: a button for each kind of aircraft, down the map's left edge.
+   Pressed means shown. It sits on the map, which looks the same in light
+   and dark, so its colours are the palette's too. */
+.planes-kinds {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+}
+
+.planes-kind {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 44px;
+  padding: 2px 5px 2px 4px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  font-size: var(--text-xs);
+  color: var(--planes-credit-ink);
+  background: var(--white-a92);
+  cursor: pointer;
+}
+
+.planes-kind + .planes-kind {
+  border-top: 1px solid var(--black-a10);
+}
+
+.planes-kind:hover {
+  background: var(--planes-outline);
+}
+
+.planes-kind svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: var(--planes-ink);
+}
+
+.planes-kind-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hidden kinds: greyed and struck out */
+.planes-kind[aria-pressed="false"] {
+  background: var(--white-a70);
+  text-decoration: line-through;
+}
+
+.planes-kind[aria-pressed="false"] svg {
+  fill: var(--planes-ground);
+  opacity: 0.6;
+}
+
+.planes-app .planes-marker {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* The marker is as big as its kind of plane (shapes.ts); the drawing fills it */
+.planes-glyph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--planes-ink);
+  stroke: var(--planes-outline);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.planes-marker-ground .planes-glyph {
+  fill: var(--planes-ground);
+  scale: 0.75;
+}
+
+.planes-marker-selected .planes-glyph {
+  fill: var(--planes-chosen);
+  scale: 1.35;
+}
+
+/* Where the chosen plane has been heard since the app began watching it */
+.planes-app .planes-trail {
+  fill: none;
+  stroke: var(--planes-chosen);
+  stroke-width: 3;
+  stroke-opacity: 0.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The credit line OpenStreetMap and adsb.lol ask for: small and quiet */
+.planes-app .leaflet-control-attribution {
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  color: var(--planes-credit-ink);
+  background: var(--white-a70);
+  padding: 0 4px;
+}
+
+.planes-app .leaflet-control-attribution a {
+  color: var(--planes-credit-link);
+}
+
+/* The chosen plane. In a narrow window it lies over the top of the map,
+   clear of the credit line and the zoom buttons. */
+.planes-info {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  /* Over Leaflet's panes and controls, which go up to 1000 inside the map */
+  z-index: 1;
+  max-height: 55%;
+  overflow-y: auto;
+  padding: 6px 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-window);
+}
+
+.planes-info-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.planes-info-name {
+  margin: 0;
+  font-size: var(--text-lg);
+  color: var(--color-accent-text);
+}
+
+.planes-info-ticket {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.planes-info-close {
+  margin-left: auto;
+  padding: 0 6px;
+  font-size: var(--text-lg);
+  line-height: 1.2;
+}
+
+/* The photo beside the facts in a narrow window, above them in a wide one */
+.planes-info-body {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.planes-photo {
+  flex: none;
+  width: 124px;
+  margin: 0;
+}
+
+.planes-photo a {
+  display: block;
+}
+
+/* The photo's box: the kit's skeleton until the photo is in. Planespotters'
+   photos are 3 by 2. */
+.planes-photo-box {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.planes-photo-credit {
+  margin-top: 2px;
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.planes-facts {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.planes-facts dt {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.planes-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.planes-info-foot {
+  margin: 6px 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* A window with room puts the plane beside the map */
+@container planes (min-width: 600px) {
+  .planes-info {
+    position: static;
+    flex: none;
+    width: 240px;
+    max-height: none;
+    overflow-y: auto;
+    border: none;
+    border-left: 1px solid var(--color-border-light);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 10px 12px;
+  }
+
+  .planes-info-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .planes-photo {
+    width: 100%;
+  }
+
+  .planes-facts {
+    font-size: var(--text-md);
+    gap: 4px 10px;
+  }
+}
+
+/* ---- Find a Plane, over the map (which stays as it was underneath) */
+
+.planes-find {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  background: var(--color-surface);
+}
+
+/* Spotter's Picks: cards of remarkable aircraft, each looked up when clicked */
+.planes-find-hint {
+  padding: 8px 10px 10px;
+}
+
+.planes-find-intro {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.planes-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planes-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 0 0 6px;
+  overflow: hidden;
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--color-text-strong);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
+}
+
+.planes-pick:hover {
+  background: var(--tint-100);
+  border-color: var(--color-accent-light);
+}
+
+.planes-pick-picture {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+}
+
+/* A card whose article has no picture */
+.planes-pick-no-picture {
+  background: var(--color-photo-mat);
+}
+
+.planes-pick-name {
+  padding: 4px 8px 0;
+  font-weight: bold;
+  font-size: var(--text-md);
+}
+
+.planes-pick-blurb {
+  padding: 0 8px;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.planes-picks-credit {
+  margin: 8px 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Over a search or a card: the way back */
+.planes-find-bar {
+  padding: 6px 10px 0;
+}
+
+.planes-find-back {
+  padding: 2px 8px;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+/* An aircraft's page: its picture beside its story and facts, stacked in a
+   narrow window */
+.planes-type {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 10px 4px;
+}
+
+.planes-type-picture {
+  flex: none;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 260px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.planes-type-words {
+  flex: 1;
+  min-width: 0;
+}
+
+.planes-type-name {
+  margin: 0;
+  font-size: var(--text-2xl);
+  color: var(--color-accent-text);
+}
+
+.planes-type-blurb {
+  margin: 2px 0 8px;
+  font-weight: bold;
+}
+
+.planes-type-story {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.planes-type-waiting {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.planes-type-line {
+  display: block;
+  height: 11px;
+  border-radius: var(--radius-sm);
+}
+
+.planes-type-line-short {
+  width: 60%;
+}
+
+.planes-type-facts {
+  margin: 4px 0 8px;
+  padding: 6px 8px;
+  font-size: var(--text-md);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+}
+
+.planes-type-source {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.planes-type-source a {
+  font-size: var(--text-md);
+  color: var(--color-link);
+}
+
+@container planes (min-width: 600px) {
+  .planes-type {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .planes-type-picture {
+    width: 42%;
+    max-width: 480px;
+    max-height: none;
+  }
+}
+
+.planes-find-heading {
+  margin: 10px 10px 0;
+  padding-top: 8px;
+  font-size: var(--text-lg);
+  color: var(--color-accent-text);
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* Where they all are: the world, or as much of it as holds them */
+.planes-world {
+  margin: 4px 10px 6px;
+  /* Half as tall as the window is wide, within reason; always the full width */
+  height: clamp(190px, 48cqi, 440px);
+  background: var(--color-photo-mat);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  /* Leaflet's layers stack inside the map, not over the app's own parts */
+  isolation: isolate;
+}
+
+.planes-find-capped {
+  margin: 0 10px 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.planes-find-note {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.planes-find-summary {
+  margin: 0;
+  padding: 8px 10px 4px;
+  font-weight: bold;
+}
+
+.planes-results {
+  margin: 0;
+  padding: 2px 6px 8px;
+  list-style: none;
+}
+
+.planes-result {
+  display: grid;
+  grid-template-columns: minmax(64px, 1fr) minmax(70px, 1.2fr) minmax(84px, 1fr);
+  gap: 2px 8px;
+  align-items: baseline;
+  width: 100%;
+  border: none;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  font-size: var(--text-md);
+  color: var(--color-text-strong);
+}
+
+.planes-result-name {
+  font-weight: bold;
+}
+
+.planes-result-kind,
+.planes-result-where {
+  color: var(--color-text-muted);
+}
+
+/* The position has a column of its own only when there is room */
+.planes-result-where {
+  display: none;
+}
+
+@container planes (min-width: 520px) {
+  .planes-result {
+    grid-template-columns: minmax(64px, 1fr) minmax(70px, 1.2fr) minmax(84px, 1fr) minmax(120px, 1.2fr);
+  }
+
+  .planes-result-where {
+    display: inline;
+  }
+}
+
+/* ---- A phone, or any touch screen: bigger things to tap, the kinds in a
+   row along the top of the map, and the chosen plane as a sheet at the
+   bottom, so the map and the filter stay in reach above it. */
+@media (max-width: 799px), (pointer: coarse) {
+  /* 16px, not smaller: an iPhone zooms the page into any field under 16px */
+  .planes-field {
+    font-size: var(--text-xl);
+  }
+
+  .planes-tab,
+  .planes-near,
+  .planes-find-button,
+  .planes-find-back {
+    min-height: 34px;
+    padding: 4px 10px;
+    font-size: var(--text-md);
+  }
+
+  .planes-near {
+    min-width: 38px;
+    justify-content: center;
+  }
+
+  .planes-kinds {
+    flex-direction: row;
+  }
+
+  .planes-kind {
+    min-width: 52px;
+    min-height: 32px;
+    font-size: var(--text-sm);
+  }
+
+  .planes-kind + .planes-kind {
+    border-top: none;
+    border-left: 1px solid var(--black-a10);
+  }
+
+  .planes-info-close {
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .planes-result,
+  .planes-suggestion {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+
+@media (max-width: 799px) {
+  .planes-info {
+    top: auto;
+    /* Above the status line */
+    bottom: 30px;
+    max-height: 50%;
+  }
+}

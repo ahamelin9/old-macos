@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkCss, checkScript, parseCss } from './design-check.mjs';
 
-const APP = 'src/components/Apps/Notes/Notes.css';
+const APP = 'src/components/Apps/Planes/Planes.css';
 const problems = (css, rel = APP) => checkCss(rel, css).map(p => p.text);
 
 describe('parseCss', () => {
@@ -15,27 +15,27 @@ describe('parseCss', () => {
 
 describe('checkCss', () => {
   it('passes a stylesheet built from tokens', () => {
-    expect(problems('.notes-window { color: var(--color-text); font: inherit; font-size: var(--text-md); border-radius: var(--radius) 0; box-shadow: 0 1px 2px var(--black-a20); }')).toEqual([]);
+    expect(problems('.planes-window { color: var(--color-text); font: inherit; font-size: var(--text-md); border-radius: var(--radius) 0; box-shadow: 0 1px 2px var(--black-a20); }')).toEqual([]);
   });
 
   it('flags raw colours, including named ones and colours inside gradients', () => {
-    expect(problems('.notes-a { color: #333; } .notes-b { background: linear-gradient(white, rgba(0,0,0,.2)); } .notes-c { border: 1px solid red; }')).toHaveLength(3);
+    expect(problems('.planes-a { color: #333; } .planes-b { background: linear-gradient(white, rgba(0,0,0,.2)); } .planes-c { border: 1px solid red; }')).toHaveLength(3);
   });
 
   it('leaves words that only contain a colour name alone', () => {
-    expect(problems('.notes-a { filter: grayscale(100%); white-space: nowrap; background: url(red.png); content: "black"; }')).toEqual([]);
+    expect(problems('.planes-a { filter: grayscale(100%); white-space: nowrap; background: url(red.png); content: "black"; }')).toEqual([]);
   });
 
   it('allows raw values only in the app\'s own palette', () => {
-    expect(problems('.notes-window { --notes-paper: #fffff0; --color-text: #000; }')).toEqual(['--color-text: #000']);
+    expect(problems('.planes-window { --planes-paper: #fffff0; --color-text: #000; }')).toEqual(['--color-text: #000']);
   });
 
   it('flags raw fonts, sizes, corners and !important', () => {
-    expect(problems('.notes-a { font-family: Arial; font-size: 12px; border-radius: 4px; color: var(--color-text) !important; }')).toHaveLength(4);
+    expect(problems('.planes-a { font-family: Arial; font-size: 12px; border-radius: 4px; color: var(--color-text) !important; }')).toHaveLength(4);
   });
 
   it('wants every selector to start with the app\'s class', () => {
-    expect(problems('.notes-a .x, .loading, button.notes-b, .notes-c:hover { top: 0 }')).toEqual(['.loading', 'button.notes-b']);
+    expect(problems('.planes-a .x, .loading, button.planes-b, .planes-c:hover { top: 0 }')).toEqual(['.loading', 'button.planes-b']);
   });
 
   it('wants keyframe names prefixed', () => {
@@ -48,7 +48,7 @@ describe('checkCss', () => {
   });
 
   it('respects a design-exception comment', () => {
-    expect(problems('.notes-a {\n  color: #f00; /* design-exception: matches the Spotify logo */\n}')).toEqual([]);
+    expect(problems('.planes-a {\n  color: #f00; /* design-exception: matches the Spotify logo */\n}')).toEqual([]);
   });
 
   it('asks for a PREFIXES entry for a new stylesheet', () => {

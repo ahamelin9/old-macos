@@ -28,7 +28,14 @@ places and Wikipedia for summaries. No key is needed.
 
 ## 1. What's in it
 
-**Search Places** (the default). It opens on Tokyo.
+**Search Places** (the default). It opens on what lives around the visitor
+(Alex, 2026-11-16), and on Tokyo when their location isn't to be had. The
+wrapper `FieldGuide` in `FieldGuide.tsx` decides before the app proper
+(`FieldGuideApp`) mounts: someone who has already allowed location waits
+up to three seconds for their position and never loads Tokyo; anyone else
+gets Tokyo at once and the browser's prompt, and a yes then moves the
+guide to them. A no says nothing; the crosshair button still explains
+itself when pressed.
 
 - Ways to pick a place:
   - type a place (Nominatim search, with suggestions);
@@ -37,6 +44,7 @@ places and Wikipedia for summaries. No key is needed.
   - a **Hotspot**: Tokyo (Kanto), Kyoto (Johto), Sapporo (Sinnoh) or
     New York City (Unova).
 - Radius 10, 25, 50 or 100 km, with a map preview of the circle (`MapPreview`).
+  Both maps grow with the window's height (know-how, `maps-and-layout.md`).
 - **Category tabs:**
   - All Species, Plants, Fungi, Birds, Mammals, Reptiles & Amphibians,
     Insects & Spiders, Fish, Molluscs;

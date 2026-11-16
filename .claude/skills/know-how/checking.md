@@ -29,7 +29,9 @@ It lives in `scripts/check.mjs`. How it stays lean:
 - **Canned API replies.** `cdp.mjs` answers every outside request from
   `fixtures/<check>.json.gz` (next to the scripts), so no check spends a
   live call. Pictures get a 1×1 PNG. The site's own `/api` (the Spotify
-  backend) answers 503 and is never recorded, as it hands out tokens. The
+  backend) answers 503 and is never recorded, as it hands out tokens;
+  `/api/planes`, which only passes adsb.lol's public data through, is
+  canned like an outside service. The
   page's clock starts at the time of the recording, so "today" matches the
   replies. A check falls back on the other checks' replies, and a request
   none of them has is fetched live once and saved to that check's file (the
@@ -37,7 +39,7 @@ It lives in `scripts/check.mjs`. How it stays lean:
   service are `npm run probe` (the `apis` skill).
 - **The same layout every run.** Windows open at random spots, so
   `launch` seeds `Math.random`. A step that failed one run in three
-  (Finder under Notes) now never does.
+  (Finder under another window) now never does.
 - **No fixed sleeps for the page.** `launch` waits for the desktop, and
   `t.settle()` waits until no transition or animation is running; use
   `waitFor` for anything else. A short sleep is fine only where a check
@@ -59,7 +61,8 @@ failed load, as Chrome blocks GitHub's text reply).
 **Timing.** The summary line ends with the total. On 2026-11-15, with
 Alex's dev server on 5173: every browser check one after another, live and
 with screenshots, took 415 s and printed about 40 KB; `npm run check --
---all` takes about 75 s and prints one line. A one-area change (Pokémon:
+--all` takes about 75 s and prints one line (about 80 s on 2026-11-16, with
+the Planes check). A one-area change (Pokémon:
 its forms check and `app-check`) went from about 110 s to 36 s, and
 `--fast` takes 3 s. The Apple menu check (about 60 s) is now the long pole
 of `--all`. Retime with `time npm run check -- --all`.
@@ -191,7 +194,6 @@ node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 <outDir>
   `minimize-check.mjs` ([feature-checks.md](feature-checks.md)).
 - `app-check.mjs` checks:
   - Camera, with a fake webcam: picture, Save, Retake, and off on close;
-  - Notes keeps its text;
   - Safari's snippets, and its messages when Brave refuses, from canned
     replies, so it costs no Brave quota;
   - Pokémon's missing name and Try again, and Deoxys, a species filed under
@@ -231,6 +233,22 @@ though the text sits on the deeper middle. The menu's highlighted row
 passes: it has its own deeper gradient (`--gradient-highlight`). Light alone also has white window titles on the title bar's
 pale top, Pokémon's yellow title, NASA's ☰ and Terminal's `$`. Rerun the
 scan for the current list rather than trusting this one.
+
+## Planes says the plane data isn't answering, in dev only
+
+*2026-11-16*
+
+- **Symptom:** in the dev server Planes shows "The plane data service
+  isn't answering right now", while every check passes.
+- **Cause:** the dev server was running an old `vite.config.ts` without
+  the `/api/planes` rule, so the request went to the Spotify backend, which
+  answered 404 (`curl -i http://127.0.0.1:5173/api/planes/v2/mil` showed
+  `server: uvicorn`). A `git stash` and `git stash apply` had swapped the
+  file out and back, and Vite restarted on the old one. The checks can't
+  see it: they answer `/api/planes` themselves.
+- **Fix:** `touch vite.config.ts` (Vite restarts), or restart the dev
+  server. And don't `git stash` while Alex's dev server is running.
+- **Check:** the same `curl` answers 200 with JSON.
 
 ## The dev server isn't on the port the preview says
 

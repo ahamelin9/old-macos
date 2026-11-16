@@ -228,9 +228,9 @@ try {
     await sleep(300);
   }
   if (wanted('Force Quit')) {
-    await t.openApp('Notes');
+    await t.openApp('Terminal');
     await t.openApp('Calculator');
-    await t.ev(`[...document.querySelectorAll('.window')].find(w => w.querySelector('.window-title')?.textContent === 'Notes').querySelector('.window-minimize').click()`);
+    await t.ev(`[...document.querySelectorAll('.window')].find(w => w.querySelector('.window-title')?.textContent === 'Terminal').querySelector('.window-minimize').click()`);
     await fromAppleMenu(t, 'Force Quit');
     await markFront();
     await t.ev(`${frontWindow}.querySelector('.window-maximize').click()`);

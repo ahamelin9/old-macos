@@ -204,6 +204,13 @@
   flex-direction: column;
 }
 
+/* Field Guide's maps grow with the window. The window's content box is the
+   one thing that knows the window's height, so it is a size container
+   there, and the maps take a share of it (cqh, in FieldGuide.css). */
+.window-content:has(.fieldguide-app) {
+  container-type: size;
+}
+
 .window-resize-handle {
   position: absolute;
   right: 0;

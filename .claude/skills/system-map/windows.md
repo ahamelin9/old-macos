@@ -70,7 +70,7 @@ the provider file exports only a component (react-refresh).
 ## 3. Minimize
 
 - **A minimized window stays mounted, hidden**, so its app keeps its state:
-  Notes its text, Field Guide its search and its map (hidden by
+  Terminal its typed text, Field Guide its search and its map (hidden by
   `visibility`, the map keeps its size, so Leaflet never sees it shrink),
   Music keeps playing. Desktop draws every window. A minimized one has
   `window-minimized` (invisible), `inert` and `aria-hidden`, and no inline

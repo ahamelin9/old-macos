@@ -403,10 +403,20 @@
   text-shadow: 0 1px 1px var(--black-a50);
 }
 
+/* A share of the window's height (cqh: Window/styles.css makes the window's
+   content box the container), never under the 140px it has in the small
+   window. MapPreview's ResizeObserver tells Leaflet about the new size. */
 .fieldguide-app .fieldguide-map-canvas {
   width: 100%;
-  height: 140px;
+  height: clamp(140px, 38cqh, 460px);
   background: var(--tone-80);
+}
+
+/* On a phone the list under the map matters more than a taller map */
+@media (max-width: 580px) {
+  .fieldguide-app .fieldguide-map-canvas {
+    height: 140px;
+  }
 }
 
 /* The maps' credit line (OpenStreetMap's tile policy asks for it): small and quiet */
@@ -1673,8 +1683,9 @@
   box-shadow: 1px 1px 3px var(--black-a10);
 }
 
+/* Grows with the window too, from the 230px it has in the small one */
 .fieldguide-app .range-map-canvas {
-  height: 230px;
+  height: clamp(230px, 48cqh, 560px);
   border-top: 1px solid var(--tone-50);
 }
 

@@ -10,7 +10,7 @@ describe('planShowApp', () => {
   });
 
   it('opens a window when only other apps are open', () => {
-    expect(planShowApp([win(1, 'finder', 2), win(2, 'notes', 3)], 'preferences')).toEqual({ kind: 'open' });
+    expect(planShowApp([win(1, 'finder', 2), win(2, 'planes', 3)], 'preferences')).toEqual({ kind: 'open' });
   });
 
   it('ignores a window opened without an app id, even with the same title', () => {
@@ -38,7 +38,7 @@ describe('planShowApp', () => {
   });
 
   it('prefers a showing window over a minimized one, whatever their order', () => {
-    expect(planShowApp([win(1, 'finder', 9, true), win(2, 'finder', 3), win(3, 'notes', 4)], 'finder'))
+    expect(planShowApp([win(1, 'finder', 9, true), win(2, 'finder', 3), win(3, 'planes', 4)], 'finder'))
       .toEqual({ kind: 'show', id: 2, restore: false, inFront: false });
   });
 
@@ -48,7 +48,7 @@ describe('planShowApp', () => {
   });
 
   it('picks the one that was in front last when all are minimized', () => {
-    expect(planShowApp([win(1, 'finder', 3, true), win(2, 'finder', 7, true), win(3, 'notes', 8)], 'finder'))
+    expect(planShowApp([win(1, 'finder', 3, true), win(2, 'finder', 7, true), win(3, 'planes', 8)], 'finder'))
       .toEqual({ kind: 'show', id: 2, restore: true, inFront: false });
   });
 });

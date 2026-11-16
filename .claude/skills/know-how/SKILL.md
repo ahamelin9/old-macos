@@ -20,16 +20,18 @@ short however much the list grows.
 | A check says replies were "fetched live once and saved", or an API changed shape | [`npm run check`](checking.md#npm-run-check-the-one-command): commit the saved file, or re-record with `--record` |
 | Prove a change works in a real browser | [Proving a change in a real browser](checking.md#proving-a-change-in-a-real-browser) |
 | Check every app still opens after a shared change | [Does every app still open?](checking.md#does-every-app-still-open) |
-| Check the windows, Camera, Notes, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
+| Check the windows, Camera, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
 | Check NASA News's sidebar: past days, scrolling, search, dates | [Does NASA News's sidebar still work?](feature-checks.md#does-nasa-newss-sidebar-still-work) |
 | Check Pokémon's forms: Megas and Gigantamax in the line, Other forms, live spot-checks | [Do Pokémon's forms still work?](feature-checks.md#do-pokémons-forms-still-work) |
 | Check System Preferences: every setting, reloads, uploads, Restore Defaults, storage blocked, sizes | [Does System Preferences still work?](feature-checks.md#does-system-preferences-still-work) |
 | Check dark mode: System following the computer live, Light and Dark, the first paint, reloads, the Appearance tiles | [Does dark mode still work?](feature-checks.md#does-dark-mode-still-work) |
 | Check the Apple menu: opening and closing, the keyboard, every row, Sleep, Restart, the phone | [Does the Apple menu still work?](feature-checks.md#does-the-apple-menu-still-work) |
+| Check Planes: the map, the chosen plane's panel, refreshing, place search, Find a Plane | [Does Planes still work?](feature-checks.md#does-planes-still-work) |
 | Check minimize: apps keep their state, the Dock's tiles and triangles, Dock clicks, the Scale effect, the window buttons, the phone | [Does minimize still work?](feature-checks.md#does-minimize-still-work) |
 | A playing `<audio>` barely moves in headless Chrome, Music has no `<audio>`, a check comes out dark, or a double-click never arrives | [Does minimize still work?](feature-checks.md#does-minimize-still-work), lessons |
 | A highlight or colour looks missing in a screenshot | [Does the Apple menu still work?](feature-checks.md#does-the-apple-menu-still-work), lessons |
 | Find text too faint to read, in dark or light; what's left over | [Is any text too faint to read?](checking.md#is-any-text-too-faint-to-read) |
+| Planes says the plane data isn't answering, but only in dev | [Planes says the plane data isn't answering, in dev only](checking.md#planes-says-the-plane-data-isnt-answering-in-dev-only) |
 | Nothing works on the port the preview reported | [The dev server isn't on the port the preview says](checking.md#the-dev-server-isnt-on-the-port-the-preview-says) |
 | `npm run lint` reports a problem | [`npm run lint` fails](checking.md#npm-run-lint-fails) |
 
@@ -51,6 +53,8 @@ short however much the list grows.
 |---|---|
 | `TypeError … '_leaflet_pos'` | [Leaflet throws `_leaflet_pos` after the map closes](maps-and-layout.md#leaflet-throws-_leaflet_pos-after-the-map-closes) |
 | A map is part grey after a resize or after being hidden | [A map is half grey or the wrong size](maps-and-layout.md#a-map-is-half-grey-or-the-wrong-size-after-a-resize-or-being-hidden) |
+| A map gets wider with its window but no taller | [A map stays small when the window is made big](maps-and-layout.md#a-map-stays-small-when-the-window-is-made-big) |
+| The window's resize handle is covered, or shows only as slivers | [The window's resize handle is hidden behind an app](maps-and-layout.md#the-windows-resize-handle-is-hidden-behind-an-app) |
 | Buttons in a row jump by a pixel when one appears | [A row of buttons shifts by a pixel](maps-and-layout.md#a-row-of-buttons-shifts-by-a-pixel-when-one-appears) |
 | One app's CSS restyles other apps, or a CSS change needs proving | [Every button changed when one app's CSS changed](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed) |
 | Something sits past the edge of the 400px window | [A bar's right end is cut off](maps-and-layout.md#a-bars-right-end-is-cut-off-in-the-400px-window) |
@@ -67,6 +71,7 @@ short however much the list grows.
 | The webcam stays on after Camera closes, or a stream won't stop | [The webcam stays on](apps.md#the-webcam-stays-on-after-camera-closes) |
 | Pokémon blames the wifi for a misspelled name | [Pokémon says "turn off wifi"](apps.md#pokémon-says-turn-off-wifi-for-a-misspelled-name) |
 | Changing a Music setting disconnects the Premium player | [Music's volume and the player](apps.md#changing-musics-volume-would-disconnect-the-premium-player) |
+| `tsc` says a file name "differs from already included file name … only in casing" | [Two files whose names differ only by capitals](apps.md#two-files-whose-names-differ-only-by-capitals) |
 | A guest preview won't start ("play() request was interrupted"), or the end of a clip skips several tracks | [Music's guest previews](apps.md#a-guest-preview-wont-start-or-the-end-of-a-clip-skips-several-tracks) |
 
 **Answered elsewhere** (these have their one home in another file):
@@ -89,7 +94,8 @@ picked from what changed. Run one by hand with
 | `fixtures/` | The canned API replies, one gzipped file per check (`npm run check -- --record <check>` remakes one) |
 | `smoke-check.mjs` | Opens every dock app at desktop and phone width; fails on any page error |
 | `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`). Minimize itself: `minimize-check.mjs` |
-| `app-check.mjs` | Camera, Notes, Safari, Pokémon and Music volume (`checking.md`) |
+| `app-check.mjs` | Camera, Safari, Pokémon and Music volume (`checking.md`) |
+| `planes-check.mjs` | Planes with a made-up sky: markers, shapes, the panel with its photo and its route test, gliding, refreshing, quiet while minimized, place search, Near Me, Find a Plane and Spotter's Picks (`feature-checks.md`) |
 | `nasa-check.mjs` | NASA News's sidebar at three sizes (`feature-checks.md`) |
 | `pokemon-forms-check.mjs` | Pokémon's Megas, Gigantamax and Other forms at three sizes, with spot-checks (`feature-checks.md`) |
 | `style-diff.mjs` | Snapshots every button's computed style, to diff before and after a CSS change (`maps-and-layout.md`) |

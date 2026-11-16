@@ -55,6 +55,9 @@ index.html (early settings script)  →  src/main.tsx  →  App.tsx
 - **Window** (`Window.tsx`): drag, resize, the Aqua close, minimize and zoom
   buttons, double-click to minimize, maximize. [`windows.md`](windows.md),
   section 2.
+- **Kit** (`src/components/Kit/`): small components every app can use,
+  styled by the kit's classes. `LoadingImage` so far (the `design` skill,
+  **Show a skeleton while something loads**).
 - **Dock** (`Dock.tsx`, `dockItems.ts`): the apps, a divider, minimized
   windows as small windows, and the Trash; a triangle under each app with a
   window open; a click is `showApp`. Five apps under 800px, and it shrinks
@@ -143,12 +146,12 @@ and on a phone. `Apps/launch.tsx` says what each draws.
 | Dock name | Folder | What it is | Calls out to | Phone |
 |---|---|---|---|---|
 | Finder | `Finder` | About Alex: About Me, Projects, Skills and Interests, with LinkedIn and GitHub links | none | ✓ |
-| Safari | `Safari` | Web search with results listed. Snippets show as text with the matched words bold, never as outside HTML; only http(s) results are links | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | ✓ |
+| Safari | `Safari` | Web search with results listed. Snippets show as text with the matched words bold, never as outside HTML; only http(s) results are links | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | |
 | Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day. The round ☰ in the heading opens a sidebar of past days (20 at a time as it scrolls), with a search box and a date box; a picked day shows in the same layout. Wide windows put the list beside the picture, narrow ones slide it over | science.nasa.gov's WordPress API (no key; `apis` skill, nasa.md) | ✓ |
 | Pokemon | `PokemonSearch` | Pokédex: fuzzy search (`fuzzysort`), stats in US units, a clickable evolution chain with each stage's Megas and Gigantamax hanging off it, an "Other forms" row (regional forms, caps; `forms.ts`), shiny toggle, type chart | PokeAPI only (the two mirror APIs it used to try were dead); sprites from the PokeAPI GitHub | ✓ |
 | Field Guide | `FieldGuide` | What lives near a place, and where a species lives. The biggest app by far | iNaturalist, Nominatim (OpenStreetMap), Wikipedia, Wikidata. **See the `field-guide` skill.** | ✓ |
+| Planes | `Planes` | The planes in the sky over a place, live on a map that opens over your own location (the crosshair button goes back there): each drawn in the shape of its kind, with a filter by kind; click one for its photo, airline, usual route, aircraft, altitude and speed, and a trail of where it has been since. Search a place or use Near Me; **Find a Plane** looks up a flight, tail number or aircraft type anywhere in the world, says what it is over, and opens on Spotter's Picks, cards of remarkable aircraft; a card opens that aircraft's page (its story, picture and facts) over a world map of where each one is right now. Asks again every 10 s, and not while minimized. On a phone: bigger tap targets, the filter in a row, the chosen plane as a sheet at the bottom | adsb.lol through the site's `/api/planes`, adsbdb, planespotters.net, Wikipedia, Wikidata, Photon, Nominatim, OSM tiles (`apis` skill, adsb.md) | ✓ |
 | Music | `Music` | Spotify player with Alex's playlists (`PLAYLISTS`). Playback needs Spotify Premium. A volume slider shows when the window is wider than 620px | Spotify Web API and Web Playback SDK, through `SpotifyContext` | |
-| Notes | `Notes` | A textarea, kept in `localStorage` (`notes_text`) | none | |
 | Camera | `Camera` | Webcam preview and snapshot; Save downloads a JPEG. The webcam is off while the window is minimized and once it closes | `getUserMedia` | |
 | Calculator | `Calculator` | Calculator | none | |
 | Terminal | `Terminal` | Fake shell: `help clear echo date ls cd cat pwd whoami theme history`. It follows the site's light or dark; `theme dark/light` darkens or lightens this one terminal (`--term-bg`/`--term-text`) | none | |
@@ -191,6 +194,10 @@ The flow:
    sends one). If that fails, or a fresh token is refused within a minute,
    it logs out and says the login expired.
 
+`/api/planes` is the one `/api` route outside this table: a proxy with no
+secret, which Vite passes straight to adsb.lol in dev, so it has no twin in
+`backend/main.py` (`apis` skill, adsb.md).
+
 Both redirect URIs have to be listed in the Spotify developer dashboard.
 Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
 `127.0.0.1`.
@@ -218,7 +225,9 @@ Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
 3. Add a line to `APPS` in `src/components/Apps/apps.ts`: a stable `id`,
    the Dock `name`, the window `title`, the `icon`, and `inDock`. The order
    is the order in the dock. Then a `case` in `Apps/launch.tsx` (TypeScript
-   fails the build until there is one).
+   fails the build until there is one). Don't name a helper file the same
+   as the component but for capitals (`planes.ts` beside `Planes.tsx`):
+   know-how, `apps.md`.
 4. If it works at phone width, set `onPhone: true` (five fit).
 5. Make it work at 400×300, maximized, and at phone width. Size the layout
    from the window, not the browser:
@@ -237,6 +246,10 @@ when it gets in the way.
 - All CSS is global; the `design` skill says how the shared styles and the
   design check keep apps from restyling each other.
 - Trash is a placeholder.
+- Safari is no longer in the phone Dock (Planes took its place,
+  2026-11-16), and nothing else opens it on a phone.
+- Skeleton loaders are in Planes only so far; Alex wants them in every app
+  (the `design` skill, **Show a skeleton while something loads**).
 - Some text is under WCAG's contrast bar in both themes: white on
   Pokémon's paler type colours (rock, grass, bug, fire…), and in light,
   white window titles on the title bar's pale top. Dark text on the paler
@@ -253,8 +266,8 @@ when it gets in the way.
   (it already loses Steel and Fairy at Medium). A container query giving
   it 9 columns in a narrow window, like its phone rule, would fix both
   sizes.
-- `npm run build` warns that the main JavaScript chunk is over 500 kB (549 kB,
-  168 kB gzipped, on 2026-11-15, after the Apple menu). It's a warning, not an error; splitting
+- `npm run build` warns that the main JavaScript chunk is over 500 kB (590 kB,
+  183 kB gzipped, on 2026-11-16, after Planes). It's a warning, not an error; splitting
   the apps into lazy-loaded chunks would clear it.
 - The local Spotify backend listens on `0.0.0.0:8000` (`backend/main.py`), so
   other devices on the same network can reach it while it runs. `127.0.0.1`

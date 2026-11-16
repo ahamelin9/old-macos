@@ -42,7 +42,7 @@ const Terminal: React.FC = () => {
       const dir = args[0] || '';
       const files = {
         '': ['Applications/', 'Documents/', 'System/', 'Users/'],
-        'Applications/': ['Finder.app', 'Terminal.app', 'Notes.app'],
+        'Applications/': ['Finder.app', 'Terminal.app', 'Planes.app'],
         'Documents/': ['report.txt', 'notes.txt'],
         'System/': ['Preferences/', 'Library/']
       };

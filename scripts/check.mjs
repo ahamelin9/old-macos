@@ -24,17 +24,19 @@ const KNOW_HOW = '.claude/skills/know-how';
 // Which browser checks a changed file needs. First match wins for each
 // rule; a file can match several rules. Test files only need the unit tests.
 const BROWSER_CHECKS = ['smoke-check', 'window-check', 'app-check', 'minimize-check', 'apple-menu-check',
-  'preferences-check', 'dark-mode-check', 'nasa-check', 'pokemon-forms-check'];
+  'preferences-check', 'dark-mode-check', 'nasa-check', 'pokemon-forms-check', 'planes-check'];
 const SHELL = ['smoke-check', 'window-check', 'minimize-check', 'apple-menu-check'];
 const RULES = [
   [/\.test\.[jt]sx?$/, []],
   [/^src\/components\/Apps\/NasaNews\//, ['nasa-check']],
   [/^src\/components\/Apps\/PokemonSearch\//, ['pokemon-forms-check', 'app-check']],
-  [/^src\/components\/Apps\/(Camera|Notes|Safari)\//, ['app-check']],
+  [/^src\/components\/Apps\/Planes\/|^functions\/api\/planes\/|^vite\.config\.ts$/, ['planes-check']],
+  [/^src\/components\/Apps\/(Camera|Safari)\//, ['app-check']],
   [/^src\/components\/Apps\/Music\/|^src\/contexts\/(Spotify|useSpotify)/, ['app-check', 'minimize-check']],
   [/^src\/components\/Apps\/(Preferences)\/|^src\/contexts\/(Settings|settings|useSettings|storage|desktopPicture)|^index\.html$/, ['preferences-check', 'dark-mode-check']],
   [/^src\/components\/Apps\/(AboutThisMac|ForceQuit)\/|^src\/components\/Desktop\/(AppleMenu|RestartAlert|SleepScreen|menuKeys)/, ['apple-menu-check']],
   [/^src\/components\/(Desktop|Dock|Window)\/|^src\/contexts\/(WindowContext|useWindows|showApp)|^src\/(App|main)\.tsx$/, SHELL],
+  [/^src\/components\/Kit\//, ['smoke-check', 'planes-check']],
   [/^src\/styles\//, ['smoke-check', 'dark-mode-check']],
   [/^src\/components\/Apps\/[^/]+\.(ts|tsx)$/, ['smoke-check']],
   [/^src\//, ['smoke-check']],

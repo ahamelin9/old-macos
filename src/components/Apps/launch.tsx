@@ -8,7 +8,7 @@ import NasaNews from './NasaNews/NasaNews';
 import PokemonSearch from './PokemonSearch/PokemonSearch';
 import FieldGuide from './FieldGuide/FieldGuide';
 import Music from './Music/Music';
-import Notes from './Notes/Notes';
+import Planes from './Planes/Planes';
 import Camera from './Camera/Camera';
 import Calculator from './Calculator/Calculator';
 import Terminal from './Terminal/Terminal';
@@ -30,7 +30,7 @@ export const launchApp = (id: AppId, request?: AppRequest, requestNumber?: numbe
     case 'pokemon': return <PokemonSearch />;
     case 'fieldguide': return <FieldGuide />;
     case 'music': return <Music />;
-    case 'notes': return <Notes />;
+    case 'planes': return <Planes />;
     case 'camera': return <Camera />;
     case 'calculator': return <Calculator />;
     case 'terminal': return <Terminal />;

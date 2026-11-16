@@ -64,10 +64,10 @@ try {
   t.check('un-maximize returns to the frame from before', same(unmaxed, resized), `${fmt(resized)} -> ${fmt(unmaxed)}`);
 
   // Clicking inside a window that is behind brings it to the front
-  await t.openApp('Notes');
-  const notes = await frameOf(t, 'Notes');
+  await t.openApp('Terminal');
+  const terminal = await frameOf(t, 'Terminal');
   const finder = await frameOf(t, 'Finder');
-  t.check('a new window opens in front', notes.z > finder.z, `Notes z ${notes.z}, Finder z ${finder.z}`);
+  t.check('a new window opens in front', terminal.z > finder.z, `Terminal z ${terminal.z}, Finder z ${finder.z}`);
   const spot = await t.ev(`(() => {
     const w = [...document.querySelectorAll('.window')].find(w => w.querySelector('.window-title')?.textContent === 'Finder');
     const r = w.querySelector('.window-content').getBoundingClientRect();
@@ -79,8 +79,8 @@ try {
   if (spot) {
     await t.clickAt(spot.x, spot.y);
     const after = await frameOf(t, 'Finder');
-    const notesAfter = await frameOf(t, 'Notes');
-    t.check('clicking inside a window behind brings it to the front', after.z > notesAfter.z, `Finder z ${after.z}, Notes z ${notesAfter.z}`);
+    const terminalAfter = await frameOf(t, 'Terminal');
+    t.check('clicking inside a window behind brings it to the front', after.z > terminalAfter.z, `Finder z ${after.z}, Terminal z ${terminalAfter.z}`);
   } else {
     t.check('found a visible spot of Finder to click', false);
   }

@@ -1,6 +1,5 @@
 // Do the smaller apps behave? Camera turns the webcam off when its window
-// closes, shows the picture again after Retake and downloads on Save; Notes
-// keeps its text after the window closes; Safari
+// closes, shows the picture again after Retake and downloads on Save; Safari
 // shows search snippets as text, never as outside HTML, and tells Brave
 // refusing apart from no results; Pokémon says when a name doesn't exist and
 // offers Try again, and finds a species filed under a form name (Deoxys);
@@ -42,14 +41,6 @@ try {
   const live = await t.ev(`window.__streams.flatMap(s => s.getTracks()).filter(tr => tr.readyState === 'live').length`);
   const total = await t.ev(`window.__streams.length`);
   t.check('closing Camera turns the webcam off', total > 0 && live === 0, `${live} live track(s) from ${total} stream(s)`);
-
-  // ---- Notes
-  await t.openApp('Notes');
-  await t.typeInto('.notes-textarea', 'remember the milk');
-  await t.ev(`${inWindow('Notes', '.window-close')}.click()`);
-  await t.openApp('Notes');
-  t.check('Notes keeps its text after closing', (await t.ev(`document.querySelector('.notes-textarea').value`)) === 'remember the milk');
-  await t.ev(`${inWindow('Notes', '.window-close')}.click()`);
 
   // ---- Safari, with a canned search reply
   await t.ev(`(() => {

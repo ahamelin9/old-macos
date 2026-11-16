@@ -4,6 +4,11 @@ Part of the `apis` skill. Used by the Field Guide's Specimen Inspector
 (`FieldGuide.tsx`: the encyclopedia summary and the guard that checks the
 article is about the right animal).
 
+Planes also asks Wikipedia once a visit for the pictures on its Spotter's
+Picks cards (one `pageimages` call for every card), and, when a card is
+opened, for that article's opening and picture (one call) and its dates and
+sizes from Wikidata (one more): [adsb.md](adsb.md), **Spotter's Picks**.
+
 ## What the site uses
 
 - `https://en.wikipedia.org/api/rest_v1/page/summary/{title}`: the summary.

@@ -269,13 +269,123 @@ const speciesCountsUrl = (loc: LocationInfo, radiusKm: number, filter: SpeciesFi
   `&radius=${radiusKm}${speciesFilterParams(filter)}&quality_grade=research&hrank=species` +
   `&page=${page}&per_page=${PAGE_SIZE}`;
 
+// Turn a GPS fix into a short place name for the banner. Returns null on
+// failure; the species search only needs the coordinates anyway.
+const describeCoordinates = async (lat: number, lng: number) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
+      { headers: { 'Accept-Language': 'en' }, signal: controller.signal }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const a = data.address || {};
+    const locality = a.city || a.town || a.village || a.hamlet || a.suburb || a.municipality || a.county;
+    const region = a.state || a.province || a.region;
+    const parts = [...new Set([locality, region, a.country].filter(Boolean))] as string[];
+    if (parts.length === 0) return null;
+    return {
+      name: parts[0],
+      fullName: parts.join(', '),
+      displayName: (data.display_name as string) || parts.join(', ')
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
+/** The visitor's own location, named, as the place the Field Guide opens on */
+interface StartPlace {
+  location: LocationInfo;
+  /** What the search box shows */
+  searchText: string;
+}
+
+/**
+ * Where the visitor is, as a place to open on. Asking the browser shows its
+ * permission prompt to anyone who hasn't answered it yet; a no, or no
+ * answer, gives null and nothing is said.
+ */
+const findStartPlace = (timeout: number): Promise<StartPlace | null> => new Promise(resolve => {
+  if (!('geolocation' in navigator) || !window.isSecureContext) { resolve(null); return; }
+  navigator.geolocation.getCurrentPosition(
+    async position => {
+      const { latitude: lat, longitude: lng } = position.coords;
+      const place = await describeCoordinates(lat, lng);
+      resolve({
+        location: { name: place?.name || 'My Location', displayName: place?.displayName || 'Your current location', lat, lng, fromDevice: true },
+        searchText: place?.fullName || '',
+      });
+    },
+    () => resolve(null),
+    // Low accuracy is plenty for a 10 km+ radius, and much faster
+    { enableHighAccuracy: false, timeout, maximumAge: 5 * 60 * 1000 }
+  );
+});
+
+/**
+ * The Field Guide opens on what lives around the visitor (Alex, 2026-11-16),
+ * and on the first hotspot when their location isn't to be had. Someone who
+ * has already allowed location never sees the hotspot first: the app waits
+ * for their position, three seconds at most, so no iNaturalist calls are
+ * spent on the wrong place. Anyone else gets the hotspot at once and the
+ * browser's prompt; saying yes then moves the guide to them.
+ */
 const FieldGuide: React.FC = () => {
-  // Opens on the first hotspot
-  const [searchInput, setSearchInput] = useState(POPULAR_LOCATIONS[0].query);
+  // undefined: still finding out. null: open on the hotspot.
+  const [start, setStart] = useState<StartPlace | null | undefined>(undefined);
+  useEffect(() => {
+    let closed = false;
+    const open = (place: StartPlace | null) => { if (!closed) setStart(now => now ?? place); };
+    const giveUp = window.setTimeout(() => open(null), 3000);
+    const begin = (allowed: boolean) => {
+      if (closed) return;
+      if (!allowed) open(null);
+      // A late yes to the prompt still arrives here, and moves the guide (below)
+      findStartPlace(15000).then(place => { if (!closed && place) setStart(place); else open(null); });
+    };
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(status => begin(status.state === 'granted'), () => begin(false));
+    } else {
+      begin(false);
+    }
+    return () => {
+      closed = true;
+      window.clearTimeout(giveUp);
+    };
+  }, []);
+
+  if (start === undefined) {
+    return (
+      <div className="fieldguide-app">
+        <p className="mac-message" role="status">Finding where you are…</p>
+      </div>
+    );
+  }
+  return <FieldGuideApp start={start} />;
+};
+
+const FieldGuideApp: React.FC<{ start: StartPlace | null }> = ({ start }) => {
+  // Opens on the visitor's own location, or the first hotspot
+  const [searchInput, setSearchInput] = useState(start ? start.searchText : POPULAR_LOCATIONS[0].query);
   const [currentLocation, setCurrentLocation] = useState<LocationInfo>(() => {
+    if (start) return start.location;
     const { name, displayName, lat, lng } = POPULAR_LOCATIONS[0];
     return { name, displayName, lat, lng };
   });
+  // A location that arrives after opening (a yes to the browser's prompt) moves the guide there, once
+  const [startShown, setStartShown] = useState(start);
+  if (start !== startShown) {
+    setStartShown(start);
+    if (start) {
+      setCurrentLocation(start.location);
+      setSearchInput(start.searchText);
+    }
+  }
   const [radiusKm, setRadiusKm] = useState<number>(25);
   const [activeTab, setActiveTab] = useState<TabType>('all');
   // "In season now": only species recorded here in the current calendar
@@ -372,35 +482,6 @@ const FieldGuide: React.FC = () => {
     locateRequestRef.current++;
     setIsLocatingUser(false);
     setLocateError(null);
-  };
-
-  // Turn a GPS fix into a short place name for the banner. Returns null on
-  // failure; the species search only needs the coordinates anyway.
-  const describeCoordinates = async (lat: number, lng: number) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
-        { headers: { 'Accept-Language': 'en' }, signal: controller.signal }
-      );
-      if (!res.ok) return null;
-      const data = await res.json();
-      const a = data.address || {};
-      const locality = a.city || a.town || a.village || a.hamlet || a.suburb || a.municipality || a.county;
-      const region = a.state || a.province || a.region;
-      const parts = [...new Set([locality, region, a.country].filter(Boolean))] as string[];
-      if (parts.length === 0) return null;
-      return {
-        name: parts[0],
-        fullName: parts.join(', '),
-        displayName: (data.display_name as string) || parts.join(', ')
-      };
-    } catch {
-      return null;
-    } finally {
-      clearTimeout(timer);
-    }
   };
 
   // Ask the browser where the user is and search around that point

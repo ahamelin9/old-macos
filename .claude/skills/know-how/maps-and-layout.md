@@ -27,6 +27,43 @@ Part of the `know-how` skill. The index is in `SKILL.md`.
   `map.invalidateSize()` when its width is over 0. Both `RangeMap.tsx` and
   `MapPreview.tsx` do this. Use the same pattern for any new map.
 
+## A map stays small when the window is made big
+
+*2026-11-16*
+
+- **Symptom:** Field Guide's maps got wider with the window but stayed
+  140px and 230px tall, even maximized.
+- **Cause:** their heights were fixed, and nothing inside a scrolling page
+  knows the window's height: a percentage has nothing to measure against.
+- **Fix:** the window's content box is a size container for Field Guide
+  (`.window-content:has(.fieldguide-app) { container-type: size }` in
+  `Window/styles.css`), and each map takes a share of it:
+  `height: clamp(140px, 38cqh, 460px)`. The floor is the old height, so the
+  small window is unchanged. On a phone the preview stays 140px. The
+  maps' `ResizeObserver`s already tell Leaflet (the entry above).
+- **Check:** maximize Field Guide with the map showing; on a 1400×900
+  screen the preview is about 280px tall and its tiles reach every edge.
+  An app whose map should fill the window instead is a flex column with
+  the map as `flex: 1` (Planes).
+
+## The window's resize handle is hidden behind an app
+
+*2026-11-16*
+
+- **Symptom:** in Planes' Find a Plane, the grey triangle at the window's
+  bottom-right corner showed only as two slivers and was hard to grab. Sky
+  was fine.
+- **Cause:** Find a Plane's page is positioned with a `z-index`, and the
+  window's content box is not a stacking context, so the page was stacked
+  in the window itself, above the handle. Only the 5px of padding round
+  the app stayed clear.
+- **Fix:** `isolation: isolate` on the app's root (`.planes-app`), so its
+  layers stack inside the app. Any app that uses `z-index` on something
+  reaching the bottom-right corner needs the same.
+- **Check:** `planes-check.mjs` samples four points along the handle's
+  diagonal in a window that isn't maximized (a maximized window has no
+  handle). A point 4px in is inside the padding and proves nothing.
+
 ## A row of buttons shifts by a pixel when one appears
 
 *2026-11-09*

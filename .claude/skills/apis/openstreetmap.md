@@ -1,6 +1,7 @@
 # OpenStreetMap: Nominatim, Photon and the map tiles
 
-Part of the `apis` skill. Used by the Field Guide: place search and Near Me's
+Part of the `apis` skill. Used by Planes (its map, place box and "over"
+line; [adsb.md](adsb.md)) and by the Field Guide: place search and Near Me's
 place name (`FieldGuide.tsx`), and the maps (`MapPreview.tsx`,
 `RangeMap.tsx`). All three run on OpenStreetMap data, which is free, but
 each server has its own rules.
@@ -10,6 +11,10 @@ each server has its own rules.
 - `https://nominatim.openstreetmap.org/search?q=…&format=json&limit=1` turns
   the search box into coordinates; `/reverse?lat=…&lon=…&format=json`
   names Near Me's spot.
+- Planes asks `/reverse?lat=…&lon=…&format=jsonv2&zoom=5&accept-language=en`
+  for the state and country a found plane is over (`Planes/place.ts`):
+  only on a find or a clicked row, spaced 1.1 s apart, kept for the visit.
+  Over open sea it answers 200 with `{"error":"Unable to geocode"}`.
 - **Usage policy:** at most 1 request a second; identify the app (a
   browser's `Referer` does that); no bulk jobs; and **no type-ahead**: the
   policy forbids autocomplete built on it. Breaking it can get the site
