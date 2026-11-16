@@ -58,7 +58,7 @@ const delayNext = (pattern) => `(() => {
   const real = window.fetch;
   let done = false;
   window.fetch = (url, opts) => !done && new RegExp(${JSON.stringify(pattern)}).test(String(url))
-    ? (done = true, new Promise(r => setTimeout(r, 2500)).then(() => real(url, opts)))
+    ? (done = true, window.__lateDone = false, new Promise(r => setTimeout(r, 2500)).then(() => real(url, opts)).finally(() => setTimeout(() => { window.__lateDone = true; }, 50)))
     : real(url, opts);
 })()`;
 
@@ -219,7 +219,8 @@ for (const size of sizes) {
       await realClick(row(slow), `the ${slow} row`);
       await realClick(row(fast), `the ${fast} row`);
       await t.waitFor(`${shownDate} === ${JSON.stringify(fast)}`, `${fast} to show`, 20000);
-      await sleep(4000);
+      await t.waitFor('window.__lateDone', 'the late reply', 10000);
+      await t.settle();
       t.check(step('a late reply for an earlier pick is dropped'), (await t.ev(shownDate)) === fast, `picked ${slow} then ${fast}; shows ${await t.ev(shownDate)}`);
     }
 
@@ -242,7 +243,8 @@ for (const size of sizes) {
       Number(count.replace(/\D/g, '')) > 100 && (await t.ev(rowCount)) === 20 && !(await t.ev(`!!${app}.querySelector('.nasa-day-today')`)), count);
     t.check(step('search asked for rocket, title matches first'), (await t.ev(requests('search=rocket&orderby=relevance'))) === 1);
     if (size.maximize) {
-      await sleep(3000);
+      await t.waitFor('window.__lateDone', 'the late search reply', 10000);
+      await t.settle();
       t.check(step('a late reply for an older search is dropped'),
         (await t.ev(countText)) === count && !(await t.ev(`[...${app}.querySelectorAll('.nasa-day-title')].some(e => /horsehead/i.test(e.textContent))`)));
     }
@@ -303,5 +305,4 @@ for (const size of sizes) {
     t.finish([/youtube|doubleclick|googleads|ytimg/i]);
     t.close();
   }
-  await sleep(2000);
 }

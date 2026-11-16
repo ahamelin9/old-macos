@@ -19,7 +19,8 @@
 //     pointer is over the group, all three at once; a background window's are
 //     grey until hovered; Graphite makes all three grey; dark keeps them;
 //   - Music's <audio> keeps playing through minimize and restore, the same
-//     element, not reset;
+//     element, not reset (a guest playlist from canned Spotify replies, its
+//     one track the repo's own mp3, so no backend or Spotify is needed);
 //   - Camera's webcam tracks stop while it is minimized and start again on
 //     restore;
 //   - Field Guide keeps its search text, and its map is the same size, drawn
@@ -92,9 +93,14 @@ const glyphsShown = async (t, windowExpr) => {
 // ================= Laptop
 let t = await launch(appUrl, undefined, {
   width: 1400, height: 900,
-  chromeArgs: [...FAKE_CAMERA, '--autoplay-policy=no-user-gesture-required']
+  // Audio may start without a click, and plays into a fake sink: with no
+  // sink, headless Chrome's media clock barely moves
+  chromeArgs: [...FAKE_CAMERA, '--autoplay-policy=no-user-gesture-required', '--disable-audio-output']
 });
 try {
+  // A light computer, whatever this Mac says, so the light and dark checks below mean what they say
+  const LIGHT = { name: 'prefers-color-scheme', value: 'light' };
+  await t.s('Emulation.setEmulatedMedia', { features: [LIGHT] });
   await t.waitFor(`document.querySelectorAll('.dock-item').length > 0`, 'the dock');
   await t.ev(`localStorage.removeItem('notes_text')`);
 
@@ -181,14 +187,14 @@ try {
   })());
 
   // ---- Reduced motion: instant
-  await t.s('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+  await t.s('Emulation.setEmulatedMedia', { features: [LIGHT, { name: 'prefers-reduced-motion', value: 'reduce' }] });
   await t.ev(`${inWin('Notes', '.window-minimize')}.click()`);
   await sleep(30);
   t.check('with reduced motion it hides at once, with no Scale effect', (await css(t, win('Notes'), 'visibility')) === 'hidden' && (await css(t, win('Notes'), 'transitionDuration')).split(',').every(s => parseFloat(s) === 0));
   await t.ev(`${tileFor('Notes')}.click()`);
   await sleep(30);
   t.check('and comes back at once', (await css(t, win('Notes'), 'visibility')) === 'visible' && (await scaleOf(t, win('Notes'))) === 1);
-  await t.s('Emulation.setEmulatedMedia', { features: [] });
+  await t.s('Emulation.setEmulatedMedia', { features: [LIGHT] });
 
   // ---- The window buttons
   const front = `document.querySelector('.window.window-active')`;
@@ -243,13 +249,36 @@ try {
   await closeAll(t);
   t.check('the triangle goes when its last window closes', !(await t.ev(`!!${dockItem('Notes')}.querySelector('.dock-running')`)));
 
-  // ---- Music keeps playing
+  // ---- Music keeps playing. The guest token and the playlist are canned (fetch
+  // and spotify-web-api-js's XMLHttpRequest), and the one track's preview is
+  // the repo's own mp3, so this needs no backend and asks Spotify nothing
+  await t.ev(`(() => {
+    const track = { type: 'track', id: 'check', name: 'I Love You Forever', artists: [{ name: 'Check' }], album: { name: 'Check', images: [] },
+      duration_ms: 30000, uri: 'spotify:track:check', preview_url: location.origin + '/Music/i-love-you-forever.mp3' };
+    const playlist = JSON.stringify({ items: [{ track }], next: null });
+    const realFetch = window.fetch;
+    window.fetch = (url, opts) => String(url).includes('/api/client_credentials')
+      ? Promise.resolve(new Response(JSON.stringify({ access_token: 'check' }), { headers: { 'Content-Type': 'application/json' } }))
+      : realFetch(url, opts);
+    const Real = window.XMLHttpRequest;
+    window.XMLHttpRequest = class extends Real {
+      open(method, url, ...rest) { this.canned = String(url).includes('api.spotify.com/v1/playlists/'); if (!this.canned) super.open(method, url, ...rest); }
+      setRequestHeader(...args) { if (!this.canned) super.setRequestHeader(...args); }
+      send(body) {
+        if (!this.canned) return super.send(body);
+        for (const [k, v] of Object.entries({ readyState: 4, status: 200, responseText: playlist })) Object.defineProperty(this, k, { value: v });
+        setTimeout(() => this.onreadystatechange?.());
+      }
+    };
+  })()`);
   await t.openApp('Music');
-  await t.ev(`(() => { const a = ${inWin('Music', 'audio')}; a.dataset.probe = '1'; a.muted = true; a.src = '/Music/i-love-you-forever.mp3'; return a.play(); })()`);
-  await t.waitFor(`${inWin('Music', 'audio')}.currentTime > 0.3`, 'the track playing', 10000);
+  await t.waitFor(`${inWin('Music', '.track-row')}`, 'the canned playlist', 10000);
+  await t.ev(`${inWin('Music', '.track-row')}.click()`);
+  await t.waitFor(`${inWin('Music', 'audio')}?.currentTime > 0.3`, 'the track playing', 10000);
+  await t.ev(`(${inWin('Music', 'audio')}).dataset.probe = '1'`);
   await minimize(t, 'Music');
   const t1 = await t.ev(`${inWin('Music', 'audio')}.currentTime`);
-  await sleep(1000);
+  await t.waitFor(`${inWin('Music', 'audio')}.currentTime > ${t1} + 0.6`, 'the track to move on', 5000).catch(() => {});
   const playing = await t.ev(`(() => { const a = ${inWin('Music', 'audio')}; return { paused: a.paused, time: a.currentTime, probe: a.dataset.probe }; })()`);
   t.check('Music keeps playing while minimized', !playing.paused && playing.time > t1 + 0.5 && playing.probe === '1', `${t1.toFixed(1)}s -> ${playing.time.toFixed(1)}s`);
   await t.ev(`${tileFor('Music')}.click()`);
@@ -280,6 +309,7 @@ try {
   await t.setGeolocation(45.5152, -122.6784);
   await t.openApp('Field Guide');
   await t.ev(`${inWin('Field Guide (Flora & Fauna)', '.window-maximize')}.click()`);
+  await t.ev(`${inWin('Field Guide (Flora & Fauna)', '.near-me-btn')}.click()`);
   await t.waitFor(`/Portland/.test(document.querySelector('.location-badge')?.textContent)`, 'Near Me finding Portland', 60000);
   await t.clickButton('Show Map');
   await t.waitFor(`document.querySelectorAll('.leaflet-tile-loaded').length > 3`, 'map tiles', 30000);

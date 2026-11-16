@@ -238,7 +238,7 @@ try {
   t.check('it finds a Preferences window the Dock opened', (await count(t, 'Preferences')) === 1 && (await frontTitle(t)) === 'Preferences');
   await t.ev(`${win('Preferences')}.querySelector('.window-minimize').click()`);
   await sleep(250);
-  t.check('(Preferences minimized)', !(await t.ev(`!!${win('Preferences')}`)));
+  t.check('(Preferences minimized)', await t.ev(`!!${win('Preferences')}?.classList.contains('window-minimized')`));
   await choose(t, 'System Preferences…');
   t.check('System Preferences… brings a minimized Preferences back, in front', (await count(t, 'Preferences')) === 1 && (await frontTitle(t)) === 'Preferences'
     && !(await t.ev(`[...document.querySelectorAll('.dock-item.minimized-window')].some(d => d.textContent.includes('Preferences'))`)));
@@ -310,17 +310,17 @@ try {
   const SLEEP = `document.querySelector('.desktop-sleep')`;
   await choose(t, 'Sleep');
   t.check('Sleep puts a screen over everything', await t.ev(`!!${SLEEP}`));
-  await sleep(1300);
+  await t.waitFor(`getComputedStyle(document.querySelector('.desktop-sleep')).opacity === '1'`, 'black', 5000).catch(() => {});
   t.check('it fades to black', await t.ev(`getComputedStyle(${SLEEP}).opacity === '1' && getComputedStyle(${SLEEP}).backgroundColor === 'rgb(0, 0, 0)'`));
   const finderIcon = await box(t, `[...document.querySelectorAll('.dock-item')].find(d => d.textContent.trim() === 'Finder')`);
   await t.clickAt(finderIcon.cx, finderIcon.cy);
   t.check('a click wakes it, fading back in', await t.ev(`!!document.querySelector('.desktop-sleep-waking')`));
-  await sleep(700);
+  await t.waitFor(`!document.querySelector('.desktop-sleep')`, 'awake', 5000).catch(() => {});
   t.check('and it is gone, without clicking the Finder icon under it', !(await t.ev(`!!${SLEEP}`)) && (await count(t, 'Finder')) === 0);
   await choose(t, 'Sleep');
-  await sleep(1300);
+  await t.waitFor(`getComputedStyle(document.querySelector('.desktop-sleep')).opacity === '1'`, 'black', 5000).catch(() => {});
   await press(t, 'a');
-  await sleep(700);
+  await t.waitFor(`!document.querySelector('.desktop-sleep')`, 'awake', 5000).catch(() => {});
   t.check('a key wakes it too', !(await t.ev(`!!${SLEEP}`)));
   await t.s('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await choose(t, 'Sleep');
@@ -339,7 +339,7 @@ try {
   await t.ev(`${ALERT}.dataset.checkAlert = '1'`);
   await t.shot('restart-alert-laptop-light.png', '[data-check-alert]');
   await clickOn(t, `[...${ALERT}.querySelectorAll('button')].find(b => b.textContent === 'Cancel')`);
-  await sleep(1000);
+  await t.waitFor(`!${ALERT}`, 'the alert to close', 3000).catch(() => {});
   t.check('Cancel closes it and nothing restarts', !(await t.ev(`!!${ALERT}`)) && (await t.ev(`window.__notRestarted`)) === 1);
   await choose(t, 'Restart…');
   await press(t, 'Escape');
@@ -411,9 +411,9 @@ try {
   await closeAll(t);
 
   await choose(t, 'Sleep', tapOn);
-  await sleep(1300);
+  await t.waitFor(`getComputedStyle(document.querySelector('.desktop-sleep')).opacity === '1'`, 'black', 5000).catch(() => {});
   await tap(t, 195, 400);
-  await sleep(700);
+  await t.waitFor(`!document.querySelector('.desktop-sleep')`, 'awake', 5000).catch(() => {});
   t.check('phone: a tap wakes Sleep', !(await t.ev(`!!document.querySelector('.desktop-sleep')`)));
 
   for (const [name, settings] of Object.entries(THEMES)) {

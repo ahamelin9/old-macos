@@ -104,7 +104,6 @@ try {
   await os(t, 'dark');
   await t.s('Page.addScriptToEvaluateOnNewDocument', { source: RECORD_EARLY });
   await t.s('Page.navigate', { url: appUrl });
-  await sleep(1500);
   await t.waitFor(`document.querySelectorAll('.dock-item').length > 0`, 'the dock');
   const early = await t.ev('window.__early');
   t.check('first visit, dark computer: dark as soon as the styles load, before React draws', early && !early.reactDrew && early.surface < 0.05 && early.scheme === 'dark', JSON.stringify(early));

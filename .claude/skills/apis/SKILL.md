@@ -72,6 +72,12 @@ up and answering the way the code expects. Probe before blaming the code,
 and once more after a fix. Keep probes small: a few requests, a second or
 more apart.
 
+`npm run probe` runs them all in one go (`probe.mjs` in this folder), one
+summary line plus any failure; `npm run probe -- nasa` runs one. Brave runs
+only when named, as each probe spends a search. These are the only live
+calls in day-to-day checking: browser checks use canned replies
+(know-how's `checking.md`, `npm run check`).
+
 ## 5. The audit
 
 *2026-11-15. Every service probed live and every call read.*

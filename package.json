@@ -11,7 +11,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . && node scripts/design-check.mjs",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "node scripts/check.mjs",
+    "probe": "node .claude/skills/apis/probe.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.22",

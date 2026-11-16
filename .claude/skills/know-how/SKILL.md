@@ -16,6 +16,8 @@ short however much the list grows.
 
 | Symptom or task | Entry |
 |---|---|
+| Check a change: what to run, canned API replies, quiet output, timing | [`npm run check`: the one command](checking.md#npm-run-check-the-one-command) |
+| A check says replies were "fetched live once and saved", or an API changed shape | [`npm run check`](checking.md#npm-run-check-the-one-command): commit the saved file, or re-record with `--record` |
 | Prove a change works in a real browser | [Proving a change in a real browser](checking.md#proving-a-change-in-a-real-browser) |
 | Check every app still opens after a shared change | [Does every app still open?](checking.md#does-every-app-still-open) |
 | Check the windows, Camera, Notes, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
@@ -24,6 +26,8 @@ short however much the list grows.
 | Check System Preferences: every setting, reloads, uploads, Restore Defaults, storage blocked, sizes | [Does System Preferences still work?](feature-checks.md#does-system-preferences-still-work) |
 | Check dark mode: System following the computer live, Light and Dark, the first paint, reloads, the Appearance tiles | [Does dark mode still work?](feature-checks.md#does-dark-mode-still-work) |
 | Check the Apple menu: opening and closing, the keyboard, every row, Sleep, Restart, the phone | [Does the Apple menu still work?](feature-checks.md#does-the-apple-menu-still-work) |
+| Check minimize: apps keep their state, the Dock's tiles and triangles, Dock clicks, the Scale effect, the window buttons, the phone | [Does minimize still work?](feature-checks.md#does-minimize-still-work) |
+| A playing `<audio>` barely moves in headless Chrome, Music has no `<audio>`, a check comes out dark, or a double-click never arrives | [Does minimize still work?](feature-checks.md#does-minimize-still-work), lessons |
 | A highlight or colour looks missing in a screenshot | [Does the Apple menu still work?](feature-checks.md#does-the-apple-menu-still-work), lessons |
 | Find text too faint to read, in dark or light; what's left over | [Is any text too faint to read?](checking.md#is-any-text-too-faint-to-read) |
 | Nothing works on the port the preview reported | [The dev server isn't on the port the preview says](checking.md#the-dev-server-isnt-on-the-port-the-preview-says) |
@@ -75,20 +79,26 @@ short however much the list grows.
 
 ## Scripts in this folder
 
+`npm run check` (`scripts/check.mjs`) runs the `*-check.mjs` ones for you,
+picked from what changed. Run one by hand with
+`node .claude/skills/know-how/<script> <appUrl> <outDir>`.
+
 | Script | What it does |
 |---|---|
-| `cdp.mjs` | Headless Chrome helper for browser checks (see `checking.md`) |
+| `cdp.mjs` | Headless Chrome helper for browser checks, with canned API replies, `settle()` and opt-in screenshots (see `checking.md`) |
+| `fixtures/` | The canned API replies, one gzipped file per check (`npm run check -- --record <check>` remakes one) |
 | `smoke-check.mjs` | Opens every dock app at desktop and phone width; fails on any page error |
-| `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`) |
+| `window-check.mjs` | Drags, resizes, minimizes and maximizes windows; checks phone fit (`checking.md`). Minimize itself: `minimize-check.mjs` |
 | `app-check.mjs` | Camera, Notes, Safari, Pokémon and Music volume (`checking.md`) |
-| `nasa-check.mjs` | NASA News's sidebar against live NASA at three sizes (`feature-checks.md`) |
-| `pokemon-forms-check.mjs` | Pokémon's Megas, Gigantamax and Other forms against live PokeAPI at three sizes, with spot-checks (`feature-checks.md`) |
+| `nasa-check.mjs` | NASA News's sidebar at three sizes (`feature-checks.md`) |
+| `pokemon-forms-check.mjs` | Pokémon's Megas, Gigantamax and Other forms at three sizes, with spot-checks (`feature-checks.md`) |
 | `style-diff.mjs` | Snapshots every button's computed style, to diff before and after a CSS change (`maps-and-layout.md`) |
 | `app-shots.mjs` | Before-and-after screenshots of every app on a laptop and a phone, with a pixel diff; `--settings` shoots with a setting on, `--scheme dark` fakes a dark computer (`design` skill, section 4) |
 | `preferences-check.mjs` | System Preferences: every setting, reloads, the early script, uploads, Restore Defaults, blocked storage, sizes (`feature-checks.md`) |
 | `dark-mode-check.mjs` | Dark mode: System following the computer live, Light and Dark, the first paint, reloads, Graphite, Restore Defaults, the Appearance tiles (`feature-checks.md`) |
 | `contrast-scan.mjs` | Every app's text against what's behind it, the Apple menu and the windows it opens too, in dark or light, with the failures listed (`checking.md`) |
 | `apple-menu-check.mjs` | The Apple menu: mouse, keyboard and touch, every row, `showApp`, Sleep, Restart, the phone, and screenshots in each look (`feature-checks.md`) |
+| `minimize-check.mjs` | Minimize: state kept, Music, Camera, Field Guide's map, the Dock's tiles and triangles, Dock clicks, the Scale effect, double-click, the window buttons, the phone; pass/fail only (`feature-checks.md`) |
 
 ## Adding an entry
 

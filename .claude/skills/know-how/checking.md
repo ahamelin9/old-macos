@@ -2,6 +2,68 @@
 
 Part of the `know-how` skill. The index is in `SKILL.md`.
 
+## `npm run check`: the one command
+
+*2026-11-15*
+
+```bash
+npm run check                    # tests, types, lint + browser checks for what git diff shows
+npm run check -- --all           # every browser check: before a push
+npm run check -- nasa pokemon    # the quick checks plus these browser checks
+npm run check -- --fast          # tests, types and lint only
+npm run check -- --shots         # save screenshots too (only when asked, or nothing else can show it)
+npm run check -- --live nasa     # against the real APIs, one check at a time
+npm run check -- --record nasa   # the same, saving the replies as the new canned ones
+```
+
+It lives in `scripts/check.mjs`. How it stays lean:
+
+- **Only what changed.** The browser checks come from `git diff` and
+  untracked files, through the table `RULES` at the top of
+  `scripts/check.mjs`. A test file or a doc needs none. Add a row there
+  when you add a browser check.
+- **Side by side.** The quick checks and up to four browser checks run at
+  once; each Chrome picks its own free DevTools port.
+- **Quiet.** One summary line. Only a failure prints more: its `FAIL` lines,
+  or the tail of its output, and the path of its full log.
+- **Canned API replies.** `cdp.mjs` answers every outside request from
+  `fixtures/<check>.json.gz` (next to the scripts), so no check spends a
+  live call. Pictures get a 1×1 PNG. The site's own `/api` (the Spotify
+  backend) answers 503 and is never recorded, as it hands out tokens. The
+  page's clock starts at the time of the recording, so "today" matches the
+  replies. A check falls back on the other checks' replies, and a request
+  none of them has is fetched live once and saved to that check's file (the
+  summary says so; commit the file with the change). Live probes of each
+  service are `npm run probe` (the `apis` skill).
+- **The same layout every run.** Windows open at random spots, so
+  `launch` seeds `Math.random`. A step that failed one run in three
+  (Finder under Notes) now never does.
+- **No fixed sleeps for the page.** `launch` waits for the desktop, and
+  `t.settle()` waits until no transition or animation is running; use
+  `waitFor` for anything else. A short sleep is fine only where a check
+  proves that nothing happens (a late reply dropped), and there it waits for
+  the late reply itself (`window.__lateDone`).
+- **No screenshots** unless `--shots` (`CHECK_SHOTS=1`). `t.shot()` does
+  nothing otherwise; pass `{ force: true }` for a picture the check itself
+  needs.
+- **After a subagent ran it**, don't rerun it all: `npm run check -- <area>`
+  is the quick checks plus the area you changed.
+
+Re-record when an API's replies change shape: `--record <check>`, or
+`--record --all` for every one (live, one check at a time, about five
+minutes). Recording fetches each reply from Node with its own User-Agent,
+as Nominatim turns away HeadlessChrome from Node; pictures and video load in
+Chrome and only their status is kept (a missing sprite's 404 arrives as a
+failed load, as Chrome blocks GitHub's text reply).
+
+**Timing.** The summary line ends with the total. On 2026-11-15, with
+Alex's dev server on 5173: every browser check one after another, live and
+with screenshots, took 415 s and printed about 40 KB; `npm run check --
+--all` takes about 75 s and prints one line. A one-area change (Pokémon:
+its forms check and `app-check`) went from about 110 s to 36 s, and
+`--fast` takes 3 s. The Apple menu check (about 60 s) is now the long pole
+of `--all`. Retime with `time npm run check -- --all`.
+
 ## Proving a change in a real browser
 
 *2026-11-09, rebuilt 2026-11-15*
@@ -40,15 +102,20 @@ Node 22+ and Google Chrome (set `CHROME_PATH` if Chrome is somewhere else).
    node <scratchpad>/check.mjs <scratchpad>/shots
    ```
 
-3. **Look at the screenshots** (Read the PNG) as well as the PASS lines.
-   Send the useful ones to Alex.
+3. Read the PASS and FAIL lines. Screenshots are off unless the script runs
+   with `CHECK_SHOTS=1`; take them only when Alex asks or nothing else can
+   show it, then Read the PNG and send the useful ones to Alex.
 
 What the helper gives you:
 
 - `ev(js)` runs JavaScript in the page.
 - `waitFor(js, label)` polls until it's true.
+- `settle()` waits until the page is still (no transition or animation
+  running): use it after a click instead of `sleep`.
+- `apiFetch(url)` is `fetch` for a check's own spot-checks from Node,
+  canned like the page's requests.
 - `check(name, ok, detail)` records a result.
-- `shot(file, selector?)` saves a screenshot.
+- `shot(file, selector?)` saves a screenshot, only with `CHECK_SHOTS=1`.
 - `openApp(dockLabel)` clicks a dock icon.
 - `typeInto(selector, text)` types into a React-controlled input or
   textarea (setting `.value` alone, React never notices).
@@ -56,6 +123,8 @@ What the helper gives you:
   pointer handlers run (`el.click()` fires no pointerdown).
 - `launch(url, dir, { chromeArgs: FAKE_CAMERA })` gives Chrome a fake webcam
   that needs no permission prompt.
+- `launch` fakes a light computer, whatever the Mac is set to (dark mode
+  checks set `prefers-color-scheme` themselves).
 - `setGeolocation(lat, lng)` / `denyGeolocation()` fake the browser location.
 - `s(method, params)` sends any raw DevTools command.
 - `finish(ignoreRegexes)` adds a "no page errors" check and prints the tally.
@@ -67,8 +136,9 @@ Lessons from writing these:
   naming the country), then check.
 - `waitFor` wraps its expression in `!!(…)`. Returning a DOM node over the
   DevTools protocol fails with "Object reference chain is too long".
-- **Pace iNaturalist:** about 20 s between range views in a script (the `apis`
-  skill, `inaturalist.md`).
+- **Pace iNaturalist:** about 20 s between range views in a script run with
+  `--live` or `--record` (the `apis` skill, `inaturalist.md`). Canned runs
+  need no pacing: skip it when `CANNED` (from `cdp.mjs`) is true.
 - **Test both window sizes**, the default small window and maximized.
   Layout bugs hide in the small one.
 - To prove that Back returned to the **same** view and didn't rebuild it,
@@ -77,8 +147,15 @@ Lessons from writing these:
 - For a layout check, measure the real numbers first (a single toolbar row
   is 27px with padding) before choosing a threshold.
 - `shot(name)` saves under exactly that name, so include `.png`.
-- `clickButton(text)` matches the visible text. The window buttons show ×, −
-  and +, so click those by selector (`.window-maximize`).
+- `clickButton(text)` matches the visible text. The window buttons have
+  none (their ×, − and + are drawn in CSS), so click those by selector
+  (`.window-maximize`).
+- `openApp(label)` waits for a new window, so it works only for an app with
+  no window yet: a Dock click on an open app brings its window back
+  (`showApp`) instead.
+- A minimized window is still in the page, hidden, with the class
+  `window-minimized` and no inline z-index, so "the front window" helpers
+  that sort by `style.zIndex` never pick it.
 - Headless Chrome won't make its window narrower than about 500px, so
   `launch` sets the viewport directly; under 500 wide it also acts as a touch
   phone. Pass the real phone width (390).
@@ -92,8 +169,8 @@ node .claude/skills/know-how/smoke-check.mjs http://127.0.0.1:5199 <outDir>
 ```
 
 It opens every dock app in turn at desktop width, then at phone width. It
-checks each window has content, saves a screenshot of each, and fails on any
-page error. It ignores the noise it expects: no webcam in headless Chrome,
+checks each window has content, saves a screenshot of each (with
+`CHECK_SHOTS=1`), and fails on any page error. It ignores the noise it expects: no webcam in headless Chrome,
 and Music's guest error when the backend is off. Run it after changing the
 shell (Desktop, Window, Dock, WindowContext), global CSS, or anything shared.
 It takes about a minute.
@@ -110,7 +187,8 @@ node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 <outDir>
 - `window-check.mjs` drags, resizes, minimizes, restores and maximizes real
   windows with real mouse events. It checks each keeps its place, comes to
   the front when clicked, and fits on a 390px phone. Run it after touching
-  `Window`, `Desktop`, `Dock` or the window context.
+  `Window`, `Desktop`, `Dock` or the window context, with
+  `minimize-check.mjs` ([feature-checks.md](feature-checks.md)).
 - `app-check.mjs` checks:
   - Camera, with a fake webcam: picture, Save, Retake, and off on close;
   - Notes keeps its text;
@@ -122,7 +200,7 @@ node .claude/skills/know-how/app-check.mjs http://127.0.0.1:5199 <outDir>
 - For a CSS change, use `style-diff.mjs`
   ([maps-and-layout.md](maps-and-layout.md#every-button-on-the-site-changed-when-one-apps-css-changed)).
 - For one feature's own check (NASA News's sidebar, Pokémon's forms, System
-  Preferences, dark mode, the Apple menu), see
+  Preferences, dark mode, the Apple menu, minimize), see
   [feature-checks.md](feature-checks.md).
 
 ## Is any text too faint to read?

@@ -6,7 +6,7 @@
 //   node .claude/skills/know-how/smoke-check.mjs http://127.0.0.1:5173 [outDir]
 //
 // Screenshots of each window land in outDir (a temp folder if omitted).
-import { launch, sleep } from './cdp.mjs';
+import { launch, sleep, LIVE, SHOTS } from './cdp.mjs';
 
 const [appUrl = 'http://127.0.0.1:5173', outDir] = process.argv.slice(2);
 
@@ -18,7 +18,7 @@ const EXPECTED_NOISE = [
 
 // Music's guest mode fetches /api/client_credentials, which locally needs the
 // FastAPI backend (npm run backend). Without it, that error is expected.
-const backendUp = await fetch('http://127.0.0.1:8000/docs').then(r => r.ok, () => false);
+const backendUp = LIVE && await fetch('http://127.0.0.1:8000/docs').then(r => r.ok, () => false);
 if (!backendUp) {
   console.log('note: the Spotify backend (port 8000) is not running, so Music\'s "Guest fetch error" is expected');
   EXPECTED_NOISE.push(/Guest fetch error/);
@@ -40,12 +40,12 @@ const run = async (label, width, height) => {
           const c = w?.querySelector('.window-content');
           return { title: w?.querySelector('.window-title')?.textContent, children: c?.children.length ?? 0 };
         })()`);
-        await sleep(700);
+        if (SHOTS) { await sleep(700); }
         await t.shot(`${label}-${name.replace(/\W+/g, '-').toLowerCase()}.png`);
         t.check(`${name} opens`, info.children > 0, `window "${info.title}"`);
         // Close every open window before the next app
         await t.ev(`[...document.querySelectorAll('.window-close')].forEach(b => b.click())`);
-        await sleep(300);
+        await t.settle();
       } catch (err) {
         t.check(`${name} opens`, false, err.message);
       }
@@ -53,7 +53,7 @@ const run = async (label, width, height) => {
   } finally {
     t.finish(EXPECTED_NOISE);
     t.close();
-    console.log(`screenshots: ${t.outDir}`);
+    if (SHOTS) console.log(`screenshots: ${t.outDir}`);
   }
 };
 

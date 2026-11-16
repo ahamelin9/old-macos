@@ -12,7 +12,7 @@ file first.
 
 | For | Read |
 |---|---|
-| How the site fits together: desktop, windows, dock, every app, the Spotify login, deploy and the live address | the `system-map` skill |
+| How the site fits together: desktop, windows (minimize, the buttons), the Dock, every app, the Spotify login, deploy and the live address | the `system-map` skill |
 | The Apple menu (🍎): About This Mac, Force Quit, Sleep, Restart, and `showApp`, which brings an app's window forward or opens one | the `system-map` skill, `apple-menu.md` |
 | Any outside API (NASA, PokeAPI, iNaturalist, Wikipedia, OpenStreetMap, Brave, Spotify, iTunes): setup, keys and env vars, limits, known issues, live probes, the API audit | the `apis` skill (an index, one file per service) |
 | Adding a new app to the dock | the `system-map` skill, **Adding an app** |
@@ -20,6 +20,7 @@ file first.
 | Anything in the Field Guide: places, species, tabs, native/endemic/introduced, maps, Back, the inspector | the `field-guide` skill |
 | Any CSS or visual change: the shared tokens, base and kit, the design check, before-and-after screenshots | the `design` skill |
 | Dark mode: how it switches, which token to use, an app's own colours, the contrast scan | the `design` skill, `dark-mode.md` |
+| Checking a change: `npm run check`, what it picks, canned API replies, timing | the `know-how` skill, `checking.md` |
 | A problem that may have been solved before, or proving a change in a real browser | the `know-how` skill (an index pointing into topic files) |
 | Where a learning, preference or decision goes; the end of a session | the `wrap-up` skill |
 
@@ -35,6 +36,8 @@ Each skill opens with its own contents list. To search all of them at once:
 | Unit tests | `npm test` | Vitest. Test files sit next to the code (`*.test.ts`). |
 | Type check | `npx tsc -b` | Its cache, `tsconfig.tsbuildinfo`, is gitignored. |
 | Lint | `npm run lint` | ESLint, then the design check (`scripts/design-check.mjs`, the `design` skill). Both pass; keep it that way. |
+| **Check a change** | `npm run check` | Tests, types and lint, plus the browser checks for the files `git diff` shows, side by side, with canned API replies. One summary line; details only on failure. `--all` before a push. Options: the `know-how` skill, `checking.md`. |
+| Live API probes | `npm run probe` | One small live call per outside service (the `apis` skill). Browser checks never call the live APIs unless asked. |
 | Build | `npm run build` | Runs `tsc -b`, then `vite build` into `dist/`. A type error stops the deploy. |
 
 ## How a change goes
@@ -47,6 +50,11 @@ Each skill opens with its own contents list. To search all of them at once:
    part of the idea, say so. At the end, offer one good follow-up idea, not a
    list.
 3. Build it, then prove it:
+   - **`npm run check` is the check.** It runs only what the change touches.
+     No screenshots unless Alex asks or something visual can't be checked
+     any other way (`--shots`). If a subagent already ran it, don't rerun
+     it all: just `npm run check -- nasa` (the quick checks plus the
+     area you changed);
    - unit tests for logic;
    - a real-browser check for anything you can see (know-how);
    - for anything that shows facts, spot-checks against the live source

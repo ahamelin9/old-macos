@@ -33,6 +33,7 @@ const attrs = (t) => t.ev(`Object.fromEntries([...document.documentElement.attri
 const style = (t, selector, prop) => t.ev(`(() => { const e = document.querySelector(${JSON.stringify(selector)}); return e ? getComputedStyle(e)[${JSON.stringify(prop)}] : null; })()`);
 const saved = (t) => t.ev(`(() => { try { return JSON.parse(localStorage.getItem(${JSON.stringify(KEY)})); } catch { return 'blocked'; } })()`);
 const desktopBackground = (t) => t.ev(`document.querySelector('.desktop').style.background`);
+const CLOCK = `document.querySelectorAll('.menu-status .status-item')[1]?.textContent`;
 const clock = (t) => t.ev(`document.querySelectorAll('.menu-status .status-item')[1]?.textContent`);
 const clickIn = (t, selector, text) => t.ev(`(() => {
   const b = [...${PREFS}.querySelectorAll(${JSON.stringify(selector)})].find(e => e.textContent.includes(${JSON.stringify(text)}));
@@ -159,7 +160,7 @@ try {
   t.check('Graphite sets data-highlight', (await attrs(t))['data-highlight'] === 'graphite');
   const title = await style(t, '.window-header', 'backgroundImage');
   t.check('Graphite turns the title bar grey', /rgb\(130, 140, 154\).*rgb\(100, 110, 124\)/.test(title), title);
-  t.check('Graphite turns the window buttons grey', (await style(t, '.window-close', 'backgroundColor')) === 'rgb(148, 157, 171)');
+  t.check('Graphite turns the window buttons grey', (await style(t, '.window.window-active .window-close', 'backgroundColor')) === 'rgb(148, 157, 171)');
   t.check('Graphite turns a chosen radio button grey', /rgb\(153, 162, 175\)/.test(await t.ev(`getComputedStyle(${PREFS}.querySelector('.preferences-radio:checked')).backgroundImage`)));
   await t.shot('03-appearance-larger-graphite.png', '[data-shot="1"]');
   await t.shot('03b-desktop-larger-graphite.png');
@@ -183,10 +184,10 @@ try {
   // ---- Date & Time
   await openPane(t, 'Date & Time');
   await choose(t, '24-hour');
-  await sleep(1100);
+  await t.waitFor(`/^\\d{2}:\\d{2}$/.test(${CLOCK})`, '24-hour clock', 3000).catch(() => {});
   t.check('24-hour time in the menu bar', /^\d{2}:\d{2}$/.test(await clock(t)), await clock(t));
   await choose(t, 'Show seconds');
-  await sleep(1100);
+  await t.waitFor(`/^\\d{2}:\\d{2}:\\d{2}$/.test(${CLOCK})`, 'seconds', 3000).catch(() => {});
   t.check('seconds in the menu bar', /^\d{2}:\d{2}:\d{2}$/.test(await clock(t)), await clock(t));
 
   const CHANGED = { wallpaper: 'ripple', theme: 'dark', textSize: 'larger', highlight: 'graphite', dockSize: 'large', dockMagnify: false, clock: '24', clockSeconds: true };

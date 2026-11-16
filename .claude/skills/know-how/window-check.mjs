@@ -1,7 +1,8 @@
 // Does the window manager behave like a Mac? Drags, resizes, minimizes,
 // restores and maximizes real windows with real mouse events, then checks
 // each window keeps its place, comes to the front when clicked, and fits on
-// a phone.
+// a phone. Minimize itself (state kept, the Dock's tiles, the Scale effect,
+// the buttons) has its own check, minimize-check.mjs.
 //
 //   node .claude/skills/know-how/window-check.mjs http://127.0.0.1:5199 [outDir]
 import { launch, sleep } from './cdp.mjs';
@@ -9,9 +10,10 @@ import { launch, sleep } from './cdp.mjs';
 const [appUrl = 'http://127.0.0.1:5199', outDir] = process.argv.slice(2);
 
 // The frame of the window whose title is `title`, or null if it isn't shown
+// (a minimized window stays in the page, hidden: minimize-check.mjs)
 const frameOf = (t, title) => t.ev(`(() => {
   const w = [...document.querySelectorAll('.window')].find(w => w.querySelector('.window-title')?.textContent === ${JSON.stringify(title)});
-  if (!w) return null;
+  if (!w || w.classList.contains('window-minimized')) return null;
   const r = w.getBoundingClientRect();
   return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), z: +w.style.zIndex };
 })()`);
@@ -41,7 +43,7 @@ try {
   await sleep(200);
   t.check('minimize hides the window', (await frameOf(t, 'Finder')) === null);
   await restoreFromDock(t, 'Finder');
-  await sleep(300);
+  await sleep(400);
   const restored = await frameOf(t, 'Finder');
   t.check('restoring from the dock keeps its place and size', same(restored, resized), `${fmt(resized)} -> ${fmt(restored)}`);
 
@@ -53,7 +55,7 @@ try {
   await clickIn(t, 'Finder', '.window-minimize');
   await sleep(200);
   await restoreFromDock(t, 'Finder');
-  await sleep(300);
+  await sleep(400);
   const maxedAgain = await frameOf(t, 'Finder');
   t.check('a maximized window comes back maximized', same(maxedAgain, maxed), `${fmt(maxed)} -> ${fmt(maxedAgain)}`);
   await clickIn(t, 'Finder', '.window-maximize');

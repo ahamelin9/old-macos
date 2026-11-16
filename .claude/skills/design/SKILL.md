@@ -58,7 +58,7 @@ uses the tokens, and follows every setting for free.
   selection, progress bars, tabs) is built from that ramp, in every app, so
   all of it turns at once. `--blue-link` stays blue, and the window buttons
   turn grey through their roles (`--color-close`, `--color-minimize`,
-  `--color-zoom` and their `-edge`s). So: **build anything Aqua from
+  `--color-zoom`, their `-edge`s and `-glyph`s). So: **build anything Aqua from
   `--blue-*` or a role, never an app's own blue**, or Graphite misses it.
   An identity blue (NASA's, Pokémon's) belongs in the app's palette exactly
   so that it doesn't turn.
@@ -285,3 +285,9 @@ Send Alex the pairs that changed on purpose.
     `--gradient-aqua`: white text needs the deeper blue to read, and the
     ramp makes it grey with Graphite. No blur behind it: those Macs had
     none.
+12. **Aqua gem window buttons** (2026-11-15). 14px, built from the
+    `--color-close`/`-minimize`/`-zoom` roles: a darker rim, a glow from
+    the bottom, `--gradient-gloss` on the top half. The ×, − and + show
+    only while the pointer is over the group, each in its `-glyph` shade; a
+    background window's are `--color-control-idle` grey (a lighter face in
+    dark). How they work: `system-map`, `windows.md`.

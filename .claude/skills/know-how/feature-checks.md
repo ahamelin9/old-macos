@@ -3,7 +3,10 @@
 Part of the `know-how` skill. The index is in `SKILL.md`. Each entry is a
 browser check for one feature: the command, what it covers, and what was
 learned writing it. How to run any of them, and the checks every change
-needs, are in [checking.md](checking.md).
+needs, are in [checking.md](checking.md). Day to day they run through
+`npm run check`, with canned API replies and no screenshots; "against
+live" below means a run with `--live` or `--record`, and the screenshots
+each one "saves" are taken only with `--shots` (`CHECK_SHOTS=1`).
 
 ## Does NASA News's sidebar still work?
 
@@ -13,7 +16,7 @@ needs, are in [checking.md](checking.md).
 node .claude/skills/know-how/nasa-check.mjs http://127.0.0.1:5199 <outDir>
 ```
 
-It drives the sidebar of past days against live science.nasa.gov at
+It drives the sidebar of past days against science.nasa.gov at
 400×300, maximized and on a 390px phone, and saves a screenshot of each
 step. It checks the ☰ in the heading row; that scrolling loads 20 more, one
 page at a time; a picture day, an .mp4 day and a YouTube day; search, its
@@ -39,7 +42,7 @@ Lessons from writing it:
 node .claude/skills/know-how/pokemon-forms-check.mjs http://127.0.0.1:5199 <outDir>
 ```
 
-It drives Pokémon against live PokeAPI at 400×300, maximized and on a 390px
+It drives Pokémon against PokeAPI at 400×300, maximized and on a 390px
 phone, and saves a screenshot of each step. It checks the Megas and
 Gigantamax hanging off their stage (Dragonite, Charizard, Raichu's family),
 that Dragonite has no Forms row, Raichu's open one-line row, Pikachu's folded
@@ -120,7 +123,7 @@ the `design` skill, `dark-mode.md`.
 
 Lessons from writing it:
 
-- **Headless Chrome says the computer is light.** Fake a dark one with
+- **`launch` fakes a light computer** (`cdp.mjs`). Fake a dark one with
   `Emulation.setEmulatedMedia({ features: [{ name: 'prefers-color-scheme',
   value: 'dark' }] })`. Changing it on an open page re-matches the media
   query at once, which is how the check proves System follows live; it
@@ -166,3 +169,52 @@ Lessons from writing it:
   checks `pointerType`) stays out of the way, as on a phone.
 - **To prove a reload,** set a marker on `window` first and wait for it to
   vanish; `ev` throws while the page navigates, so catch and retry.
+
+## Does minimize still work?
+
+*2026-11-15*
+
+```bash
+node .claude/skills/know-how/minimize-check.mjs http://127.0.0.1:5173
+```
+
+About a minute, pass/fail only, no screenshots. Outside requests: Field
+Guide's Near Me load (faked at Portland) and NASA's picture of the day.
+Its header lists every check: a minimized window stays mounted but hidden,
+inert and never the front one; Notes, Field Guide's search and its map,
+Music's playing `<audio>` and Camera's webcam through minimize and restore;
+the Dock's tile (icon, label, after the divider, left of the Trash) and the
+triangle; Dock clicks restoring rather than opening a second window; the
+Scale effect mid-way and landing on its tile, and instant with reduced
+motion; double-click; the buttons' glyphs on hover, grey in a background
+window, Graphite and dark; and on a 390px touch phone, the folded tile, the
+Dock fitting, and the buttons' hit boxes. Run it after any change to
+`Window`, `Desktop`, `Dock` or the window context. How it works: the
+`system-map` skill, `windows.md`.
+
+Lessons from writing it:
+
+- **Headless Chrome's audio clock barely moves without a sound card.** A
+  playing `<audio>` reached 0.02s in 3s. `--disable-audio-output` plays into
+  a fake sink at real speed; `--autoplay-policy=no-user-gesture-required`
+  lets it start.
+- **Music has no `<audio>` until a track plays**, which needs the Spotify
+  backend. The check answers `/api/client_credentials` (fetch) and the
+  playlist (`spotify-web-api-js` uses `XMLHttpRequest`) with canned
+  replies, with the repo's own mp3 as the track's preview.
+- **Headless Chrome can take the Mac's dark setting.** Grey checked in
+  "light" came out dark, and `preferences-check`'s Graphite title bar
+  failed. `launch` in `cdp.mjs` now pins a light computer; a later
+  `setEmulatedMedia` call replaces the whole list, so keep
+  `prefers-color-scheme` in it (as this check does with reduced motion).
+- **A background window's buttons are grey now**, so a check reading
+  `.window-close` takes the front window's:
+  `.window.window-active .window-close`.
+- **Near Me is a button** (`.near-me-btn`), not automatic on opening.
+- **A touch screen in headless Chrome:** `Emulation.setTouchEmulationEnabled`
+  plus `setEmulatedMedia` with `pointer: coarse` and `hover: none`, so the
+  touch-only CSS applies.
+- **A double-click on the title bar needs the pointer captured by the title
+  bar.** Captured by the whole window, the click lands on the window, and
+  the title bar's `onDoubleClick` never runs. Send it as two press and
+  release pairs, `clickCount` 1 then 2.

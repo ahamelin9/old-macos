@@ -13,7 +13,9 @@ section in the same piece of work.
 1. [The shell](#1-the-shell)
    - The Apple menu: its own file, [`apple-menu.md`](apple-menu.md) (each
      row, the keyboard, where the submenu goes, Sleep and Restart)
-2. [The window manager](#2-the-window-manager)
+2. [The window manager](#2-the-window-manager): its own file,
+   [`windows.md`](windows.md) (`useWindows`, a window and its buttons,
+   minimize and the Scale effect, the Dock)
 3. [Settings: System Preferences](#3-settings-system-preferences)
 4. [The apps](#4-the-apps)
 5. [Outside services, keys and env vars](#5-outside-services-keys-and-env-vars)
@@ -43,59 +45,28 @@ index.html (early settings script)  →  src/main.tsx  →  App.tsx
   the Apple menu (below); the other titles (Finder, File…) are
   for show, apart from **Disconnect Spotify**, which appears once you are
   logged in. The clock uses `date-fns`, in the format the settings choose.
-  The desktop draws every window that is open and not minimized. Its
+  The desktop draws every window, minimized ones too (hidden), and marks the
+  front one; the Dock comes first. Its
   background is the chosen wallpaper ([section 3](#3-settings-system-preferences));
   the default is `public/mac-os-background.jpg`.
 - **The Apple menu** (`AppleMenu.tsx`, the 🍎): About This Mac, System
   Preferences…, Dock ▸, Force Quit…, Sleep and Restart…. How it works, row
   by row: its own file, [`apple-menu.md`](apple-menu.md).
-- **Window** (`Window.tsx`):
-  - Drag it by the title bar (pointer capture). Resize it from the
-    bottom-right handle (minimum 300×200).
-  - The buttons are close, minimize and maximize/restore.
-  - Maximize fills the space between the 26px menu bar and the dock, which
-    it measures from `.dock`. It re-measures when the browser resizes.
-  - A press anywhere inside a window brings it to the front.
-  - Content sits in `.window-content`, which is the element that scrolls.
-    Music and NASA News fill it edge to edge and scroll their own panes
-    instead (`.window-content:has(…)` in `Window/styles.css`).
-- **Dock** (`Dock.tsx`): the apps in `Apps/apps.ts` marked `inDock`, with
-  their names and icons ([section 4](#4-the-apps)). A click is
-  `openApp(id)`, a new window each time.
-  - Under 800px wide (`isMobile`), only the five marked `onPhone` show:
-    Finder, Safari, Nasa News, Pokemon and Field Guide.
-  - Its icon size and magnification come from the settings, through
-    `--dock-*` tokens.
-  - Minimized windows appear after the apps as 📄 items.
+- **Window** (`Window.tsx`): drag, resize, the Aqua close, minimize and zoom
+  buttons, double-click to minimize, maximize. [`windows.md`](windows.md),
+  section 2.
+- **Dock** (`Dock.tsx`, `dockItems.ts`): the apps, a divider, minimized
+  windows as small windows, and the Trash; a triangle under each app with a
+  window open; a click is `showApp`. Five apps under 800px, and it shrinks
+  to fit the screen. [`windows.md`](windows.md), section 4.
 
 ## 2. The window manager
 
-`useWindows()` (`src/contexts/useWindows.ts`, with the types and
-`MENU_BAR_HEIGHT`) returns `windows` and these. The provider in
-`WindowContext.tsx` holds the state; hooks and types sit in their own file so
-the provider file exports only a component (react-refresh).
-
-| Call | Does |
-|---|---|
-| `openApp(appId, request?)` | Opens a new window of an app from `src/components/Apps/apps.ts`, whatever is open already. The Dock uses it |
-| `showApp(appId, request?)` | Brings the app's window to the front, restoring it if minimized, or opens one if it has none. With a `request` (Preferences' `pane`), an open window gets it as new props and keeps its state. Which window, when there are several: `planShowApp` in `showApp.ts` (tested). The Apple menu uses it |
-| `openWindow(title, content)` | Adds a window with any content and no app. Every window opens in front: 400×300 at a random spot near the top left, shrunk and clamped to fit a phone. Ids come from a counter |
-| `closeWindow(id)` | Removes it from the list |
-| `focusWindow(id)` | Brings it to the front (no change, and no re-render, if it's already there) |
-| `setWindowFrame(id, position, size)` | Saves where it is. Window calls it when a drag or resize ends |
-| `minimizeWindow(id)` / `restoreWindow(id)` | Hide it to the dock / bring it back in front, where it was |
-| `maximizeWindow(id, position, size)` / `unmaximizeWindow(id)` | Fill the desktop, remembering the old frame / go back to it |
-
-- The context is the one home for each window's frame. During a drag,
-  Window keeps the moving frame in local state and saves it on pointer-up.
-- Each window carries its app's `appId`; `showApp` finds windows by it,
-  never by title.
-- The Dock still opens a new window on every click (`openApp`). Making it
-  `showApp`, so an open app's icon brings its window back, is the next step.
-- `content` is a React element made when the window opens (`launchApp` in
-  `Apps/launch.tsx`). Closing the window unmounts it, so an app's state is
-  lost on close unless the app saves it.
-- `know-how/window-check.mjs` proves all of this in a real browser.
+`useWindows()` (`src/contexts/useWindows.ts`): `showApp`, `openApp`,
+`closeWindow`, `minimizeWindow`, `restoreWindow`, maximize and the frame.
+A minimized window stays mounted, hidden, so its app keeps its state; an app
+that should stop while hidden (Camera) reads `useOwnWindow()`. Every call,
+minimize, the Scale effect and the Dock: [`windows.md`](windows.md).
 
 ## 3. Settings: System Preferences
 
@@ -178,7 +149,7 @@ and on a phone. `Apps/launch.tsx` says what each draws.
 | Field Guide | `FieldGuide` | What lives near a place, and where a species lives. The biggest app by far | iNaturalist, Nominatim (OpenStreetMap), Wikipedia, Wikidata. **See the `field-guide` skill.** | ✓ |
 | Music | `Music` | Spotify player with Alex's playlists (`PLAYLISTS`). Playback needs Spotify Premium. A volume slider shows when the window is wider than 620px | Spotify Web API and Web Playback SDK, through `SpotifyContext` | |
 | Notes | `Notes` | A textarea, kept in `localStorage` (`notes_text`) | none | |
-| Camera | `Camera` | Webcam preview and snapshot; Save downloads a JPEG. The webcam turns off when the window closes | `getUserMedia` | |
+| Camera | `Camera` | Webcam preview and snapshot; Save downloads a JPEG. The webcam is off while the window is minimized and once it closes | `getUserMedia` | |
 | Calculator | `Calculator` | Calculator | none | |
 | Terminal | `Terminal` | Fake shell: `help clear echo date ls cd cat pwd whoami theme history`. It follows the site's light or dark; `theme dark/light` darkens or lightens this one terminal (`--term-bg`/`--term-text`) | none | |
 | System Preferences | `Preferences` | Desktop (seven CSS wallpapers, the photo, or your own picture), Appearance (System, Light or Dark; text size; Blue or Graphite), Dock (size, magnification), Date & Time (12/24-hour, seconds), and Restore Defaults. Its `pane` prop opens it at a pane. [Section 3](#3-settings-system-preferences) | none; IndexedDB and localStorage only | from the Apple menu (the phone Dock leaves it out) |
@@ -274,13 +245,9 @@ when it gets in the way.
   too faint to read?**
 - Each time a window comes to the front it gets a z-index above all the
   others, with no ceiling, and the menu bar, its Apple menu and the Dock sit at
-  1000. A visit with about a thousand window clicks would put a window
-  over them. Renumbering the windows from 2 when the top passes, say, 900
+  1000 (a minimized window sits at 999 while it shrinks). A visit with
+  about a thousand window clicks would put a window over them. Renumbering the windows from 2 when the top passes, say, 900
   would keep them under.
-- At 390px the Dock is 402px wide and runs 6px past each edge; it always
-  has. Large stays Medium there, so it's no worse. Trimming its side
-  padding and gaps under 800px would make it fit, but changes the default
-  look on a phone.
 - At Larger text, Dock labels are cut short ("Nasa N…"), and Pokémon's
   18-column type chart loses Dark, Steel and Fairy in the 400px window
   (it already loses Steel and Fairy at Medium). A container query giving

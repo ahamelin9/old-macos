@@ -35,7 +35,7 @@
 // Screenshots of each step land in outDir. About 55 PokeAPI requests in all,
 // half a second or more apart: species, chains and types are cached for the
 // session, so each browser asks for each only once.
-import { launch, sleep } from './cdp.mjs';
+import { launch, sleep, apiFetch, CANNED } from './cdp.mjs';
 
 const [appUrl, outDir] = process.argv.slice(2);
 if (!appUrl || !outDir) throw new Error('usage: pokemon-forms-check.mjs <appUrl> <outDir>');
@@ -183,8 +183,8 @@ const pikachu = async (t, size, shoot, startsOpen) => {
 
 // What the app shows for a form, against PokeAPI asked directly
 const live = async (path) => {
-  await sleep(700);
-  const res = await fetch(`https://pokeapi.co/api/v2/${path}`, { headers: { 'User-Agent': 'macos-1999-pokemon-check/1.0' } });
+  if (!CANNED) await sleep(700);
+  const res = await apiFetch(`https://pokeapi.co/api/v2/${path}`, { headers: { 'User-Agent': 'macos-1999-pokemon-check/1.0' } });
   if (!res.ok) throw new Error(`PokeAPI ${path}: ${res.status}`);
   return res.json();
 };
@@ -278,13 +278,14 @@ try {
       await t.ev(`(() => {
         const f = window.fetch;
         window.fetch = (url, opts) => String(url).endsWith('/pokemon/charizard')
-          ? new Promise(r => setTimeout(r, 2500)).then(() => f(url, opts)) : f(url, opts);
+          ? (window.__lateStarted = true, new Promise(r => setTimeout(r, 2500))).then(() => f(url, opts)).finally(() => setTimeout(() => { window.__lateDone = true; }, 50)) : f(url, opts);
       })()`);
       await t.typeInto('.pokemon-container .search-form input', 'charizard');
       await t.ev(`${app}.querySelector('.search-form').requestSubmit()`);
       await sleep(200);
       await search(t, 'raichu', 'Raichu');
-      await sleep(3500);
+      await t.waitFor('!window.__lateStarted || window.__lateDone', 'the late Charizard reply', 10000);
+      await t.settle();
       t.check(`${size}: a slow older reply doesn't replace the newer search`,
         (await t.ev(heading)) === '#26 - Raichu' && (await t.ev(`!!${stage('Pichu')}`)), await t.ev(heading));
     }

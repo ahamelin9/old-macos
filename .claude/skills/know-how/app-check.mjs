@@ -35,10 +35,10 @@ try {
   const downloads = await t.ev(`window.__downloads`);
   t.check('Save downloads a JPEG', downloads.length === 1 && /^photo-.*\.jpg$/.test(downloads[0]), downloads.join(', '));
   await t.ev(`[...${inWindow('Camera', '.camera-photo-actions')}.querySelectorAll('button')].find(b => b.textContent.includes('Retake')).click()`);
-  await sleep(1500);
+  await t.waitFor(`${inWindow('Camera', 'video')}?.videoWidth > 0`, 'the camera again', 5000).catch(() => {});
   t.check('after Retake the camera shows a picture again', await t.ev(`${inWindow('Camera', 'video')}?.videoWidth > 0`));
   await t.ev(`${inWindow('Camera', '.window-close')}.click()`);
-  await sleep(500);
+  await t.waitFor(`window.__streams.flatMap(s => s.getTracks()).every(tr => tr.readyState !== 'live')`, 'the webcam off', 3000).catch(() => {});
   const live = await t.ev(`window.__streams.flatMap(s => s.getTracks()).filter(tr => tr.readyState === 'live').length`);
   const total = await t.ev(`window.__streams.length`);
   t.check('closing Camera turns the webcam off', total > 0 && live === 0, `${live} live track(s) from ${total} stream(s)`);
@@ -89,7 +89,7 @@ try {
   t.check('no results says so', await t.ev(`[...document.querySelectorAll('.safari-container .mac-message')].some(e => e.textContent === 'No results found.')`));
   const safariMessage = `[...document.querySelectorAll('.safari-container .mac-message')].map(e => e.textContent).join(' ')`;
   await search('toofast');
-  await sleep(1200);   // it waits a second and tries once more before giving up
+  await t.waitFor(`/too fast/.test(${safariMessage})`, 'the rate-limit message', 5000).catch(() => {});   // it waits a second and tries once more first
   t.check('a rate-limit refusal is not "no results"', /too fast/.test(await t.ev(safariMessage)), await t.ev(safariMessage));
   await search('usedup');
   t.check("a used-up month says so", /used up/.test(await t.ev(safariMessage)), await t.ev(safariMessage));
