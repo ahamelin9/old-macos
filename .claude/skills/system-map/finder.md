@@ -106,3 +106,9 @@ Graphite turns it grey.
    Open button is the way in on a phone, where a double-tap is awkward.
 3. **Documents open in their own windows** (SimpleText), not inside
    Finder, so they behave like any other window: drag, minimize, Force Quit.
+4. **No email address on the site** (Alex, 2026-11-25), to keep it from
+   spam bots. About Me points to LinkedIn as the way to get in touch.
+5. **About Me is Alex's own words**, from a short interview (2026-11-25):
+   role and place, how Alex got into building things, why an old Mac, and
+   that every project was built for Alex's own use. Change it only from
+   what Alex says.
