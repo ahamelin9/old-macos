@@ -146,9 +146,9 @@ const PROJECTS: AppNode[] = [
     kind: 'app',
     app: 'music',
     name: 'Music',
-    summary: 'A Spotify player with Alex\'s playlists',
+    summary: 'A Spotify player for my playlists',
     about:
-      'Alex\'s playlists, played through Spotify. Log in with Spotify to play them right in the window (playback needs Spotify Premium).',
+      'My playlists, played through Spotify. Log in with Spotify to play them in the window (playback requires Spotify Premium).',
     built: [
       'Spotify\'s Web API and Web Playback SDK',
       'The login runs on Cloudflare Pages Functions, so the app\'s secret never reaches the browser, and an hour-old token refreshes itself',
@@ -181,7 +181,7 @@ const UTILITIES: AppNode[] = [
     name: 'Safari',
     summary: 'Web search',
     about: 'Searches the web and lists the results, with the words you searched for in bold.',
-    built: ['Brave Search, through a Cloudflare Worker of Alex\'s that keeps the key off the page'],
+    built: ['Brave Search, through a Cloudflare Worker of my own that keeps the API key off the page'],
     services: ['Brave Search']
   },
   {
@@ -209,8 +209,8 @@ const UTILITIES: AppNode[] = [
     kind: 'app',
     app: 'terminal',
     name: 'Terminal',
-    summary: 'A pretend shell',
-    about: 'A pretend shell: try help, ls, date and theme dark.',
+    summary: 'A simulated command line',
+    about: 'A simulated command line. Try help, ls, date or theme dark.',
     built: [],
     services: []
   }
@@ -222,26 +222,26 @@ const ABOUT_ME: DocumentNode = {
   id: 'doc-about',
   kind: 'document',
   name: 'About Me.txt',
-  summary: 'Hello!',
-  // Alex's own answers, 2026-11-25
+  summary: 'An introduction',
+  // From Alex's own answers (2026-11-25), in a professional tone at Alex's request
   body: [
-    { text: 'Hello! I\'m Alex Hamelin, a software engineer at AbbVie, based in Illinois.' },
+    { text: 'Hello, I\'m Alex Hamelin, a software engineer at AbbVie based in Illinois.' },
     {
-      text: 'I started out wanting to make video games. I was building them back in middle school, and websites by high school, so I went on to study computer science to learn more. Now it\'s my job.'
+      text: 'My interest in software began with game development in middle school and grew into building websites in high school, which led me to study computer science. Today I build applications professionally.'
     },
     {
-      text: 'What I enjoy most is the problem solving. There\'s almost always more than one way to solve a problem, and the interesting part is working out which one is the right one to take.'
+      text: 'The part of the work I enjoy most is problem solving. Most problems have several workable solutions; the real work is weighing them and choosing the right one.'
     },
-    { heading: 'About this desktop' },
+    { heading: 'About this site' },
     {
-      text: 'I wanted one place to show several apps together, and a desktop was the natural fit. I went with an older Mac because it takes me back to where I started, making games on a friend\'s mom\'s computer. (I\'m not that old, I just like old tech.)'
+      text: 'This site is my portfolio, presented as a late-1990s Mac desktop. I wanted a single environment where several applications could live side by side, and the classic Mac look is a nod to the computers I first learned on.'
     },
     {
-      text: 'Everything in the Projects folder is something I built for myself. When I wish I could see something and can\'t find an app that does it the way I picture it, I make one. I use all of them. Field Guide is a favourite: it shows you plants and animals near you that you may never have noticed, and lets you dig into each one.'
+      text: 'Each project in the Projects folder began as a tool I wanted for myself and couldn\'t find elsewhere, and I use all of them regularly. Field Guide is a good example: it surfaces the plants and animals recorded near you, including ones you may never have noticed, and lets you explore each one in depth.'
     },
-    { text: 'Double-click any project to open it, or click it once to read how it\'s built.' },
-    { heading: 'Get in touch' },
-    { text: 'The best way to reach me is LinkedIn. I don\'t check it every day, so give me a little while to reply.' }
+    { text: 'Double-click a project to open it, or select it to read how it was built.' },
+    { heading: 'Contact' },
+    { text: 'The best way to reach me is through LinkedIn. Replies may take a little while.' }
   ]
 };
 
@@ -252,7 +252,7 @@ const SKILLS: DocumentNode = {
   summary: 'What I work with',
   body: [
     { list: ['React / TypeScript', 'JavaScript', 'CSS', 'Node.js', 'REST API integration'] },
-    { heading: 'Also on this site' },
+    { heading: 'Also used in this site' },
     { list: ['Vite', 'Cloudflare Pages and Functions', 'Python (FastAPI)', 'Leaflet maps', 'OAuth (the Spotify login)'] }
   ]
 };
@@ -261,8 +261,8 @@ const INTERESTS: DocumentNode = {
   id: 'doc-interests',
   kind: 'document',
   name: 'Interests.txt',
-  summary: 'When I\'m not coding',
-  body: [{ list: ['Coding', 'Gaming', 'Retro tech (DS, 3DS and the like)', 'Art', 'Pickleball', 'Golf'] }]
+  summary: 'Outside of work',
+  body: [{ list: ['Building software for fun', 'Video games', 'Retro technology, especially handheld consoles', 'Art', 'Pickleball', 'Golf'] }]
 };
 
 const LINKEDIN: LinkNode = {
@@ -277,7 +277,7 @@ const GITHUB: LinkNode = {
   id: 'link-github',
   kind: 'link',
   name: 'GitHub',
-  summary: 'My GitHub, with this site\'s code',
+  summary: 'My GitHub, including this site\'s code',
   url: 'https://github.com/ahamelin9'
 };
 
