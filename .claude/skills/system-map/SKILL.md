@@ -13,6 +13,8 @@ section in the same piece of work.
 1. [The shell](#1-the-shell)
    - The Apple menu: its own file, [`apple-menu.md`](apple-menu.md) (each
      row, the keyboard, where the submenu goes, Sleep and Restart)
+   - Finder: its own file, [`finder.md`](finder.md) (the pretend disk,
+     keeping the projects' notes true, opening things, the layouts)
 2. [The window manager](#2-the-window-manager): its own file,
    [`windows.md`](windows.md) (`useWindows`, a window and its buttons,
    minimize and the Scale effect, the Dock)
@@ -145,7 +147,7 @@ and on a phone. `Apps/launch.tsx` says what each draws.
 
 | Dock name | Folder | What it is | Calls out to | Phone |
 |---|---|---|---|---|
-| Finder | `Finder` | About Alex: About Me, Projects, Skills and Interests, with LinkedIn and GitHub links | none | ✓ |
+| Finder | `Finder` | About Alex, as a small pretend disk (`finderFiles.ts`): the home folder (About Me, Skills and Interests as documents, LinkedIn and GitHub as links) and Projects, one item per app on the site with a note on what it is and how it's built; the smaller apps are in Projects ▸ Utilities. A click shows an item in the info pane; a double-click or Return opens it: a folder here, a document in its own window (one each, found by title), a project as the real app (`showApp`), a link in a new tab. Back, Forward, the path, icons or list (remembered). [`finder.md`](finder.md) | none | ✓ |
 | Safari | `Safari` | Web search with results listed. Snippets show as text with the matched words bold, never as outside HTML; only http(s) results are links | Brave Search through Alex's own Cloudflare Worker, `brave-search-worker.ahamelin9.workers.dev` (its code is not in this repo) | |
 | Nasa News | `NasaNews` | NASA's Astronomy Picture of the Day. The round ☰ at the right of the heading opens a sidebar of past days on the right (20 at a time as it scrolls), with a search box and a date box; a picked day shows in the same layout. Wide windows put the list beside the picture, narrow ones slide it over | science.nasa.gov's WordPress API (no key; `apis` skill, nasa.md) | ✓ |
 | Pokemon | `PokemonSearch` | Pokédex: fuzzy search (`fuzzysort`), stats in US units, a clickable evolution chain with each stage's Megas and Gigantamax hanging off it, an "Other forms" row (regional forms, caps; `forms.ts`), shiny toggle, type chart | PokeAPI only (the two mirror APIs it used to try were dead); sprites from the PokeAPI GitHub | ✓ |
@@ -237,6 +239,9 @@ Spotify doesn't accept `localhost` redirect URIs, which is why dev runs on
    matching route in `backend/main.py` (CLAUDE.md, **Guardrails**).
 7. Add a row to the table in [section 4](#4-the-apps). If it has more than
    a few files' worth of logic, give it its own skill, like `field-guide`.
+8. Give it a project in Finder's `finderFiles.ts`, with a true note on what
+   it is and how it's built (`finder.md`); a small app goes in Utilities.
+   `finderFiles.test.ts` fails until there is one.
 
 ## 9. Known rough edges
 

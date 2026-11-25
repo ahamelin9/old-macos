@@ -34,6 +34,32 @@ Lessons from writing it:
 - A list sliding shut still covers what's under it for its 0.2 s
   transition; wait before clicking the ☰ again.
 
+## Does Finder still work?
+
+*2026-11-25*
+
+```bash
+node .claude/skills/know-how/finder-check.mjs http://127.0.0.1:5199 <outDir>
+```
+
+It drives Finder at 400×300, maximized and on a 390px phone: the home
+folder, double-clicking into Projects, Back, Forward, ⌘[, the sidebar and
+the path's steps; a project's note in the info pane (beside the items when
+wide, under them when narrow); Return opening About Me.txt in its own
+window, once; a project opening the real app (About This Mac, Calculator);
+a link opening a new tab; and as List, remembered. Its header lists every
+check. It calls no outside service. Other checks open Finder too (windows,
+minimize, dark mode, Preferences, the Apple menu), so a change to its
+window or sidebar can fail those first.
+
+Lessons from writing it:
+
+- React hears a `dblclick` or `keydown` dispatched from the page with
+  `bubbles: true`, so a check can double-click an item or press Return on
+  it without real mouse events.
+- `window.open` is replaced in the page to record the links instead of
+  opening tabs headless Chrome would leave behind.
+
 ## Do Pokémon's forms still work?
 
 *2026-11-15*

@@ -24,11 +24,12 @@ const KNOW_HOW = '.claude/skills/know-how';
 // Which browser checks a changed file needs. First match wins for each
 // rule; a file can match several rules. Test files only need the unit tests.
 const BROWSER_CHECKS = ['smoke-check', 'window-check', 'app-check', 'minimize-check', 'apple-menu-check',
-  'preferences-check', 'dark-mode-check', 'nasa-check', 'pokemon-forms-check', 'planes-check'];
+  'preferences-check', 'dark-mode-check', 'nasa-check', 'pokemon-forms-check', 'planes-check', 'finder-check'];
 const SHELL = ['smoke-check', 'window-check', 'minimize-check', 'apple-menu-check'];
 const RULES = [
   [/\.test\.[jt]sx?$/, []],
   [/^src\/components\/Apps\/NasaNews\//, ['nasa-check']],
+  [/^src\/components\/Apps\/Finder\//, ['finder-check']],
   [/^src\/components\/Apps\/PokemonSearch\//, ['pokemon-forms-check', 'app-check']],
   [/^src\/components\/Apps\/Planes\/|^functions\/api\/planes\/|^vite\.config\.ts$/, ['planes-check']],
   [/^src\/components\/Apps\/(Camera|Safari)\//, ['app-check']],

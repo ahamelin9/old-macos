@@ -128,7 +128,7 @@ try {
 
   // A window that was open before any change, to prove changes reach it
   await t.openApp('Finder');
-  const finderSize = () => t.ev(`getComputedStyle([...document.querySelectorAll('.window')].find(w => w.querySelector('.window-title')?.textContent === 'Finder').querySelector('.sidebar-item')).fontSize`);
+  const finderSize = () => t.ev(`getComputedStyle([...document.querySelectorAll('.window')].find(w => w.querySelector('.window-title')?.textContent === 'Finder').querySelector('.finder-place')).fontSize`);
   const finderBefore = await finderSize();
 
   await openPrefs(t);

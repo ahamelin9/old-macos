@@ -16,6 +16,7 @@ file first.
 | The Apple menu (🍎): About This Mac, Force Quit, Sleep, Restart, and `showApp`, which brings an app's window forward or opens one | the `system-map` skill, `apple-menu.md` |
 | Any outside API (NASA, PokeAPI, iNaturalist, Wikipedia, OpenStreetMap, Brave, Spotify, iTunes, adsb.lol and adsbdb): setup, keys and env vars, limits, known issues, live probes, the API audit | the `apis` skill (an index, one file per service) |
 | Planes: where the positions, routes and photos come from, the `/api/planes` proxy, when a route is shown, the map's shapes, Spotter's Picks | the `apis` skill, `adsb.md` |
+| Finder (the "about me"): the pretend disk, each project's note, opening documents and apps | the `system-map` skill, `finder.md` |
 | Adding a new app to the dock | the `system-map` skill, **Adding an app** |
 | System Preferences and its settings: the store, the early script in `index.html`, the desktop picture, the theme, adding a setting | the `system-map` skill, **Settings** |
 | Anything in the Field Guide: places, species, tabs, native/endemic/introduced, maps, Back, the inspector | the `field-guide` skill |

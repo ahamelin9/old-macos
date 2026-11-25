@@ -21,6 +21,7 @@ short however much the list grows.
 | Prove a change works in a real browser | [Proving a change in a real browser](checking.md#proving-a-change-in-a-real-browser) |
 | Check every app still opens after a shared change | [Does every app still open?](checking.md#does-every-app-still-open) |
 | Check the windows, Camera, Safari, Pokémon or Music volume still work | [Do the windows and the smaller apps still behave?](checking.md#do-the-windows-and-the-smaller-apps-still-behave) |
+| Check Finder: folders, Back and Forward, the info pane, documents, projects opening their apps, as List | [Does Finder still work?](feature-checks.md#does-finder-still-work) |
 | Check NASA News's sidebar: past days, scrolling, search, dates | [Does NASA News's sidebar still work?](feature-checks.md#does-nasa-newss-sidebar-still-work) |
 | Check Pokémon's forms: Megas and Gigantamax in the line, Other forms, live spot-checks | [Do Pokémon's forms still work?](feature-checks.md#do-pokémons-forms-still-work) |
 | Check System Preferences: every setting, reloads, uploads, Restore Defaults, storage blocked, sizes | [Does System Preferences still work?](feature-checks.md#does-system-preferences-still-work) |
