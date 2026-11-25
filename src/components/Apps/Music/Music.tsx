@@ -466,15 +466,15 @@ const Music = () => {
             onClick={() => setShowSidebar(!showSidebar)} 
             className="sidebar-toggle-btn"
           >
-            {showSidebar ? '◀' : '▶'}
+            {showSidebar ? '◀︎' : '▶︎'}
           </button>
 
           <div className="transport-controls">
-            <button onClick={() => skipTrack('prev')} className="control-button">⏮</button>
+            <button onClick={() => skipTrack('prev')} className="control-button">⏮︎</button>
             <button onClick={() => { void togglePlay(); }} className="control-button play-pause">
-              {isPlaying ? '⏸' : '▶'}
+              {isPlaying ? '⏸︎' : '▶︎'}
             </button>
-            <button onClick={() => skipTrack('next')} className="control-button">⏭</button>
+            <button onClick={() => skipTrack('next')} className="control-button">⏭︎</button>
           </div>
         </div>
 

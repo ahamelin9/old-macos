@@ -1308,7 +1308,7 @@ const FieldGuideApp: React.FC<{ start: StartPlace | null }> = ({ start }) => {
               onClick={goBack}
               title={`Return to ${backStack[backStack.length - 1].label}`}
             >
-              ◀ Back to {backStack[backStack.length - 1].label}
+              ◀︎ Back to {backStack[backStack.length - 1].label}
             </button>
           )}
           <span className="mode-switch-hint-box">
@@ -1694,7 +1694,7 @@ const FieldGuideApp: React.FC<{ start: StartPlace | null }> = ({ start }) => {
                             <span className="observation-count">
                               📊 {(taxon.observations_count ?? 0).toLocaleString()} sightings
                             </span>
-                            <span className="inspect-link">Range ▶</span>
+                            <span className="inspect-link">Range ▶︎</span>
                           </div>
                         </div>
                       </div>
@@ -1856,7 +1856,7 @@ const FieldGuideApp: React.FC<{ start: StartPlace | null }> = ({ start }) => {
                           <span className="observation-count">
                             📊 {item.count.toLocaleString()} sightings
                           </span>
-                          <span className="inspect-link">Details ▶</span>
+                          <span className="inspect-link">Details ▶︎</span>
                         </div>
                       </div>
                     </div>

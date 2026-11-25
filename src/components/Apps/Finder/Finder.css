@@ -55,6 +55,45 @@
   border-bottom-left-radius: 0;
 }
 
+/* The toolbar's symbols, drawn here rather than typed: a phone shows ◀ and
+   ▶ as colour emoji */
+.finder-app .finder-tool-glyph {
+  display: block;
+  margin: auto;
+  background: currentColor;
+}
+
+.finder-app .finder-glyph-back,
+.finder-app .finder-glyph-forward {
+  width: 8px;
+  height: 10px;
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
+}
+
+.finder-app .finder-glyph-forward {
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Four squares, and three lines */
+.finder-app .finder-glyph-icons,
+.finder-app .finder-glyph-list {
+  width: 11px;
+  height: 11px;
+}
+
+.finder-app .finder-glyph-icons {
+  --finder-square: linear-gradient(currentColor, currentColor);
+  background:
+    var(--finder-square) 0 0 / 5px 5px no-repeat,
+    var(--finder-square) 6px 0 / 5px 5px no-repeat,
+    var(--finder-square) 0 6px / 5px 5px no-repeat,
+    var(--finder-square) 6px 6px / 5px 5px no-repeat;
+}
+
+.finder-app .finder-glyph-list {
+  background: repeating-linear-gradient(to bottom, currentColor 0 2px, transparent 2px 4.5px);
+}
+
 .finder-app .finder-tool[aria-pressed="true"] {
   background: var(--gradient-platinum-pressed);
   box-shadow: var(--shadow-pressed);
@@ -197,7 +236,8 @@
    chosen one's name in the highlight */
 .finder-app .finder-items-icons {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  grid-template-columns: repeat(auto-fill, 88px);
+  justify-content: start;
   gap: 10px 4px;
 }
 
@@ -519,7 +559,22 @@
   }
 
   .finder-app .finder-items-icons {
-    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    grid-template-columns: repeat(auto-fill, 80px);
+  }
+}
+
+/* A phone (under 800px, the site's phone width, as the Dock's and Planes'),
+   or a touch screen: the sidebar would take a third of a narrow window, and
+   the path in the toolbar and the home folder's own links already do its job */
+@container (max-width: 639px) {
+  @media (max-width: 799px), (pointer: coarse) {
+    .finder-app .finder-sidebar {
+      display: none;
+    }
+
+    .finder-app .finder-items-icons {
+      justify-content: space-evenly;
+    }
   }
 }
 
@@ -531,18 +586,126 @@
   }
 }
 
-/* ---- A document in its own window, like SimpleText: a white page */
+/* ---- A document in its own window, like SimpleText: a formatting bar over
+   a page you can type in. Nothing is saved. */
 .finder-doc-window {
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-body);
   background: var(--color-surface);
 }
 
-.finder-doc-window .finder-doc-page {
-  max-width: 560px;
-  padding: 4px 6px 12px;
+.finder-doc-window .finder-doc-bar {
+  flex: none;
+  flex-wrap: wrap;
+  gap: 4px 6px;
 }
 
-.finder-doc-window .finder-doc-text:first-child {
+.finder-doc-window .finder-doc-menu {
+  height: 24px;
+  max-width: 120px;
+  font-size: var(--text-sm);
+}
+
+.finder-doc-window .finder-doc-group {
+  display: flex;
+}
+
+.finder-doc-window .finder-doc-tool {
+  width: 26px;
+  height: 24px;
+  padding: 0;
+  font-family: var(--font-system);
+  font-size: var(--text-md);
+  line-height: 1;
+}
+
+.finder-doc-window .finder-doc-group .finder-doc-tool:not(:first-child) {
+  margin-left: -1px;
+}
+
+.finder-doc-window .finder-doc-group .finder-doc-tool:not(:first-child, :last-child) {
+  border-radius: 0;
+}
+
+.finder-doc-window .finder-doc-group .finder-doc-tool:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.finder-doc-window .finder-doc-group .finder-doc-tool:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.finder-doc-window .finder-doc-tool[aria-pressed="true"] {
+  background: var(--gradient-platinum-pressed);
+  box-shadow: var(--shadow-pressed);
+}
+
+.finder-doc-window .finder-doc-bold {
+  font-weight: bold;
+}
+
+.finder-doc-window .finder-doc-italic {
+  font-style: italic;
+  font-family: var(--font-body);
+}
+
+.finder-doc-window .finder-doc-underline {
+  text-decoration: underline;
+}
+
+/* Alignment: four lines, long and short, against the side they line up on */
+.finder-doc-window .finder-doc-align {
+  --finder-line: linear-gradient(currentColor, currentColor);
+  display: block;
+  width: 12px;
+  height: 10px;
+  margin: auto;
+}
+
+.finder-doc-window .finder-doc-justifyLeft {
+  background:
+    var(--finder-line) 0 0 / 12px 2px no-repeat,
+    var(--finder-line) 0 4px / 8px 2px no-repeat,
+    var(--finder-line) 0 8px / 10px 2px no-repeat;
+}
+
+.finder-doc-window .finder-doc-justifyCenter {
+  background:
+    var(--finder-line) center 0 / 12px 2px no-repeat,
+    var(--finder-line) center 4px / 8px 2px no-repeat,
+    var(--finder-line) center 8px / 10px 2px no-repeat;
+}
+
+.finder-doc-window .finder-doc-justifyRight {
+  background:
+    var(--finder-line) right 0 / 12px 2px no-repeat,
+    var(--finder-line) right 4px / 8px 2px no-repeat,
+    var(--finder-line) right 8px / 10px 2px no-repeat;
+}
+
+.finder-doc-window .finder-doc-revert {
+  margin-left: auto;
+  height: 24px;
+  padding: 0 10px;
+  font-size: var(--text-sm);
+}
+
+/* The page: type anywhere. The caret shows where; no focus ring round it */
+.finder-doc-window .finder-doc-page {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 12px 16px;
+  outline: none;
+  color: var(--color-text);
+  cursor: text;
+}
+
+.finder-doc-window .finder-doc-page > :first-child {
   margin-top: 4px;
 }

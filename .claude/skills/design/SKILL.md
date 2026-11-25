@@ -116,6 +116,10 @@ Two things the check can't see:
 - **A text field someone types in on a phone is 16px (`--text-xl`) or
   larger.** An iPhone zooms the whole page into any field smaller than
   that (Safari's search box).
+- **A phone turns some symbols into colour emoji**: ◀ ▶ ⏸ ⏮ ⏭ and their
+  kin show as blue buttons on an iPhone. Follow each with U+FE0E (text
+  style), as Music and Field Guide do, or draw it in CSS, as Finder's
+  toolbar does (2026-11-25).
 - **A disabled button has to look disabled.** Plain buttons and
   `mac-button-primary` already do; an app that restyles a button styles its
   `:disabled` state too.

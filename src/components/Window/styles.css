@@ -193,11 +193,13 @@
 }
 
 /* Music fills its window edge to edge. Finder too: its sidebar, items and
-   info pane each scroll on their own. NASA News too: its list of past days
+   info pane each scroll on their own, as does a document's page under its
+   formatting bar. NASA News too: its list of past days
    and its picture each scroll on their own. System Preferences keeps its
    toolbar still while the pane under it scrolls */
 .window-content:has(.retro-itunes),
 .window-content:has(.finder-app),
+.window-content:has(.finder-doc-window),
 .window-content:has(.nasa-app),
 .window-content:has(.preferences-app) {
   padding: 0;

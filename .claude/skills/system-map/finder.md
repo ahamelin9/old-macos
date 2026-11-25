@@ -90,8 +90,21 @@ on `.finder-app`):
 - **Narrower** (the 400px window it opens in, a phone): a slimmer sidebar,
   and the info pane under the items, up to half the height, only once
   something is chosen.
-- **Under 360px:** no sidebar; the path in the toolbar and the home folder's
-  own links do its job.
+- **Narrower on a phone** (a screen under 800px, the site's phone width, or
+  a touch screen), **or under 360px anywhere:** no sidebar; the path in the
+  toolbar and the home folder's own links do its job, and the icons spread
+  evenly across the room it leaves.
+- **The toolbar's symbols are drawn in CSS** (`.finder-tool-glyph`), never
+  typed: an iPhone shows ◀ and ▶ as blue emoji buttons.
+
+**A document's window** is a SimpleText: a formatting bar (font, size,
+bold, italic, underline, alignment, Revert) over a page you can type in
+(`contentEditable`). Nothing is saved; Revert remounts the page. Styling goes
+through `document.execCommand`, which is deprecated but still in every
+browser, and is the only way to style a selection without an editor
+library. The page's selection is kept on `selectionchange`, so a menu,
+which takes the focus, still styles what was selected; the buttons keep the
+focus off themselves (`preventDefault` on pointer and mouse down).
 
 The icons Finder draws are in its own palette, so they stay the same in
 light and dark, as icons do; the folder is built from the Aqua ramp, so

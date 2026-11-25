@@ -137,18 +137,18 @@ const Finder: React.FC = () => {
       <div className="finder-toolbar mac-toolbar">
         <div className="finder-button-group">
           <button type="button" className="finder-tool" aria-label="Back" title="Back" disabled={!canGoBack(history)} onClick={() => go(back(history))}>
-            <span aria-hidden="true">◀</span>
+            <span className="finder-tool-glyph finder-glyph-back" aria-hidden="true" />
           </button>
           <button type="button" className="finder-tool" aria-label="Forward" title="Forward" disabled={!canGoForward(history)} onClick={() => go(forward(history))}>
-            <span aria-hidden="true">▶</span>
+            <span className="finder-tool-glyph finder-glyph-forward" aria-hidden="true" />
           </button>
         </div>
         <div className="finder-button-group" role="group" aria-label="View">
           <button type="button" className="finder-tool" aria-label="as Icons" title="as Icons" aria-pressed={view === 'icons'} onClick={() => changeView('icons')}>
-            <span aria-hidden="true">▦</span>
+            <span className="finder-tool-glyph finder-glyph-icons" aria-hidden="true" />
           </button>
           <button type="button" className="finder-tool" aria-label="as List" title="as List" aria-pressed={view === 'list'} onClick={() => changeView('list')}>
-            <span aria-hidden="true">☰</span>
+            <span className="finder-tool-glyph finder-glyph-list" aria-hidden="true" />
           </button>
         </div>
         <nav className="finder-path" aria-label="Path">

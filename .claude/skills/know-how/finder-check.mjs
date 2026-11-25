@@ -6,7 +6,9 @@
 //
 // At each size it checks:
 //  - it opens on Alex's home folder, with Back and Forward off and nothing
-//    running sideways out of the window;
+//    running sideways out of the window; the toolbar's symbols are drawn,
+//    not typed (a phone shows ◀ and ▶ as emoji); the sidebar shows, but
+//    not on a phone, where the icons get the room;
 //  - double-clicking Projects opens it here: the path, the status line and
 //    Back follow; Back, Forward, ⌘[ and the path's own steps move about;
 //  - a click on a project shows its note in the info pane, with an Open
@@ -14,6 +16,8 @@
 //    window and under them in a narrow one, only once something is chosen;
 //  - Return on About Me.txt opens it in its own window, and again brings the
 //    same window back rather than a second;
+//  - the document's formatting bar fits the window, and Bold, Centre and
+//    Huge style the selected text; Revert puts it back;
 //  - as List shows each item's kind, and the choice is remembered;
 //  - opening macOS 1999 opens About This Mac, and Calculator (in Utilities)
 //    opens Calculator: the projects open the real apps;
@@ -63,6 +67,8 @@ for (const size of sizes) {
         back: ${tool('Back')}.disabled, forward: ${tool('Forward')}.disabled,
         sideways: a.scrollWidth > a.clientWidth + 1 || files.scrollWidth > files.clientWidth + 1,
         sidebar: getComputedStyle(a.querySelector('.finder-sidebar')).display !== 'none',
+        typed: /[◀▶▦☰]/.test(a.querySelector('.finder-toolbar').textContent),
+        glyphs: [...a.querySelectorAll('.finder-tool-glyph')].every(g => g.getBoundingClientRect().width >= 8),
         icons: a.querySelectorAll('.finder-item .finder-icon').length
       };
     })()`);
@@ -70,7 +76,9 @@ for (const size of sizes) {
       home.items === 'About Me.txt,Projects,Skills.txt,Interests.txt,LinkedIn,GitHub' && (await t.ev(path)) === 'Alex' && (await t.ev(status)) === '6 items', home.items);
     t.check(step('Back and Forward start off'), home.back && home.forward);
     t.check(step('every item has an icon, and nothing runs sideways'), home.icons === 6 && !home.sideways, JSON.stringify(home));
-    t.check(step('the sidebar of places shows'), home.sidebar);
+    t.check(step('the toolbar\'s symbols are drawn, not typed'), !home.typed && home.glyphs);
+    const phone = size.width < 500;
+    t.check(step(phone ? 'phone: no sidebar, so the icons get the room' : 'the sidebar of places shows'), home.sidebar === !phone);
     const narrow = await t.ev(`getComputedStyle(${app}.querySelector('.finder-main')).flexDirection === 'column'`);
     t.check(step('the layout is the one this width should have'), narrow === !size.maximize);
     t.check(step(narrow ? 'narrow: no info pane until something is chosen' : 'wide: the info pane shows the folder'),
@@ -93,7 +101,7 @@ for (const size of sizes) {
     t.check(step('⌘[ goes back'), (await t.ev(path)) === 'Alex');
     await t.ev(`${app}.querySelector('.finder-place:nth-child(3)').click()`);
     await t.settle();
-    t.check(step('the sidebar opens Utilities'), (await t.ev(path)) === 'Alex > Projects > Utilities');
+    t.check(step('the sidebar opens Utilities (a phone hides it, but it still works)'), (await t.ev(path)) === 'Alex > Projects > Utilities');
     await t.ev(`[...${app}.querySelectorAll('button.finder-path-step')].find(b => b.textContent === 'Projects').click()`);
     await t.settle();
     t.check(step('a step in the path opens that folder'), (await t.ev(path)) === 'Alex > Projects');
@@ -147,6 +155,38 @@ for (const size of sizes) {
     await t.ev(dblclick('doc-about'));
     await t.settle();
     t.check(step('opening it again brings back the same window'), (await t.ev(count('About Me.txt'))) === 1 && (await t.ev(frontTitle)) === 'About Me.txt');
+
+    // ---- Formatting the document
+    const doc = `${win('About Me.txt')}.querySelector('.finder-doc-window')`;
+    const page = `${doc}.querySelector('.finder-doc-page')`;
+    const bar = await t.ev(`(() => {
+      const b = ${doc}.querySelector('.finder-doc-bar'), w = ${win('About Me.txt')}.getBoundingClientRect();
+      return { fits: b.scrollWidth <= b.clientWidth + 1 && [...b.children].every(c => c.getBoundingClientRect().right <= w.right + 1),
+        editable: ${page}.isContentEditable, revert: ${doc}.querySelector('.finder-doc-revert').disabled };
+    })()`);
+    t.check(step('the document has a formatting bar that fits its window, over text you can edit'), bar.fits && bar.editable && bar.revert, JSON.stringify(bar));
+    // Select the first paragraph
+    await t.ev(`(() => { const r = document.createRange(); r.selectNodeContents(${page}.querySelector('p')); const s = document.getSelection(); s.removeAllRanges(); s.addRange(r); })()`);
+    await t.settle();
+    await t.ev(`${doc}.querySelector('[aria-label="Bold"]').click()`);
+    await t.ev(`${doc}.querySelector('[aria-label="Centre"]').click()`);
+    await t.ev(`(() => { const m = ${doc}.querySelector('[aria-label="Size"]');
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(m, '6');
+      m.dispatchEvent(new Event('change', { bubbles: true })); })()`);
+    await t.settle();
+    const styled = await t.ev(`(() => {
+      const p = ${page}.querySelector('p'), b = p.querySelector('b, strong, [style*="bold"]');
+      return { bold: !!b, centred: getComputedStyle(p).textAlign === 'center' || getComputedStyle(${page}.firstElementChild).textAlign === 'center',
+        huge: !!${page}.querySelector('font[size="6"]'), pressed: ${doc}.querySelector('[aria-label="Bold"]').getAttribute('aria-pressed'),
+        others: !${page}.querySelectorAll('p')[1].querySelector('b, strong'), revert: ${doc}.querySelector('.finder-doc-revert').disabled };
+    })()`);
+    t.check(step('Bold, Centre and Huge style the selected text, and only it'), styled.bold && styled.centred && styled.huge && styled.others, JSON.stringify(styled));
+    t.check(step('Bold shows as pressed, and Revert comes on'), styled.pressed === 'true' && !styled.revert, JSON.stringify(styled));
+    await t.ev(`${doc}.querySelector('.finder-doc-revert').click()`);
+    await t.settle();
+    t.check(step('Revert puts the text back'),
+      await t.ev(`!${page}.querySelector('b, strong, font') && getComputedStyle(${page}.querySelector('p')).textAlign !== 'center' && /Alex Hamelin/.test(${page}.innerText) && ${doc}.querySelector('.finder-doc-revert').disabled`));
+    await t.shot(`${size.name}-document.png`);
 
     // ---- A link opens in a new tab
     await t.ev(focusFinder);
