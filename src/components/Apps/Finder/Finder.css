@@ -14,6 +14,10 @@
   --finder-paper-edge: var(--grey-60);
   --finder-paper-line: var(--grey-80);
   --finder-at: var(--blue-600);
+  /* The @ on an internet location, at the two icon sizes; off the text
+     scale, as it is part of a picture */
+  --finder-at-size: 20px;
+  --finder-at-size-small: 8px;
 
   container-type: inline-size;
   flex: 1;
@@ -328,74 +332,71 @@
 }
 
 /* ---- The icons Finder draws: a folder, a page, an internet location.
-   Each is drawn in a 40px frame, in px from its top left, and shrunk to
-   16px for the small size. */
+   Each is drawn at its real size from one unit (--finder-u: 1px at 40px,
+   0.4px at 16px) and centred in its box, never shrunk with a transform,
+   which a phone can place a pixel or two off. */
 .finder-app .finder-icon {
+  --finder-u: 1px;
   flex: none;
-  position: relative;
-  display: block;
-  width: 40px;
-  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(40 * var(--finder-u));
+  height: calc(40 * var(--finder-u));
+}
+
+.finder-app .finder-icon-small {
+  --finder-u: 0.4px;
 }
 
 .finder-app .finder-icon-app {
   object-fit: contain;
 }
 
-.finder-app .finder-icon-small {
-  width: 16px;
-  height: 16px;
-}
-
-.finder-app .finder-icon-small .finder-glyph {
-  transform: scale(0.4);
-  transform-origin: top left;
-}
-
 .finder-app .finder-glyph {
-  position: absolute;
+  position: relative;
   display: block;
+  box-sizing: border-box;
 }
 
+/* A folder; its tab sits above it, so it sits a little low to look centred */
 .finder-app .finder-glyph-folder {
-  top: 9px;
-  left: 2px;
-  width: 36px;
-  height: 28px;
+  width: calc(36 * var(--finder-u));
+  height: calc(28 * var(--finder-u));
+  margin-top: calc(6 * var(--finder-u));
   border: 1px solid var(--finder-folder-edge);
   border-radius: var(--radius-xs) var(--radius) var(--radius) var(--radius);
   background: linear-gradient(to bottom, var(--finder-folder-top), var(--finder-folder-bottom));
   box-shadow: var(--shadow-raised);
 }
 
-/* The folder's tab */
 .finder-app .finder-glyph-folder::before {
   content: '';
   position: absolute;
-  top: -6px;
+  bottom: 100%;
   left: -1px;
-  width: 15px;
-  height: 6px;
+  width: calc(15 * var(--finder-u));
+  height: calc(6 * var(--finder-u));
   border: 1px solid var(--finder-folder-edge);
   border-bottom: none;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: var(--finder-folder-top);
+  box-sizing: border-box;
 }
 
 /* A page with its corner folded down, and lines of text */
 .finder-app .finder-glyph-document,
 .finder-app .finder-glyph-link {
-  top: 2px;
-  left: 6px;
-  width: 28px;
-  height: 36px;
+  --finder-fold: calc(9 * var(--finder-u));
+  width: calc(28 * var(--finder-u));
+  height: calc(36 * var(--finder-u));
   border: 1px solid var(--finder-paper-edge);
   background:
-    linear-gradient(to bottom left, var(--finder-paper-fold) 50%, transparent 50%) top right / 9px 9px no-repeat,
-    repeating-linear-gradient(to bottom, transparent 0 5px, var(--finder-paper-line) 5px 6px) 5px 12px / calc(100% - 10px) calc(100% - 16px) no-repeat,
+    linear-gradient(to bottom left, var(--finder-paper-fold) 50%, transparent 50%) top right / var(--finder-fold) var(--finder-fold) no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 calc(5 * var(--finder-u)), var(--finder-paper-line) calc(5 * var(--finder-u)) calc(6 * var(--finder-u)))
+      calc(4 * var(--finder-u)) calc(11 * var(--finder-u)) / calc(100% - 8 * var(--finder-u)) calc(100% - 15 * var(--finder-u)) no-repeat,
     var(--finder-paper);
-  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%);
-  box-shadow: var(--shadow-raised);
+  clip-path: polygon(0 0, calc(100% - var(--finder-fold)) 0, 100% var(--finder-fold), 100% 100%, 0 100%);
 }
 
 /* An internet location: a page with a blue @ instead of the lines */
@@ -404,15 +405,19 @@
   align-items: center;
   justify-content: center;
   background:
-    linear-gradient(to bottom left, var(--finder-paper-fold) 50%, transparent 50%) top right / 9px 9px no-repeat,
+    linear-gradient(to bottom left, var(--finder-paper-fold) 50%, transparent 50%) top right / var(--finder-fold) var(--finder-fold) no-repeat,
     var(--finder-paper);
 }
 
 .finder-app .finder-glyph-at {
-  font-size: var(--text-2xl);
+  font-size: var(--finder-at-size);
   font-weight: bold;
   line-height: 1;
   color: var(--finder-at);
+}
+
+.finder-app .finder-icon-small .finder-glyph-at {
+  font-size: var(--finder-at-size-small);
 }
 
 /* ---- The info pane */
@@ -555,31 +560,18 @@
   }
 
   .finder-app .finder-sidebar {
-    width: 112px;
+    width: 104px;
   }
 
+  /* Fewer columns: spread them evenly across the room there is */
   .finder-app .finder-items-icons {
     grid-template-columns: repeat(auto-fill, 80px);
+    justify-content: space-evenly;
   }
 }
 
-/* A phone (under 800px, the site's phone width, as the Dock's and Planes'),
-   or a touch screen: the sidebar would take a third of a narrow window, and
-   the path in the toolbar and the home folder's own links already do its job */
-@container (max-width: 639px) {
-  @media (max-width: 799px), (pointer: coarse) {
-    .finder-app .finder-sidebar {
-      display: none;
-    }
-
-    .finder-app .finder-items-icons {
-      justify-content: space-evenly;
-    }
-  }
-}
-
-/* A phone held upright, or a window this narrow: the path in the toolbar and
-   the files in the home folder do the sidebar's job */
+/* A window this narrow (narrower than a phone's): the path in the toolbar
+   and the files in the home folder do the sidebar's job */
 @container (max-width: 359px) {
   .finder-app .finder-sidebar {
     display: none;
@@ -603,10 +595,51 @@
   gap: 4px 6px;
 }
 
+/* Font and Size: platinum pop-up menus with a small arrow, drawn here so a
+   phone doesn't swap in its own big rounded ones */
 .finder-doc-window .finder-doc-menu {
+  appearance: none;
   height: 24px;
   max-width: 120px;
+  padding: 0 20px 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(45deg, transparent 50%, var(--tone-0) 50%) calc(100% - 11px) 55% / 4px 4px no-repeat,
+    linear-gradient(-45deg, transparent 50%, var(--tone-0) 50%) calc(100% - 7px) 55% / 4px 4px no-repeat,
+    var(--gradient-platinum);
+  box-shadow: var(--shadow-button);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
+  font-weight: bold;
+  color: var(--tone-0);
+  cursor: pointer;
+}
+
+.finder-doc-window .finder-doc-menu:hover {
+  background:
+    linear-gradient(45deg, transparent 50%, var(--tone-0) 50%) calc(100% - 11px) 55% / 4px 4px no-repeat,
+    linear-gradient(-45deg, transparent 50%, var(--tone-0) 50%) calc(100% - 7px) 55% / 4px 4px no-repeat,
+    var(--gradient-platinum-hover);
+}
+
+.finder-doc-window .finder-doc-menu:focus-visible {
+  outline: 2px solid var(--color-accent-light);
+  outline-offset: 1px;
+}
+
+/* An iPhone zooms the whole page into a menu under 16px (the design skill) */
+@media (max-width: 799px), (pointer: coarse) {
+  .finder-doc-window .finder-doc-menu {
+    width: 92px;
+    font-size: var(--text-xl);
+    font-weight: normal;
+    height: 26px;
+  }
+
+  .finder-doc-window .finder-doc-menu[aria-label="Size"] {
+    width: 76px;
+  }
 }
 
 .finder-doc-window .finder-doc-group {

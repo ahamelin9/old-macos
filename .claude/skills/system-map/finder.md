@@ -90,10 +90,15 @@ on `.finder-app`):
 - **Narrower** (the 400px window it opens in, a phone): a slimmer sidebar,
   and the info pane under the items, up to half the height, only once
   something is chosen.
-- **Narrower on a phone** (a screen under 800px, the site's phone width, or
-  a touch screen), **or under 360px anywhere:** no sidebar; the path in the
-  toolbar and the home folder's own links do its job, and the icons spread
-  evenly across the room it leaves.
+  The icons spread evenly across the room the slim sidebar leaves.
+- **Under 360px:** no sidebar; the path in the toolbar and the home
+  folder's own links do its job. (Hiding it on every phone was tried on
+  2026-11-25; Alex missed it, so a phone keeps the slim one.)
+- **Icons are drawn at their real size** from one unit, `--finder-u`, and
+  centred with flexbox. Shrinking a 40px drawing with `transform: scale`
+  put the small ones a pixel or two off on an iPhone.
+- **The document's Font and Size menus** are drawn as platinum pop-ups
+  (`appearance: none`), and are 16px on a phone so Safari doesn't zoom.
 - **The toolbar's symbols are drawn in CSS** (`.finder-tool-glyph`), never
   typed: an iPhone shows ◀ and ▶ as blue emoji buttons.
 

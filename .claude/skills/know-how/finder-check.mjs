@@ -7,8 +7,8 @@
 // At each size it checks:
 //  - it opens on Alex's home folder, with Back and Forward off and nothing
 //    running sideways out of the window; the toolbar's symbols are drawn,
-//    not typed (a phone shows ◀ and ▶ as emoji); the sidebar shows, but
-//    not on a phone, where the icons get the room;
+//    not typed (a phone shows ◀ and ▶ as emoji); the sidebar shows, phone
+//    too; every drawn icon sits centred in its box;
 //  - double-clicking Projects opens it here: the path, the status line and
 //    Back follow; Back, Forward, ⌘[ and the path's own steps move about;
 //  - a click on a project shows its note in the info pane, with an Open
@@ -69,6 +69,10 @@ for (const size of sizes) {
         sidebar: getComputedStyle(a.querySelector('.finder-sidebar')).display !== 'none',
         typed: /[◀▶▦☰]/.test(a.querySelector('.finder-toolbar').textContent),
         glyphs: [...a.querySelectorAll('.finder-tool-glyph')].every(g => g.getBoundingClientRect().width >= 8),
+        offCentre: [...a.querySelectorAll('.finder-icon:not(img)')].map(i => {
+          const b = i.getBoundingClientRect(), g = i.firstElementChild.getBoundingClientRect();
+          return Math.max(Math.abs((b.left + b.right) / 2 - (g.left + g.right) / 2), g.left < b.left - 0.5 || g.right > b.right + 0.5 ? 99 : 0);
+        }).reduce((m, x) => Math.max(m, x), 0),
         icons: a.querySelectorAll('.finder-item .finder-icon').length
       };
     })()`);
@@ -77,8 +81,8 @@ for (const size of sizes) {
     t.check(step('Back and Forward start off'), home.back && home.forward);
     t.check(step('every item has an icon, and nothing runs sideways'), home.icons === 6 && !home.sideways, JSON.stringify(home));
     t.check(step('the toolbar\'s symbols are drawn, not typed'), !home.typed && home.glyphs);
-    const phone = size.width < 500;
-    t.check(step(phone ? 'phone: no sidebar, so the icons get the room' : 'the sidebar of places shows'), home.sidebar === !phone);
+    t.check(step('every drawn icon, big and small, sits centred in its box'), home.offCentre <= 0.5, String(home.offCentre));
+    t.check(step('the sidebar of places shows, phone too'), home.sidebar);
     const narrow = await t.ev(`getComputedStyle(${app}.querySelector('.finder-main')).flexDirection === 'column'`);
     t.check(step('the layout is the one this width should have'), narrow === !size.maximize);
     t.check(step(narrow ? 'narrow: no info pane until something is chosen' : 'wide: the info pane shows the folder'),
@@ -101,7 +105,7 @@ for (const size of sizes) {
     t.check(step('⌘[ goes back'), (await t.ev(path)) === 'Alex');
     await t.ev(`${app}.querySelector('.finder-place:nth-child(3)').click()`);
     await t.settle();
-    t.check(step('the sidebar opens Utilities (a phone hides it, but it still works)'), (await t.ev(path)) === 'Alex > Projects > Utilities');
+    t.check(step('the sidebar opens Utilities'), (await t.ev(path)) === 'Alex > Projects > Utilities');
     await t.ev(`[...${app}.querySelectorAll('button.finder-path-step')].find(b => b.textContent === 'Projects').click()`);
     await t.settle();
     t.check(step('a step in the path opens that folder'), (await t.ev(path)) === 'Alex > Projects');
