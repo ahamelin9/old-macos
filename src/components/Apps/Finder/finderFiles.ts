@@ -223,11 +223,25 @@ const ABOUT_ME: DocumentNode = {
   kind: 'document',
   name: 'About Me.txt',
   summary: 'Hello!',
+  // Alex's own answers, 2026-11-25
   body: [
-    { text: 'Hello! I\'m Alex Hamelin.' },
+    { text: 'Hello! I\'m Alex Hamelin, a software engineer at AbbVie, based in Illinois.' },
     {
-      text: 'This desktop is my portfolio. Every app in the Projects folder is something I built, and each one opens right here: double-click one to try it, or click it once to read how it\'s made.'
-    }
+      text: 'I started out wanting to make video games. I was building them back in middle school, and websites by high school, so I went on to study computer science to learn more. Now it\'s my job.'
+    },
+    {
+      text: 'What I enjoy most is the problem solving. There\'s almost always more than one way to solve a problem, and the interesting part is working out which one is the right one to take.'
+    },
+    { heading: 'About this desktop' },
+    {
+      text: 'I wanted one place to show several apps together, and a desktop was the natural fit. I went with an older Mac because it takes me back to where I started, making games on a friend\'s mom\'s computer. (I\'m not that old, I just like old tech.)'
+    },
+    {
+      text: 'Everything in the Projects folder is something I built for myself. When I wish I could see something and can\'t find an app that does it the way I picture it, I make one. I use all of them. Field Guide is a favourite: it shows you plants and animals near you that you may never have noticed, and lets you dig into each one.'
+    },
+    { text: 'Double-click any project to open it, or click it once to read how it\'s built.' },
+    { heading: 'Get in touch' },
+    { text: 'The best way to reach me is LinkedIn. I don\'t check it every day, so give me a little while to reply.' }
   ]
 };
 
@@ -248,14 +262,14 @@ const INTERESTS: DocumentNode = {
   kind: 'document',
   name: 'Interests.txt',
   summary: 'When I\'m not coding',
-  body: [{ list: ['Coding', 'Gaming', 'Art', 'Pickleball', 'Golf'] }]
+  body: [{ list: ['Coding', 'Gaming', 'Retro tech (DS, 3DS and the like)', 'Art', 'Pickleball', 'Golf'] }]
 };
 
 const LINKEDIN: LinkNode = {
   id: 'link-linkedin',
   kind: 'link',
   name: 'LinkedIn',
-  summary: 'My LinkedIn profile',
+  summary: 'The best way to reach me',
   url: 'https://www.linkedin.com/in/alejandro-hamelin/'
 };
 
