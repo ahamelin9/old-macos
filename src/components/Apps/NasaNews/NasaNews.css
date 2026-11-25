@@ -1,4 +1,5 @@
-/* NASA News: a sidebar of past days beside (or over) the day's picture. How
+/* NASA News: a sidebar of past days on the right, beside (or over) the day's
+   picture. How
    the sidebar fits the window is at the end of this file. */
 .nasa-app {
   /* NASA's own colours */
@@ -96,7 +97,7 @@
   max-width: 280px;
   overflow: hidden;
   background-color: var(--color-surface-alt);
-  border-right: 1px solid var(--tone-63);
+  border-left: 1px solid var(--tone-63);
 }
 
 .nasa-app .nasa-sidebar-open {
@@ -123,9 +124,11 @@
   gap: 5px;
 }
 
-/* Shown only in a narrow window (the end of this file) */
+/* Shown only in a narrow window (the end of this file), at the right end
+   of the header, where the ☰ on the page sits */
 .nasa-app .nasa-sidebar-close {
   display: none;
+  margin-left: auto;
 }
 
 /* The search box, with a round ✕ inside its right end. 16px text, or a
@@ -314,8 +317,9 @@
   box-shadow: var(--shadow-card);
 }
 
-/* The ☰ at the left of the heading, and an empty column as wide on the
-   right, so the heading stays centred and never runs under the button */
+/* The ☰ at the right of the heading, by the list it opens, and an empty
+   column as wide on the left, so the heading stays centred and never runs
+   under the button */
 .nasa-container .nasa-heading-row {
   display: grid;
   grid-template-columns: 34px 1fr 34px;
@@ -326,6 +330,7 @@
 }
 
 .nasa-title {
+  grid-column: 2;
   color: var(--nasa-blue-ink);
   text-align: center;
 }
@@ -487,13 +492,13 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 0;
+    right: 0;
     z-index: 2;
     width: min(280px, 85%);
     min-width: 0;
     max-width: none;
     box-shadow: var(--shadow-window);
-    transform: translateX(-100%);
+    transform: translateX(100%);
     visibility: hidden;
     transition: transform 0.2s ease-out, visibility 0s linear 0.2s;
   }

@@ -359,6 +359,30 @@ const NasaNews: React.FC = () => {
 
   return (
     <div className="nasa-app">
+      {/* Behind the sliding list in a narrow window: a tap here closes it */}
+      {sidebarOpen && <div className="nasa-scrim" aria-hidden="true" onClick={closeSidebar} />}
+
+      <div className="nasa-main" ref={mainRef}>
+        <div className="nasa-container">
+          <div className="nasa-heading-row">
+            <h2 className="nasa-title">NASA Astronomy Picture of the Day</h2>
+            <button
+              ref={toggleRef}
+              type="button"
+              className="nasa-gel-button nasa-sidebar-toggle"
+              aria-expanded={sidebarOpen}
+              aria-controls={sidebarId}
+              aria-label="Past days"
+              title="Past days"
+              onClick={() => (sidebarOpen ? closeSidebar() : setSidebarOpen(true))}
+            >
+              <span aria-hidden="true">☰</span>
+            </button>
+          </div>
+          {body}
+        </div>
+      </div>
+
       <nav
         id={sidebarId}
         ref={sidebarRef}
@@ -367,6 +391,7 @@ const NasaNews: React.FC = () => {
       >
         <div className="nasa-sidebar-top">
           <div className="nasa-sidebar-header">
+            <span aria-hidden="true">▼</span> Past Days
             {/* Only in a narrow window, where the list covers the ☰ on the page */}
             <button
               ref={closeRef}
@@ -378,7 +403,6 @@ const NasaNews: React.FC = () => {
             >
               <span aria-hidden="true">☰</span>
             </button>
-            <span aria-hidden="true">▼</span> Past Days
           </div>
 
           <div className="nasa-search">
@@ -477,30 +501,6 @@ const NasaNews: React.FC = () => {
           )}
         </div>
       </nav>
-
-      {/* Behind the sliding list in a narrow window: a tap here closes it */}
-      {sidebarOpen && <div className="nasa-scrim" aria-hidden="true" onClick={closeSidebar} />}
-
-      <div className="nasa-main" ref={mainRef}>
-        <div className="nasa-container">
-          <div className="nasa-heading-row">
-            <button
-              ref={toggleRef}
-              type="button"
-              className="nasa-gel-button nasa-sidebar-toggle"
-              aria-expanded={sidebarOpen}
-              aria-controls={sidebarId}
-              aria-label="Past days"
-              title="Past days"
-              onClick={() => (sidebarOpen ? closeSidebar() : setSidebarOpen(true))}
-            >
-              <span aria-hidden="true">☰</span>
-            </button>
-            <h2 className="nasa-title">NASA Astronomy Picture of the Day</h2>
-          </div>
-          {body}
-        </div>
-      </div>
     </div>
   );
 };

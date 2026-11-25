@@ -139,7 +139,7 @@ for (const size of sizes) {
         inRow: b.parentElement.classList.contains('nasa-heading-row'), size: Math.round(br.width) + 'x' + Math.round(br.height),
         round: s.borderRadius, blur: s.backdropFilter,
         centreGap: Math.round(Math.abs((br.top + br.bottom) / 2 - (hr.top + hr.bottom) / 2)),
-        clearOfText: lines.every(l => l.left >= br.right + 4), titleLines: lines.length,
+        clearOfText: lines.every(l => l.right <= br.left - 4), titleLines: lines.length,
         toolbar: !!${app}.querySelector('.mac-toolbar'),
         firstInContent: Math.round(br.top - ${front}.querySelector('.window-content').getBoundingClientRect().top)
       };
@@ -177,7 +177,7 @@ for (const size of sizes) {
     const layout = await t.ev(`(() => {
       const s = ${app}.querySelector('.nasa-sidebar').getBoundingClientRect(), m = ${app}.querySelector('.nasa-main').getBoundingClientRect();
       const w = ${front}.getBoundingClientRect(), a = ${app};
-      return { overlaps: s.right > m.left + 1, inside: s.left >= w.left - 1 && s.right <= w.right + 1,
+      return { overlaps: s.left < m.right - 1, inside: s.left >= w.left - 1 && s.right <= w.right + 1,
         noSideScroll: a.scrollWidth <= a.clientWidth, listHeight: Math.round(${scroller}.getBoundingClientRect().height) };
     })()`);
     t.check(step(isNarrow ? 'narrow: the list slides over the picture' : 'wide: the list sits beside the picture'),
